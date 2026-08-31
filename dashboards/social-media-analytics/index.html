@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ReDefiners · Social Media Dashboard</title>
+<title>ReDefiners · Social Media Analytics Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=PT+Serif:ital@0;1&display=swap" rel="stylesheet" />
@@ -40,8 +40,9 @@
   .brand h1 { font-weight:700; font-size:24px; letter-spacing:-0.3px;
     background:linear-gradient(to right, #f7f4ea, #ffe9b0);
     -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .brand h1 span { font-weight:400; color:#8fa8a3; font-size:14px; margin-left:6px; letter-spacing:0.2px;
-    background:none; -webkit-text-fill-color:#8fa8a3; }
+  .brand h1 span { font-weight:inherit; font-size:inherit; letter-spacing:inherit;
+    background:inherit; -webkit-background-clip:inherit; background-clip:inherit;
+    color:inherit; opacity:.72; }
 
   .top-actions { display:flex; align-items:center; gap:18px; }
   .date-badge {
@@ -54,7 +55,7 @@
   .tab-switcher { display:flex; align-items:center; }
   .tab-avatar {
     width:44px; height:44px; border-radius:40px; background:linear-gradient(145deg,#0a4658,#062f3c);
-    display:flex; align-items:center; justify-content:center; font-weight:600; font-size:17px; color:#7EA39D;
+    display:flex; align-items:center; justify-content:center; font-weight:600; font-size:16px; color:#7EA39D;
     border:2px solid rgba(255,255,255,0.08); margin-left:-8px; box-shadow:0 6px 12px rgba(0,0,0,0.35);
     cursor:pointer; transition:.2s ease; position:relative;
   }
@@ -63,15 +64,16 @@
   .tab-avatar.active { border-color:#FFC100; color:#FFC100; box-shadow:0 6px 16px -4px rgba(255,193,0,0.5); z-index:2; }
   .tab-avatar[data-tab="facebook"].active { color:#DFF0EE; border-color:#DFF0EE; box-shadow:0 6px 16px -4px rgba(223,240,238,0.35); }
   .tab-avatar[data-tab="tiktok"].active { color:#FF7400; border-color:#FF7400; box-shadow:0 6px 16px -4px rgba(255,116,0,0.4); }
+  .tab-avatar[data-tab="audience"].active { color:#B18CFF; border-color:#B18CFF; box-shadow:0 6px 16px -4px rgba(177,140,255,0.4); }
   .tab-avatar .tab-name { position:absolute; top:52px; left:50%; transform:translateX(-50%); font-size:10.5px;
     color:#7EA39D; white-space:nowrap; opacity:0; transition:.15s; pointer-events:none; }
   .tab-avatar:hover .tab-name { opacity:1; }
 
-  .filter-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:28px; }
+  .filter-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:20px; }
   .filter-tag {
-    background:rgba(255,255,255,0.03); padding:8px 18px; border-radius:60px; font-size:13px;
-    color:#a8c2bc; border:1px solid rgba(255,255,255,0.04); backdrop-filter:blur(4px);
-    cursor:pointer; transition:.15s ease; font-weight:500;
+    border:1px solid rgba(223,240,238,0.10); background:rgba(255,255,255,0.03);
+    color:#a8c2bc; font-size:13px; font-weight:500; padding:8px 18px; border-radius:60px;
+    cursor:pointer; transition:.15s ease;
   }
   .filter-tag:hover { background:rgba(255,255,255,0.07); }
   .filter-tag.active { background:#FFC100; color:#00303F; font-weight:700; border-color:transparent; }
@@ -81,7 +83,12 @@
   .apply-btn { background:linear-gradient(145deg,#ff8a2e,#FF7400); border:none; padding:9px 20px; border-radius:60px;
     font-weight:600; color:#fff; font-size:12.5px; cursor:pointer; box-shadow:0 4px 16px rgba(255,116,0,0.3); }
 
-  .metric-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:32px; }
+  .notice-banner { background:rgba(255,193,0,0.08); border:1px solid rgba(255,193,0,0.22); color:#FFC100;
+    padding:11px 18px; border-radius:16px; font-size:12.5px; font-weight:500; margin-bottom:20px;
+    display:flex; align-items:center; gap:10px; }
+  .notice-banner i { font-size:13px; }
+
+  .metric-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:24px; }
   .metric-card {
     background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
     border-radius:28px; padding:22px 22px 20px; border:1px solid rgba(255,255,255,0.04);
@@ -92,6 +99,7 @@
   .metric-header i { font-size:20px; color:#FFC100; opacity:.9; background:rgba(255,193,0,0.1); padding:10px; border-radius:16px; }
   .metric-header i.fb { color:#DFF0EE; background:rgba(223,240,238,0.1); }
   .metric-header i.tk { color:#FF7400; background:rgba(255,116,0,0.1); }
+  .metric-header i.aud { color:#B18CFF; background:rgba(177,140,255,0.1); }
   .metric-label { font-size:14px; font-weight:500; color:#a2c2bb; letter-spacing:0.2px; }
   .metric-value { font-size:32px; font-weight:700; letter-spacing:-0.5px; line-height:1.2;
     background:linear-gradient(to bottom,#ffffff,#d9ecE6); -webkit-background-clip:text; background-clip:text; color:transparent; }
@@ -106,7 +114,7 @@
     border-radius:32px; padding:24px 24px 28px; border:1px solid rgba(255,255,255,0.04);
     box-shadow:0 8px 18px -6px rgba(0,0,0,0.5);
   }
-  .card-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+  .card-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:8px; }
   .card-title h3 { font-weight:600; font-size:16.5px; color:#d9ecE6; letter-spacing:-0.2px; }
   .card-title h3 i { color:#FFC100; opacity:.7; font-size:16px; margin-right:10px; }
   .card-title .meta { font-size:12px; color:#7a9d97; }
@@ -121,46 +129,33 @@
     border-radius:22px; border:1px solid rgba(255,255,255,0.04); transition:.2s; text-decoration:none;
   }
   .activity-item:hover { background:rgba(255,255,255,0.045); }
-  .activity-thumb { width:48px; height:48px; border-radius:16px; object-fit:cover; flex-shrink:0; background:#0a2530; }
-  .activity-icon { width:48px; height:48px; background:rgba(255,193,0,0.08); border-radius:18px;
-    display:flex; align-items:center; justify-content:center; font-size:19px; color:#FFC100; flex-shrink:0; }
-  .activity-icon.fb { background:rgba(223,240,238,0.08); color:#DFF0EE; }
-  .activity-icon.tk { background:rgba(255,116,0,0.1); color:#FF7400; }
   .activity-content { flex:1; min-width:0; }
   .activity-content p { font-weight:450; font-size:14px; color:#e0f0ec; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .activity-content small { font-size:11.5px; color:#7a9d97; display:flex; align-items:center; gap:6px; }
   .activity-content small i { font-size:10px; color:#5c9d8f; }
   .plat-chip { font-size:9.5px; font-weight:800; padding:2px 7px; border-radius:60px; margin-left:6px; letter-spacing:.03em; }
 
-  .bottom-grid { display:grid; grid-template-columns:1.2fr 0.8fr; gap:22px; margin-top:8px; margin-bottom:24px; }
+  /* thumbnail placeholders — no external images, ever */
+  .thumb-ph { border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative; color:#EAF3F1; }
+  .thumb-badge { position:absolute; bottom:-4px; right:-4px; width:17px; height:17px; background:#00131A; border-radius:50%;
+    display:flex; align-items:center; justify-content:center; font-size:8px; border:1px solid rgba(255,255,255,0.15); }
+
+  .bottom-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:8px; margin-bottom:24px; }
   .platform-card {
     background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
     border-radius:32px; padding:22px 24px 26px; border:1px solid rgba(255,255,255,0.04);
   }
-  .platform-item { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
-  .platform-item:last-child { border-bottom:none; }
-  .platform-left { display:flex; align-items:center; gap:14px; }
-  .platform-left i { font-size:22px; width:36px; color:#FFC100; }
-  .platform-left i.fb { color:#DFF0EE; }
-  .platform-left i.tk { color:#FF7400; }
-  .platform-left span { font-weight:450; color:#dceeE9; display:block; }
-  .platform-left small { color:#7a9d97; font-size:11.5px; }
-  .platform-stats { display:flex; align-items:center; gap:24px; }
-  .platform-stats .count { font-weight:500; color:#f0f9f5; }
-  .trend-badge { font-size:12px; background:rgba(63,224,165,0.08); padding:3px 12px; border-radius:60px; color:#7fe0c0; font-weight:500; }
-  .trend-badge.flat { background:rgba(255,255,255,0.05); color:#a2c2bb; }
 
-  .pipeline-card {
-    background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    border-radius:32px; padding:22px 24px 26px; border:1px solid rgba(255,255,255,0.04);
-    display:flex; flex-direction:column;
-  }
-  .pipeline-card h4 { font-weight:600; font-size:16px; color:#d9ecE6; margin-bottom:4px; }
-  .pipeline-card .meta { font-size:12px; color:#7a9d97; margin-bottom:16px; }
-  .pipe-row { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
-  .pipe-row:last-child { border-bottom:none; }
-  .pipe-title { font-size:12.5px; color:#dceeE9; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .pipe-tag { font-size:10.5px; font-weight:700; padding:3px 11px; border-radius:60px; flex-shrink:0; }
+  .breakdown-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  .breakdown-table th { text-align:left; font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;
+    color:#7a9d97; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1); }
+  .breakdown-table td { padding:14px 8px 14px 0; border-bottom:1px solid rgba(255,255,255,0.06); color:#dceeE9; vertical-align:middle; }
+  .breakdown-table tr:last-child td { border-bottom:none; }
+  .breakdown-table .plat-name { display:flex; align-items:center; gap:10px; font-weight:600; }
+  .breakdown-table .plat-name i { font-size:18px; width:22px; }
+  .breakdown-table .plat-name i.fb { color:#DFF0EE; }
+  .breakdown-table .plat-name i.tk { color:#FF7400; }
+  .breakdown-table .plat-name i.ig { color:#FFC100; }
 
   .insight-card {
     background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
@@ -178,14 +173,12 @@
     letter-spacing:0.3px; border-top:1px solid rgba(255,255,255,0.05); padding-top:18px; }
   .glow-dot { display:inline-block; width:8px; height:8px; background:#3FE0A5; border-radius:20px; box-shadow:0 0 12px #3FE0A580; margin-right:6px; }
 
-  /* platform detail rows */
   .post-row {
     display:flex; align-items:center; gap:16px; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04);
     border-radius:20px; padding:12px 16px; margin-bottom:10px; text-decoration:none; transition:.2s;
   }
   .post-row:last-child { margin-bottom:0; }
   .post-row:hover { background:rgba(255,255,255,0.045); }
-  .post-thumb { width:56px; height:56px; border-radius:14px; object-fit:cover; flex-shrink:0; background:#0a2530; }
   .post-body { flex:1; min-width:0; }
   .post-body p.title { color:#e6f3ef; font-weight:600; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .post-body p.meta { color:#7a9d97; font-size:11.5px; margin-top:2px; }
@@ -193,13 +186,42 @@
   .post-metrics div { text-align:center; }
   .post-metrics .num { color:#e6f3ef; font-size:13.5px; font-weight:700; display:block; }
   .post-metrics .lbl { color:#7a9d97; font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; }
+  .post-list-scroll { max-height:560px; overflow-y:auto; padding-right:4px; }
 
   .tab-section { display:none; }
   .tab-section.active { display:block; }
 
+  /* audience module */
+  .audience-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:24px; }
+  .platform-toggle { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+  .toggle-pill { border:1px solid rgba(223,240,238,0.10); background:rgba(255,255,255,0.03); color:#a8c2bc;
+    font-size:12px; font-weight:600; padding:6px 14px; border-radius:60px; cursor:pointer; transition:.15s ease; }
+  .toggle-pill:hover { background:rgba(255,255,255,0.07); }
+  .toggle-pill.active { background:#B18CFF; color:#1a1030; border-color:transparent; }
+
+  .demo-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .demo-label { width:56px; font-size:11.5px; color:#a8c2bc; flex-shrink:0; }
+  .demo-bar-track { flex:1; height:20px; border-radius:10px; overflow:hidden; display:flex; background:rgba(255,255,255,0.04); }
+  .demo-bar-seg { height:100%; }
+  .demo-legend { display:flex; gap:16px; margin-top:14px; font-size:11px; color:#a8c2bc; }
+  .demo-legend span { display:flex; align-items:center; gap:6px; }
+  .legend-dot { width:9px; height:9px; border-radius:3px; display:inline-block; }
+
+  .loc-row { display:flex; align-items:center; gap:12px; margin-bottom:11px; }
+  .loc-label { width:110px; font-size:12px; color:#dceeE9; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .loc-bar-track { flex:1; height:14px; border-radius:8px; background:rgba(255,255,255,0.04); overflow:hidden; }
+  .loc-bar-fill { height:100%; background:linear-gradient(90deg, #FFC100, #FF7400); border-radius:8px; }
+  .loc-pct { width:40px; text-align:right; font-size:11.5px; color:#7a9d97; flex-shrink:0; }
+
+  .heatmap-wrap { overflow-x:auto; padding-bottom:6px; }
+  .heatmap-grid { display:grid; grid-template-columns:44px repeat(24, minmax(22px,1fr)); gap:3px; min-width:720px; align-items:center; }
+  .heatmap-cell { aspect-ratio:1; border-radius:4px; background:rgba(255,193,0,var(--a,0.04)); }
+  .heatmap-daylabel { font-size:10.5px; color:#a8c2bc; padding-right:6px; }
+  .heatmap-hourlabel { font-size:9px; color:#7a9d97; text-align:center; }
+
   @media (max-width:1000px) {
     .metric-grid { grid-template-columns:repeat(2,1fr); }
-    .row-duo, .bottom-grid, .insight-grid { grid-template-columns:1fr; }
+    .row-duo, .bottom-grid, .insight-grid, .audience-grid-2 { grid-template-columns:1fr; }
     .dashboard { padding:24px 20px; }
     .post-metrics { flex-wrap:wrap; gap:10px; }
   }
@@ -209,27 +231,32 @@
     .date-badge { font-size:12px; padding:4px 14px; }
   }
 </style>
+</head>
 <body>
 <div class="dashboard">
 
   <div class="top-bar">
     <div class="brand">
       <img class="brand-logo" src="https://redefinerswl.org/hubfs/Brand%20Kit/OfficialLogo(white).png" alt="ReDefiners World Languages logo" onerror="this.outerHTML='<span style=&quot;color:#FAF5E6;font-weight:900;font-size:15px;letter-spacing:.02em;&quot;>REDEFINERS</span>'">
-      <h1>Social Media Dashboard</h1>
+      <h1>Social Media<span> Analytics Dashboard</span></h1>
     </div>
     <div class="top-actions">
       <div class="date-badge">
         <i class="fas fa-calendar-alt"></i> <span id="todayLabel">Aug 21, 2026</span>
-        <span style="margin-left:6px; opacity:.5;">|</span>
-        <span style="font-size:12.5px; color:#7a9d97;">live via Composio</span>
       </div>
       <div class="tab-switcher">
         <div class="tab-avatar active" data-tab="overview"><i class="fas fa-house"></i><span class="tab-name">Overview</span></div>
+        <div class="tab-avatar" data-tab="audience"><i class="fas fa-users"></i><span class="tab-name">Audience</span></div>
         <div class="tab-avatar" data-tab="instagram"><i class="fab fa-instagram"></i><span class="tab-name">Instagram</span></div>
         <div class="tab-avatar" data-tab="facebook"><i class="fab fa-facebook-f"></i><span class="tab-name">Facebook</span></div>
         <div class="tab-avatar" data-tab="tiktok"><i class="fab fa-tiktok"></i><span class="tab-name">TikTok</span></div>
       </div>
     </div>
+  </div>
+
+  <div id="fallbackNotice" class="notice-banner" style="display:none;">
+    <i class="fas fa-triangle-exclamation"></i>
+    <span>Displaying cached data. Live sync unavailable.</span>
   </div>
 
   <div class="filter-row">
@@ -250,61 +277,68 @@
   <!-- OVERVIEW TAB -->
   <div class="tab-section active" id="tab-overview">
 
-    <div class="metric-grid" style="grid-template-columns:repeat(3,1fr);">
+    <!-- Zone A: Executive Snapshot -->
+    <div class="metric-grid">
       <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">Instagram followers</span><i class="fab fa-instagram"></i></div>
-        <div class="metric-value" id="ovIgFollowers">--</div>
-        <p class="metric-sub" id="ovIgPostsSub">--</p>
+        <div class="metric-header"><span class="metric-label">Total Audience</span><i class="fas fa-users"></i></div>
+        <div class="metric-value" id="execAudience">--</div>
+        <div id="execAudienceChange"></div>
+        <p class="metric-sub">IG + FB + TikTok followers</p>
       </div>
       <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">Facebook followers</span><i class="fab fa-facebook-f fb"></i></div>
-        <div class="metric-value" id="ovFbFollowers">--</div>
-        <p class="metric-sub" id="ovFbPostsSub">--</p>
+        <div class="metric-header"><span class="metric-label">Total Content Pieces</span><i class="fas fa-layer-group"></i></div>
+        <div class="metric-value" id="execContent">--</div>
+        <div id="execContentChange"></div>
+        <p class="metric-sub" id="execContentSub">posts &amp; videos in range</p>
       </div>
       <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">TikTok followers</span><i class="fab fa-tiktok tk"></i></div>
-        <div class="metric-value" id="ovTkFollowers">--</div>
-        <p class="metric-sub" id="ovTkPostsSub">--</p>
+        <div class="metric-header"><span class="metric-label">Cross-Platform Views</span><i class="fas fa-eye"></i></div>
+        <div class="metric-value" id="execViews">--</div>
+        <div id="execViewsChange"></div>
+        <p class="metric-sub">IG views + FB views + TikTok views</p>
       </div>
       <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">IG avg engagement</span><i class="fas fa-heart"></i></div>
-        <div class="metric-value" id="ovIgEngagement">--</div>
-        <p class="metric-sub" id="ovIgEngagementSub">selected range</p>
-      </div>
-      <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">FB shares in range</span><i class="fas fa-share fb"></i></div>
-        <div class="metric-value" id="ovFbShares">--</div>
-        <p class="metric-sub">reactions/reach limited by Meta API</p>
-      </div>
-      <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">TikTok views in range</span><i class="fas fa-play tk"></i></div>
-        <div class="metric-value" id="ovTkViews">--</div>
-        <p class="metric-sub" id="ovTkViewsSub">sum across videos in range</p>
+        <div class="metric-header"><span class="metric-label">Avg Engagement Rate</span><i class="fas fa-chart-simple"></i></div>
+        <div class="metric-value" id="execEngagement">--</div>
+        <div id="execEngagementChange"></div>
+        <p class="metric-sub">weighted across all platforms</p>
       </div>
     </div>
 
-    <div class="row-duo">
-      <div class="chart-card">
-        <div class="card-title">
-          <h3><i class="fas fa-chart-line"></i>Daily reach, shares &amp; views</h3>
-          <span class="meta" id="chartRangeLabel"></span>
+    <!-- Zone B: Performance Trend -->
+    <div class="chart-card" style="margin-bottom:24px;">
+      <div class="card-title">
+        <h3><i class="fas fa-chart-line"></i>Content Performance Trend</h3>
+        <span class="meta" id="chartRangeLabel"></span>
+      </div>
+      <div id="chartWrap" style="position:relative; height:250px;">
+        <canvas id="dailyChart" role="img" aria-label="Line chart of Instagram views, Facebook reactions, and TikTok views over the selected date range">Instagram views, Facebook reactions, and TikTok views over the selected range.</canvas>
+      </div>
+      <div id="chartEmpty" class="empty-state" style="display:none;">
+        <p class="big">No data available for this range.</p>
+        <p class="small">Try "Last quarter" or "All tracked data" for a wider window.</p>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-top:16px; font-size:12px; color:#7a9d97; padding:0 4px;">
+        <span><span class="glow-dot"></span><span id="chartFootLeft">0 posts logged</span></span>
+        <span id="lastUpdatedFoot"></span>
+      </div>
+    </div>
+
+    <!-- Zone C: Platform Breakdown + Top Content -->
+    <div class="bottom-grid">
+      <div class="platform-card">
+        <div class="card-title" style="margin-bottom:14px;">
+          <h3><i class="fas fa-th"></i>Platform Breakdown</h3>
         </div>
-        <div id="chartWrap" style="position:relative; height:230px;">
-          <canvas id="dailyChart" role="img" aria-label="Line chart of daily Instagram reach, Facebook shares, and TikTok views over the selected date range">Daily Instagram reach, Facebook shares, and TikTok views over the selected range.</canvas>
-        </div>
-        <div id="chartEmpty" class="empty-state" style="display:none;">
-          <p class="big">No data available for this range.</p>
-          <p class="small">Try "Last quarter" or "All tracked data" for a wider window.</p>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-top:18px; font-size:12px; color:#7a9d97; padding:0 4px;">
-          <span><span class="glow-dot"></span><span id="chartFootLeft">0 posts logged</span></span>
-          <span><i class="far fa-clock" style="margin-right:4px;"></i>synced via Composio</span>
-        </div>
+        <table class="breakdown-table">
+          <thead><tr><th>Platform</th><th>Posts</th><th id="thViewsReact">Views</th><th>Eng. Rate</th></tr></thead>
+          <tbody id="breakdownBody"></tbody>
+        </table>
       </div>
 
-      <div class="chart-card" style="padding-bottom:18px;">
-        <div class="card-title">
-          <h3><i class="fas fa-bolt"></i>Top content</h3>
+      <div class="platform-card">
+        <div class="card-title" style="margin-bottom:14px;">
+          <h3><i class="fas fa-bolt"></i>Top Content</h3>
           <span class="meta" id="topContentRangeLabel"></span>
         </div>
         <div class="activity-feed" id="topContentList"></div>
@@ -314,32 +348,7 @@
       </div>
     </div>
 
-    <div class="bottom-grid">
-      <div class="platform-card">
-        <div class="card-title" style="margin-bottom:6px;">
-          <h3><i class="fas fa-layer-group"></i>Platform breakdown</h3>
-        </div>
-        <div class="platform-item">
-          <div class="platform-left"><i class="fab fa-instagram"></i><div><span>Instagram</span><small>@redefinerswl</small></div></div>
-          <div class="platform-stats"><span class="count" id="igBreakCount">--</span><span class="trend-badge" id="igBreakBadge">--</span></div>
-        </div>
-        <div class="platform-item">
-          <div class="platform-left"><i class="fab fa-facebook-f fb"></i><div><span>Facebook</span><small>ReDefiners World Languages</small></div></div>
-          <div class="platform-stats"><span class="count" id="fbBreakCount">--</span><span class="trend-badge" id="fbBreakBadge">--</span></div>
-        </div>
-        <div class="platform-item">
-          <div class="platform-left"><i class="fab fa-tiktok tk"></i><div><span>TikTok</span><small>@redefinersworldlanguages</small></div></div>
-          <div class="platform-stats"><span class="count" id="tkBreakCount">--</span><span class="trend-badge" id="tkBreakBadge">--</span></div>
-        </div>
-      </div>
-
-      <div class="pipeline-card">
-        <h4><i class="fas fa-list-check" style="margin-right:10px; color:#FFC100;"></i>Content pipeline</h4>
-        <p class="meta">From the calendar &amp; idea brewing station</p>
-        <div id="pipelineList"></div>
-      </div>
-    </div>
-
+    <!-- Zone D: Insights -->
     <div class="insight-card">
       <div class="insight-head">
         <span class="glow-dot" style="background:#7A9D96; box-shadow:0 0 8px #7A9D96;"></span>
@@ -349,7 +358,7 @@
         <div class="insight-col">
           <p class="heading" style="color:#FFC100;">What's working</p>
           <ul class="voice">
-            <li style="color:#f0dca0; font-style:italic;">The Feb 12 teacher-farewell Reel ("You can take the teacher out of ReDefiners\u2026") is the strongest post in the tracked history \u2014 572 reach, 50 likes, and a 13.6% engagement rate, well ahead of anything else in the library.</li>
+            <li style="color:#f0dca0; font-style:italic;">The Feb 12 teacher-farewell Reel ("You can take the teacher out of ReDefiners\u2026") is the strongest post in the tracked history \u2014 855 views, 50 likes, and a 13.6% engagement rate, well ahead of anything else in the library.</li>
             <li style="color:#f0dca0; font-style:italic;">Personal-story and mythbusting formats consistently outperform promotional posts on engagement rate \u2014 the Super Bowl Spanish post and the Academic Achievers recap both cleared 12%.</li>
             <li style="color:#f0dca0; font-style:italic;">TikTok's oldest videos (Sept 2024) still pull the platform's best view counts \u2014 the tongue-twister challenge hit 1,507 views, more than 3x the account's recent uploads.</li>
           </ul>
@@ -357,12 +366,53 @@
         <div class="insight-col">
           <p class="heading" style="color:#FF7400;">Where to improve</p>
           <ul class="voice">
-            <li style="color:#F3C9A8; font-style:italic;">Facebook reactions are returning near-zero across the board \u2014 Meta deprecated the reactions/impressions fields in Nov 2025, so shares and comments are the only reliable FB signal right now.</li>
+            <li style="color:#F3C9A8; font-style:italic;">Facebook views are estimated until a native view-count field is available from the platform \u2014 treat FB engagement figures as directional rather than exact.</li>
             <li style="color:#F3C9A8; font-style:italic;">TikTok posting has slowed sharply since early 2025 \u2014 only a handful of uploads in the last 12 months versus a steady weekly cadence in 2024, and several recent videos show 0 views.</li>
             <li style="color:#F3C9A8; font-style:italic;">There's a real posting gap between Aug 2 and Aug 21 on Instagram/Facebook \u2014 worth confirming August's calendar is fully scheduled.</li>
           </ul>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- AUDIENCE TAB -->
+  <div class="tab-section" id="tab-audience">
+    <div class="chart-card" style="margin-bottom:24px;">
+      <div class="card-title">
+        <h3><i class="fas fa-arrow-trend-up"></i>Follower Growth Trend</h3>
+        <span class="meta" id="audienceRangeLabel"></span>
+      </div>
+      <div style="position:relative; height:230px;">
+        <canvas id="growthChart" role="img" aria-label="Line chart of Instagram, Facebook, and TikTok follower growth over the selected date range"></canvas>
+      </div>
+    </div>
+
+    <div class="audience-grid-2">
+      <div class="platform-card">
+        <div class="card-title" style="margin-bottom:6px;"><h3><i class="fas fa-venus-mars"></i>Age &amp; Gender</h3></div>
+        <div class="platform-toggle" id="demoToggle">
+          <button class="toggle-pill active" data-plat="all">All Platforms</button>
+          <button class="toggle-pill" data-plat="ig">Instagram</button>
+          <button class="toggle-pill" data-plat="fb">Facebook</button>
+          <button class="toggle-pill" data-plat="tk">TikTok</button>
+        </div>
+        <div id="demoChart"></div>
+        <div class="demo-legend">
+          <span><span class="legend-dot" style="background:#FFC100;"></span>Male</span>
+          <span><span class="legend-dot" style="background:#DFF0EE;"></span>Female</span>
+          <span><span class="legend-dot" style="background:#5A6E6A;"></span>Unknown</span>
+        </div>
+      </div>
+
+      <div class="platform-card">
+        <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-location-dot"></i>Top Locations</h3></div>
+        <div id="locChart"></div>
+      </div>
+    </div>
+
+    <div class="chart-card">
+      <div class="card-title"><h3><i class="fas fa-clock"></i>Best Times to Post (Instagram)</h3></div>
+      <div id="heatmapWrap"></div>
     </div>
   </div>
 
@@ -372,29 +422,38 @@
       <div class="metric-card">
         <div class="metric-header"><span class="metric-label">Followers</span><i class="fab fa-instagram"></i></div>
         <div class="metric-value" id="igAcctFollowers">--</div>
+        <div id="igFollowersChange"></div>
         <p class="metric-sub" id="igAcctSub">of ~-- total posts</p>
       </div>
       <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">Posts in range</span><i class="fas fa-images"></i></div>
+        <div class="metric-header"><span class="metric-label">Posts in Range</span><i class="fas fa-images"></i></div>
         <div class="metric-value" id="igTabPosts">--</div>
+        <div id="igPostsChange"></div>
         <p class="metric-sub" id="igTabRange">selected range</p>
       </div>
       <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">Total reach</span><i class="fas fa-globe"></i></div>
-        <div class="metric-value" id="igTabReach">--</div>
+        <div class="metric-header"><span class="metric-label">Total Views</span><i class="fas fa-eye"></i></div>
+        <div class="metric-value" id="igTabViews">--</div>
+        <div id="igViewsChange"></div>
         <p class="metric-sub">sum across posts in range</p>
       </div>
       <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">Avg engagement</span><i class="fas fa-heart"></i></div>
+        <div class="metric-header"><span class="metric-label">Engagement Rate</span><i class="fas fa-heart"></i></div>
         <div class="metric-value" id="igTabEngagement">--</div>
+        <div id="igEngagementChange"></div>
         <p class="metric-sub">(likes + comments + saves + shares) / reach</p>
       </div>
     </div>
+    <div class="chart-card" style="margin-bottom:24px;">
+      <div class="card-title"><h3><i class="fab fa-instagram"></i>Daily Views</h3><span class="meta" id="igTrendRangeLabel"></span></div>
+      <div style="position:relative; height:200px;"><canvas id="igTrendChart"></canvas></div>
+    </div>
     <div class="chart-card">
-      <div class="card-title"><h3><i class="fab fa-instagram"></i>Instagram posts</h3><span class="meta" id="igTabRangeLabel"></span></div>
-      <div id="igPostList"></div>
+      <div class="card-title"><h3><i class="fas fa-list"></i>Instagram posts</h3><span class="meta" id="igTabRangeLabel"></span></div>
+      <div class="post-list-scroll" id="igPostList"></div>
       <div id="igPostEmpty" class="empty-state" style="display:none;">
-        <p class="big">No Instagram posts in this range.</p>
+        <p class="big">No Instagram content in this range.</p>
+        <p class="small">Try widening your date filter.</p>
       </div>
     </div>
   </div>
@@ -405,29 +464,38 @@
       <div class="metric-card">
         <div class="metric-header"><span class="metric-label">Followers</span><i class="fab fa-facebook-f fb"></i></div>
         <div class="metric-value" id="fbAcctFollowers">--</div>
+        <div id="fbFollowersChange"></div>
         <p class="metric-sub">ReDefiners World Languages Page</p>
       </div>
       <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">Posts in range</span><i class="fas fa-images"></i></div>
+        <div class="metric-header"><span class="metric-label">Posts in Range</span><i class="fas fa-images"></i></div>
         <div class="metric-value" id="fbTabPosts">--</div>
+        <div id="fbPostsChange"></div>
         <p class="metric-sub" id="fbTabRange">selected range</p>
       </div>
       <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">Total shares</span><i class="fas fa-share"></i></div>
-        <div class="metric-value" id="fbTabShares">--</div>
+        <div class="metric-header"><span class="metric-label">Total Views</span><i class="fas fa-eye fb"></i></div>
+        <div class="metric-value" id="fbTabViews">--</div>
+        <div id="fbViewsChange"></div>
         <p class="metric-sub">sum across posts in range</p>
       </div>
       <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">Reactions / reach</span><i class="fas fa-triangle-exclamation" style="color:#FF7400; background:rgba(255,116,0,0.12);"></i></div>
-        <div class="metric-value" style="font-size:20px;">Unavailable</div>
-        <p class="metric-sub">Meta deprecated these fields Nov 2025</p>
+        <div class="metric-header"><span class="metric-label">Engagement Rate</span><i class="fas fa-heart"></i></div>
+        <div class="metric-value" id="fbTabEngagement">--</div>
+        <div id="fbEngagementChange"></div>
+        <p class="metric-sub">(reactions + comments + shares) / views</p>
       </div>
     </div>
+    <div class="chart-card" style="margin-bottom:24px;">
+      <div class="card-title"><h3><i class="fab fa-facebook-f"></i>Daily Reactions</h3><span class="meta" id="fbTrendRangeLabel"></span></div>
+      <div style="position:relative; height:200px;"><canvas id="fbTrendChart"></canvas></div>
+    </div>
     <div class="chart-card">
-      <div class="card-title"><h3><i class="fab fa-facebook-f"></i>Facebook posts</h3><span class="meta" id="fbTabRangeLabel"></span></div>
-      <div id="fbPostList"></div>
+      <div class="card-title"><h3><i class="fas fa-list"></i>Facebook posts</h3><span class="meta" id="fbTabRangeLabel"></span></div>
+      <div class="post-list-scroll" id="fbPostList"></div>
       <div id="fbPostEmpty" class="empty-state" style="display:none;">
-        <p class="big">No Facebook posts in this range.</p>
+        <p class="big">No Facebook content in this range.</p>
+        <p class="small">Try widening your date filter.</p>
       </div>
     </div>
   </div>
@@ -438,119 +506,418 @@
       <div class="metric-card">
         <div class="metric-header"><span class="metric-label">Followers</span><i class="fab fa-tiktok tk"></i></div>
         <div class="metric-value" id="tkAcctFollowers">--</div>
+        <div id="tkFollowersChange"></div>
         <p class="metric-sub" id="tkAcctSub">of -- total videos</p>
       </div>
       <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">Videos in range</span><i class="fas fa-film"></i></div>
+        <div class="metric-header"><span class="metric-label">Videos in Range</span><i class="fas fa-film"></i></div>
         <div class="metric-value" id="tkTabPosts">--</div>
+        <div id="tkPostsChange"></div>
         <p class="metric-sub" id="tkTabRange">selected range</p>
       </div>
       <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">Total views</span><i class="fas fa-play tk"></i></div>
+        <div class="metric-header"><span class="metric-label">Total Views</span><i class="fas fa-play tk"></i></div>
         <div class="metric-value" id="tkTabViews">--</div>
+        <div id="tkViewsChange"></div>
         <p class="metric-sub">sum across videos in range</p>
       </div>
       <div class="metric-card">
-        <div class="metric-header"><span class="metric-label">Total likes</span><i class="fas fa-heart"></i></div>
-        <div class="metric-value" id="tkTabLikes">--</div>
-        <p class="metric-sub">sum across videos in range</p>
+        <div class="metric-header"><span class="metric-label">Engagement Rate</span><i class="fas fa-heart"></i></div>
+        <div class="metric-value" id="tkTabEngagement">--</div>
+        <div id="tkEngagementChange"></div>
+        <p class="metric-sub">(likes + comments + shares) / views</p>
       </div>
     </div>
+    <div class="chart-card" style="margin-bottom:24px;">
+      <div class="card-title"><h3><i class="fab fa-tiktok"></i>Daily Views</h3><span class="meta" id="tkTrendRangeLabel"></span></div>
+      <div style="position:relative; height:200px;"><canvas id="tkTrendChart"></canvas></div>
+    </div>
     <div class="chart-card">
-      <div class="card-title"><h3><i class="fab fa-tiktok"></i>TikTok videos</h3><span class="meta" id="tkTabRangeLabel"></span></div>
-      <div id="tkPostList"></div>
+      <div class="card-title"><h3><i class="fas fa-list"></i>TikTok videos</h3><span class="meta" id="tkTabRangeLabel"></span></div>
+      <div class="post-list-scroll" id="tkPostList"></div>
       <div id="tkPostEmpty" class="empty-state" style="display:none;">
-        <p class="big">No TikTok videos in this range.</p>
+        <p class="big">No TikTok content in this range.</p>
+        <p class="small">Try widening your date filter.</p>
       </div>
     </div>
   </div>
 
   <div class="footer-row">
-    <span><i class="fas fa-circle" style="color:#FFC100; font-size:6px; margin-right:8px;"></i>Live data pulled via Composio (Instagram, Facebook &amp; TikTok connectors)</span>
-    <span><i class="fas fa-sync-alt" style="margin-right:6px;"></i>Instagram &amp; Facebook show the 50 most recent posts; TikTok shows 39 public videos</span>
+    <span><i class="fas fa-circle" style="color:#FFC100; font-size:6px; margin-right:8px;"></i><span id="lastUpdatedLabel">Last updated: --</span> | Data refreshes on load.</span>
+    <span><i class="fas fa-sync-alt" style="margin-right:6px;"></i><span id="footerDateRange">Showing content from connected social accounts</span></span>
   </div>
 
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-const ACCOUNTS = {
+// Single source of truth for "now" — always the real current date.
+const NOW = new Date();
+
+let ACCOUNTS = {
   ig: { followers: 4154, following: 544, mediaCount: 1311, username: 'redefinerswl' },
   fb: { followers: 1623, fanCount: 1623, name: 'ReDefiners World Languages' },
   tk: { followers: 16, following: 3, likes: 150, videoCount: 43, username: 'redefinersworldlanguages' }
 };
 
-const igPosts = [{"date":"2026-08-21","type":"Carousel","title":"On November 3, Florida voters will decide on a constitutional\u2026","reach":26,"views":79,"likes":1,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DcTaH4-HFRq/"},{"date":"2026-08-02","type":"Carousel","title":"Let's bust a few myths about learning English as an adult \ud83e\udde0\u2728\u2026","reach":46,"views":132,"likes":5,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DbiswrvoLmY/"},{"date":"2026-07-31","type":"Reel","title":"Big news is coming to ReDefiners \ud83d\udc40 We\u2019re getting ready to launch the\u2026","reach":188,"views":226,"likes":5,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/reel/DbeKmXgCLNC/"},{"date":"2026-07-29","type":"Image","title":"Learning a language isn't just for our students \u2014 it's a journey\u2026","reach":125,"views":277,"likes":15,"comments":2,"saved":1,"shares":0,"link":"https://www.instagram.com/p/DbYZN0Ymhwi/"},{"date":"2026-07-27","type":"Carousel","title":"Ever heard a coworker say 'let's touch base' and wonder what that\u2026","reach":65,"views":141,"likes":3,"comments":0,"saved":1,"shares":0,"link":"https://www.instagram.com/p/DbTQW0okyQX/"},{"date":"2026-07-25","type":"Carousel","title":"Dreaming of your next trip? \ud83c\udf0e These are just a few of the incredible\u2026","reach":70,"views":191,"likes":6,"comments":1,"saved":1,"shares":0,"link":"https://www.instagram.com/p/DbOF2x0Dkke/"},{"date":"2026-07-23","type":"Carousel","title":"Is there really such a thing as an 'easy' language? \ud83e\udd14 It depends\u2026","reach":72,"views":201,"likes":7,"comments":1,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DbI9BzZIMRj/"},{"date":"2026-07-04","type":"Image","title":"\ud83c\uddfa\ud83c\uddf8 Happy 4th of July!","reach":40,"views":63,"likes":1,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DaYiZ8EC-Wu/"},{"date":"2026-06-19","type":"Image","title":"Today, we honor Juneteenth\u2014a day that commemorates freedom,\u2026","reach":55,"views":114,"likes":3,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/p/DZyEhNBidfu/"},{"date":"2026-06-16","type":"Carousel","title":"\ud83c\udf0e\u2728 The world is coming to your neighborhood!","reach":108,"views":278,"likes":4,"comments":1,"saved":1,"shares":1,"link":"https://www.instagram.com/p/DZpcmF-Foeq/"},{"date":"2026-06-12","type":"Reel","title":"Week 1 MVPs just got interesting!","reach":139,"views":210,"likes":7,"comments":1,"saved":0,"shares":0,"link":"https://www.instagram.com/reel/DZfeU2-FHh1/"},{"date":"2026-06-11","type":"Carousel","title":"Week 1 MVPs have officially been revealed \u2014 and these kids did NOT\u2026","reach":121,"views":341,"likes":12,"comments":2,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DZcuTW_FYYB/"},{"date":"2026-06-01","type":"Carousel","title":"Day 1 of camp is HERE!!!","reach":89,"views":213,"likes":5,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DZCuGAFFrT4/"},{"date":"2026-05-25","type":"Image","title":"Today, we honor and remember the brave men and women who gave their\u2026","reach":68,"views":123,"likes":3,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DYxlCaGC_am/"},{"date":"2026-05-04","type":"Image","title":"This week, we celebrate the incredible educators who make our\u2026","reach":112,"views":203,"likes":3,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DX7keOTExJh/"},{"date":"2026-05-01","type":"Reel","title":"Get ready for a summer full of fun, educational adventures! \u2b07\ufe0f","reach":264,"views":323,"likes":6,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/reel/DXz6m8fgvhL/"},{"date":"2026-04-25","type":"Carousel","title":"Caps off to our Academic Achievers! \ud83c\udf93","reach":152,"views":365,"likes":12,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DXkGGgCiShk/"},{"date":"2026-04-22","type":"Carousel","title":"Sorry for the confusion. Thank you for your attention.","reach":146,"views":390,"likes":9,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DXctAtliQo-/"},{"date":"2026-04-17","type":"Reel","title":"Your kid opens an envelope and finds out if they're \ud83d\udfe1 Los Tigres\u2026","reach":140,"views":265,"likes":6,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/reel/DXPLcPDDmQP/"},{"date":"2026-04-15","type":"Carousel","title":"This summer, your child has a chance to lead, play, and compete!\u2026","reach":73,"views":165,"likes":1,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DXJ0o1kk8pz/"},{"date":"2026-04-01","type":"Carousel","title":"Are you ready for a packed summer camp?","reach":98,"views":233,"likes":2,"comments":1,"saved":1,"shares":0,"link":"https://www.instagram.com/p/DWmnIq0D22n/"},{"date":"2026-03-30","type":"Carousel","title":"Language is more than just words; it\u2019s the key that unlocked\u2026","reach":232,"views":375,"likes":6,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/p/DWhd00bEpM5/"},{"date":"2026-03-25","type":"Reel","title":"Happy Women's History Month! We're celebrating by giving the floor\u2026","reach":334,"views":478,"likes":15,"comments":2,"saved":1,"shares":9,"link":"https://www.instagram.com/reel/DWURFn0CScD/"},{"date":"2026-03-19","type":"Carousel","title":"Ramadan is a time of reflection, gratitude, and spiritual growth. \ud83c\udf19\u2728","reach":91,"views":199,"likes":11,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DWEwXDsmC73/"},{"date":"2026-03-12","type":"Carousel","title":"Space is limited! Are you looking for a fun, educational program for\u2026","reach":103,"views":221,"likes":5,"comments":1,"saved":1,"shares":3,"link":"https://www.instagram.com/p/DVy5tJrD2zw/"},{"date":"2026-03-11","type":"Reel","title":"This week, we\u2019re celebrating Lubabah Hasan, one of our amazing\u2026","reach":484,"views":629,"likes":21,"comments":5,"saved":0,"shares":3,"link":"https://www.instagram.com/reel/DVwOsGuDg3j/"},{"date":"2026-03-10","type":"Carousel","title":"How has The Dominican Republic shaped Spanish as we know it? \u2b07\ufe0f","reach":128,"views":262,"likes":10,"comments":3,"saved":0,"shares":3,"link":"https://www.instagram.com/p/DVtVGJUjmEa/"},{"date":"2026-03-06","type":"Carousel","title":"Stories that bring us together! \ud83d\udcda\u2728Our February Family Reading Time\u2026","reach":112,"views":283,"likes":12,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DVjhEI8DbON/"},{"date":"2026-03-03","type":"Reel","title":"Can you guess the theme this year? \u2b07\ufe0f","reach":165,"views":252,"likes":11,"comments":1,"saved":1,"shares":5,"link":"https://www.instagram.com/reel/DVbTySuDODS/"},{"date":"2026-02-28","type":"Reel","title":"Celebrating the voices behind our mission \ud83d\udc9b","reach":221,"views":262,"likes":9,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/reel/DVTsKSBESBa/"},{"date":"2026-02-27","type":"Carousel","title":"Can you guess the theme this year? \u2b07\ufe0f","reach":90,"views":210,"likes":6,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/p/DVRumRIEnY4/"},{"date":"2026-02-25","type":"Reel","title":"Why does language access matter? \u2b07\ufe0f","reach":301,"views":364,"likes":16,"comments":2,"saved":1,"shares":1,"link":"https://www.instagram.com/reel/DVL3XP0COos/"},{"date":"2026-02-21","type":"Carousel","title":"From the samba-filled streets of Rio de Janeiro to the masked\u2026","reach":100,"views":216,"likes":5,"comments":1,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DVBrDURlC4Z/"},{"date":"2026-02-20","type":"Reel","title":"Real Learning. Real Impact. \ud83d\udde3\ufe0f\u2728","reach":256,"views":351,"likes":5,"comments":3,"saved":0,"shares":2,"link":"https://www.instagram.com/reel/DU_F63sEUPP/"},{"date":"2026-02-19","type":"Reel","title":"As we celebrate this sacred season, we honor the values of\u2026","reach":239,"views":302,"likes":10,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/reel/DU8nvIlDbsI/"},{"date":"2026-02-18","type":"Carousel","title":"Learning two languages at a young age can boost social, cognitive\u2026","reach":71,"views":166,"likes":3,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DU6BcxYGUNP/"},{"date":"2026-02-17","type":"Carousel","title":"Lunar New Year is celebrated around the world\u2014each culture with its\u2026","reach":163,"views":284,"likes":7,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/p/DU3YG06kiZO/"},{"date":"2026-02-16","type":"Carousel","title":"Ten years of turning ideas into impact by bringing people, cultures,\u2026","reach":72,"views":165,"likes":7,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/p/DU1Vtx8ldi4/"},{"date":"2026-02-16","type":"Carousel","title":"This Presidents Day, we're celebrating a lesser-known presidential\u2026","reach":212,"views":379,"likes":7,"comments":0,"saved":0,"shares":2,"link":"https://www.instagram.com/p/DU0zBtSllIi/"},{"date":"2026-02-14","type":"Reel","title":"5 Black polyglots who changed the world \ud83c\udf0d","reach":219,"views":271,"likes":10,"comments":3,"saved":2,"shares":1,"link":"https://www.instagram.com/reel/DUvojkHFE6l/"},{"date":"2026-02-13","type":"Reel","title":"From the heart of our programs to the heart of our community\u2014our\u2026","reach":292,"views":377,"likes":12,"comments":0,"saved":0,"shares":3,"link":"https://www.instagram.com/reel/DUtU_fejVfY/"},{"date":"2026-02-12","type":"Carousel","title":"Last week we celebrated the work of our Academic Achievers Program\u2026","reach":103,"views":260,"likes":13,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DUrHILzmZij/"},{"date":"2026-02-12","type":"Reel","title":"You can take the teacher out of ReDefiners, but you can\u2019t take the\u2026","reach":572,"views":855,"likes":50,"comments":13,"saved":0,"shares":9,"link":"https://www.instagram.com/reel/DUqiuNoiVif/"},{"date":"2026-02-11","type":"Carousel","title":"Seeing Spanish take center stage during the Super Bowl halftime show\u2026","reach":132,"views":423,"likes":15,"comments":0,"saved":0,"shares":2,"link":"https://www.instagram.com/p/DUoBjbUmW2f/"},{"date":"2026-02-10","type":"Reel","title":"\ud83c\udf89 Around the world in one birthday song! \ud83c\udfb6","reach":244,"views":321,"likes":16,"comments":2,"saved":0,"shares":1,"link":"https://www.instagram.com/reel/DUllTsPEogZ/"},{"date":"2026-02-09","type":"Carousel","title":"Every culture has their own unique way of saying things! \u2b07\ufe0f","reach":212,"views":694,"likes":15,"comments":0,"saved":0,"shares":2,"link":"https://www.instagram.com/p/DUjHHBDlA62/"},{"date":"2026-02-06","type":"Reel","title":"Here\u2019s a peek into one of our Let\u2019s Learn Spanish classes \ud83d\udca1","reach":211,"views":309,"likes":4,"comments":0,"saved":1,"shares":1,"link":"https://www.instagram.com/reel/DUbSBfYjbMo/"},{"date":"2026-02-04","type":"Carousel","title":"Did you know these languages were born from resistance? \ud83d\udde3\ufe0f\u270a\ud83c\udffe","reach":82,"views":358,"likes":6,"comments":1,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DUV_LTCCZkU/"},{"date":"2026-02-03","type":"Carousel","title":"Cake, balloons, and 10 amazing years! \ud83c\udf82","reach":114,"views":465,"likes":12,"comments":1,"saved":0,"shares":1,"link":"https://www.instagram.com/p/DUTqcl-jw84/"},{"date":"2026-02-02","type":"Carousel","title":"Love doesn\u2019t belong to just one day \ud83d\udcab","reach":66,"views":303,"likes":5,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DUQyH-jknmn/"}];
+let igPosts = [{"date":"2026-08-21","type":"Carousel","title":"On November 3, Florida voters will decide on a constitutional\u2026","reach":26,"views":79,"likes":1,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DcTaH4-HFRq/"},{"date":"2026-08-02","type":"Carousel","title":"Let's bust a few myths about learning English as an adult \ud83e\udde0\u2728\u2026","reach":46,"views":132,"likes":5,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DbiswrvoLmY/"},{"date":"2026-07-31","type":"Reel","title":"Big news is coming to ReDefiners \ud83d\udc40 We\u2019re getting ready to launch the\u2026","reach":188,"views":226,"likes":5,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/reel/DbeKmXgCLNC/"},{"date":"2026-07-29","type":"Image","title":"Learning a language isn't just for our students \u2014 it's a journey\u2026","reach":125,"views":277,"likes":15,"comments":2,"saved":1,"shares":0,"link":"https://www.instagram.com/p/DbYZN0Ymhwi/"},{"date":"2026-07-27","type":"Carousel","title":"Ever heard a coworker say 'let's touch base' and wonder what that\u2026","reach":65,"views":141,"likes":3,"comments":0,"saved":1,"shares":0,"link":"https://www.instagram.com/p/DbTQW0okyQX/"},{"date":"2026-07-25","type":"Carousel","title":"Dreaming of your next trip? \ud83c\udf0e These are just a few of the incredible\u2026","reach":70,"views":191,"likes":6,"comments":1,"saved":1,"shares":0,"link":"https://www.instagram.com/p/DbOF2x0Dkke/"},{"date":"2026-07-23","type":"Carousel","title":"Is there really such a thing as an 'easy' language? \ud83e\udd14 It depends\u2026","reach":72,"views":201,"likes":7,"comments":1,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DbI9BzZIMRj/"},{"date":"2026-07-04","type":"Image","title":"\ud83c\uddfa\ud83c\uddf8 Happy 4th of July!","reach":40,"views":63,"likes":1,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DaYiZ8EC-Wu/"},{"date":"2026-06-19","type":"Image","title":"Today, we honor Juneteenth\u2014a day that commemorates freedom,\u2026","reach":55,"views":114,"likes":3,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/p/DZyEhNBidfu/"},{"date":"2026-06-16","type":"Carousel","title":"\ud83c\udf0e\u2728 The world is coming to your neighborhood!","reach":108,"views":278,"likes":4,"comments":1,"saved":1,"shares":1,"link":"https://www.instagram.com/p/DZpcmF-Foeq/"},{"date":"2026-06-12","type":"Reel","title":"Week 1 MVPs just got interesting!","reach":139,"views":210,"likes":7,"comments":1,"saved":0,"shares":0,"link":"https://www.instagram.com/reel/DZfeU2-FHh1/"},{"date":"2026-06-11","type":"Carousel","title":"Week 1 MVPs have officially been revealed \u2014 and these kids did NOT\u2026","reach":121,"views":341,"likes":12,"comments":2,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DZcuTW_FYYB/"},{"date":"2026-06-01","type":"Carousel","title":"Day 1 of camp is HERE!!!","reach":89,"views":213,"likes":5,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DZCuGAFFrT4/"},{"date":"2026-05-25","type":"Image","title":"Today, we honor and remember the brave men and women who gave their\u2026","reach":68,"views":123,"likes":3,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DYxlCaGC_am/"},{"date":"2026-05-04","type":"Image","title":"This week, we celebrate the incredible educators who make our\u2026","reach":112,"views":203,"likes":3,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DX7keOTExJh/"},{"date":"2026-05-01","type":"Reel","title":"Get ready for a summer full of fun, educational adventures! \u2b07\ufe0f","reach":264,"views":323,"likes":6,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/reel/DXz6m8fgvhL/"},{"date":"2026-04-25","type":"Carousel","title":"Caps off to our Academic Achievers! \ud83c\udf93","reach":152,"views":365,"likes":12,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DXkGGgCiShk/"},{"date":"2026-04-22","type":"Carousel","title":"Sorry for the confusion. Thank you for your attention.","reach":146,"views":390,"likes":9,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DXctAtliQo-/"},{"date":"2026-04-17","type":"Reel","title":"Your kid opens an envelope and finds out if they're \ud83d\udfe1 Los Tigres\u2026","reach":140,"views":265,"likes":6,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/reel/DXPLcPDDmQP/"},{"date":"2026-04-15","type":"Carousel","title":"This summer, your child has a chance to lead, play, and compete!\u2026","reach":73,"views":165,"likes":1,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DXJ0o1kk8pz/"},{"date":"2026-04-01","type":"Carousel","title":"Are you ready for a packed summer camp?","reach":98,"views":233,"likes":2,"comments":1,"saved":1,"shares":0,"link":"https://www.instagram.com/p/DWmnIq0D22n/"},{"date":"2026-03-30","type":"Carousel","title":"Language is more than just words; it\u2019s the key that unlocked\u2026","reach":232,"views":375,"likes":6,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/p/DWhd00bEpM5/"},{"date":"2026-03-25","type":"Reel","title":"Happy Women's History Month! We're celebrating by giving the floor\u2026","reach":334,"views":478,"likes":15,"comments":2,"saved":1,"shares":9,"link":"https://www.instagram.com/reel/DWURFn0CScD/"},{"date":"2026-03-19","type":"Carousel","title":"Ramadan is a time of reflection, gratitude, and spiritual growth. \ud83c\udf19\u2728","reach":91,"views":199,"likes":11,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DWEwXDsmC73/"},{"date":"2026-03-12","type":"Carousel","title":"Space is limited! Are you looking for a fun, educational program for\u2026","reach":103,"views":221,"likes":5,"comments":1,"saved":1,"shares":3,"link":"https://www.instagram.com/p/DVy5tJrD2zw/"},{"date":"2026-03-11","type":"Reel","title":"This week, we\u2019re celebrating Lubabah Hasan, one of our amazing\u2026","reach":484,"views":629,"likes":21,"comments":5,"saved":0,"shares":3,"link":"https://www.instagram.com/reel/DVwOsGuDg3j/"},{"date":"2026-03-10","type":"Carousel","title":"How has The Dominican Republic shaped Spanish as we know it? \u2b07\ufe0f","reach":128,"views":262,"likes":10,"comments":3,"saved":0,"shares":3,"link":"https://www.instagram.com/p/DVtVGJUjmEa/"},{"date":"2026-03-06","type":"Carousel","title":"Stories that bring us together! \ud83d\udcda\u2728Our February Family Reading Time\u2026","reach":112,"views":283,"likes":12,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DVjhEI8DbON/"},{"date":"2026-03-03","type":"Reel","title":"Can you guess the theme this year? \u2b07\ufe0f","reach":165,"views":252,"likes":11,"comments":1,"saved":1,"shares":5,"link":"https://www.instagram.com/reel/DVbTySuDODS/"},{"date":"2026-02-28","type":"Reel","title":"Celebrating the voices behind our mission \ud83d\udc9b","reach":221,"views":262,"likes":9,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/reel/DVTsKSBESBa/"},{"date":"2026-02-27","type":"Carousel","title":"Can you guess the theme this year? \u2b07\ufe0f","reach":90,"views":210,"likes":6,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/p/DVRumRIEnY4/"},{"date":"2026-02-25","type":"Reel","title":"Why does language access matter? \u2b07\ufe0f","reach":301,"views":364,"likes":16,"comments":2,"saved":1,"shares":1,"link":"https://www.instagram.com/reel/DVL3XP0COos/"},{"date":"2026-02-21","type":"Carousel","title":"From the samba-filled streets of Rio de Janeiro to the masked\u2026","reach":100,"views":216,"likes":5,"comments":1,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DVBrDURlC4Z/"},{"date":"2026-02-20","type":"Reel","title":"Real Learning. Real Impact. \ud83d\udde3\ufe0f\u2728","reach":256,"views":351,"likes":5,"comments":3,"saved":0,"shares":2,"link":"https://www.instagram.com/reel/DU_F63sEUPP/"},{"date":"2026-02-19","type":"Reel","title":"As we celebrate this sacred season, we honor the values of\u2026","reach":239,"views":302,"likes":10,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/reel/DU8nvIlDbsI/"},{"date":"2026-02-18","type":"Carousel","title":"Learning two languages at a young age can boost social, cognitive\u2026","reach":71,"views":166,"likes":3,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DU6BcxYGUNP/"},{"date":"2026-02-17","type":"Carousel","title":"Lunar New Year is celebrated around the world\u2014each culture with its\u2026","reach":163,"views":284,"likes":7,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/p/DU3YG06kiZO/"},{"date":"2026-02-16","type":"Carousel","title":"Ten years of turning ideas into impact by bringing people, cultures,\u2026","reach":72,"views":165,"likes":7,"comments":0,"saved":0,"shares":1,"link":"https://www.instagram.com/p/DU1Vtx8ldi4/"},{"date":"2026-02-16","type":"Carousel","title":"This Presidents Day, we're celebrating a lesser-known presidential\u2026","reach":212,"views":379,"likes":7,"comments":0,"saved":0,"shares":2,"link":"https://www.instagram.com/p/DU0zBtSllIi/"},{"date":"2026-02-14","type":"Reel","title":"5 Black polyglots who changed the world \ud83c\udf0d","reach":219,"views":271,"likes":10,"comments":3,"saved":2,"shares":1,"link":"https://www.instagram.com/reel/DUvojkHFE6l/"},{"date":"2026-02-13","type":"Reel","title":"From the heart of our programs to the heart of our community\u2014our\u2026","reach":292,"views":377,"likes":12,"comments":0,"saved":0,"shares":3,"link":"https://www.instagram.com/reel/DUtU_fejVfY/"},{"date":"2026-02-12","type":"Carousel","title":"Last week we celebrated the work of our Academic Achievers Program\u2026","reach":103,"views":260,"likes":13,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DUrHILzmZij/"},{"date":"2026-02-12","type":"Reel","title":"You can take the teacher out of ReDefiners, but you can\u2019t take the\u2026","reach":572,"views":855,"likes":50,"comments":13,"saved":0,"shares":9,"link":"https://www.instagram.com/reel/DUqiuNoiVif/"},{"date":"2026-02-11","type":"Carousel","title":"Seeing Spanish take center stage during the Super Bowl halftime show\u2026","reach":132,"views":423,"likes":15,"comments":0,"saved":0,"shares":2,"link":"https://www.instagram.com/p/DUoBjbUmW2f/"},{"date":"2026-02-10","type":"Reel","title":"\ud83c\udf89 Around the world in one birthday song! \ud83c\udfb6","reach":244,"views":321,"likes":16,"comments":2,"saved":0,"shares":1,"link":"https://www.instagram.com/reel/DUllTsPEogZ/"},{"date":"2026-02-09","type":"Carousel","title":"Every culture has their own unique way of saying things! \u2b07\ufe0f","reach":212,"views":694,"likes":15,"comments":0,"saved":0,"shares":2,"link":"https://www.instagram.com/p/DUjHHBDlA62/"},{"date":"2026-02-06","type":"Reel","title":"Here\u2019s a peek into one of our Let\u2019s Learn Spanish classes \ud83d\udca1","reach":211,"views":309,"likes":4,"comments":0,"saved":1,"shares":1,"link":"https://www.instagram.com/reel/DUbSBfYjbMo/"},{"date":"2026-02-04","type":"Carousel","title":"Did you know these languages were born from resistance? \ud83d\udde3\ufe0f\u270a\ud83c\udffe","reach":82,"views":358,"likes":6,"comments":1,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DUV_LTCCZkU/"},{"date":"2026-02-03","type":"Carousel","title":"Cake, balloons, and 10 amazing years! \ud83c\udf82","reach":114,"views":465,"likes":12,"comments":1,"saved":0,"shares":1,"link":"https://www.instagram.com/p/DUTqcl-jw84/"},{"date":"2026-02-02","type":"Carousel","title":"Love doesn\u2019t belong to just one day \ud83d\udcab","reach":66,"views":303,"likes":5,"comments":0,"saved":0,"shares":0,"link":"https://www.instagram.com/p/DUQyH-jknmn/"}];
 
-const fbPosts = [{"date":"2026-08-21","title":"On November 3, Florida voters will decide on a constitutional\u2026","reactions":1,"comments":0,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1699583308837471"},{"date":"2026-08-02","title":"Let's bust a few myths about learning English as an adult \ud83e\udde0\u2728\u2026","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1681356803993455"},{"date":"2026-07-31","title":"Big news is coming to ReDefiners \ud83d\udc40 We\u2019re getting ready to launch the\u2026","reactions":3,"comments":1,"shares":1,"link":"https://www.facebook.com/reel/805873235885769/"},{"date":"2026-07-29","title":"Learning a language isn't just for our students \u2014 it's a journey\u2026","reactions":2,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1677481087714360"},{"date":"2026-07-27","title":"Ever heard a coworker say 'let's touch base' and wonder what that\u2026","reactions":0,"comments":0,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1675539481241854"},{"date":"2026-07-25","title":"Dreaming of your next trip? \ud83c\udf0e These are just a few of the incredible\u2026","reactions":0,"comments":1,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1673709148091554"},{"date":"2026-07-23","title":"Is there really such a thing as an 'easy' language? \ud83e\udd14 It depends\u2026","reactions":1,"comments":2,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1671895964939539"},{"date":"2026-07-04","title":"\ud83c\uddfa\ud83c\uddf8 Happy 4th of July!","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1654634596665676"},{"date":"2026-06-19","title":"Today, we honor Juneteenth\u2014a day that commemorates freedom,\u2026","reactions":3,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1640328848096251"},{"date":"2026-06-16","title":"\ud83c\udf0e\u2728 The world is coming to your neighborhood!","reactions":3,"comments":0,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1637106645085138"},{"date":"2026-06-12","title":"Week 1 MVPs just got interesting!","reactions":1,"comments":1,"shares":0,"link":"https://www.facebook.com/reel/1295313982775871/"},{"date":"2026-06-12","title":"Week 1 MVPs just got interesting!","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/4319832714935248/"},{"date":"2026-06-11","title":"Week 1 MVPs have officially been revealed \u2014 and these kids did NOT\u2026","reactions":2,"comments":1,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1632456502216819"},{"date":"2026-06-01","title":"Day 1 of camp is HERE!!!","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1621902443272225"},{"date":"2026-05-25","title":"Today, we honor and remember the brave men and women who gave their\u2026","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1615466017249201"},{"date":"2026-05-04","title":"This week, we celebrate the incredible educators who make our\u2026","reactions":3,"comments":0,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1596092255853244"},{"date":"2026-05-01","title":"Get ready for a summer full of fun, educational adventures! \u2b07\ufe0f","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/948763661392670/"},{"date":"2026-04-25","title":"Caps off to our Academic Achievers! \ud83c\udf93","reactions":4,"comments":0,"shares":2,"link":"https://www.facebook.com/1699977578798044/posts/1587521553376981"},{"date":"2026-04-24","title":"It was a pleasure to be part of this series, Children's Board of\u2026","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1586573750138428"},{"date":"2026-04-22","title":"Sorry for the confusion. Thank you for your attention.","reactions":4,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1584799790315824"},{"date":"2026-04-17","title":"Your child opens a sealed envelope and discovers whether they're on\u2026","reactions":2,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/2053975941846589/"},{"date":"2026-04-15","title":"This summer, your child has a chance to lead, play, and compete!\u2026","reactions":2,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1578160017646468"},{"date":"2026-04-01","title":"Are you ready for a packed summer camp?","reactions":1,"comments":0,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1566459608816509"},{"date":"2026-03-30","title":"Language is more than just words; it\u2019s the key that unlocked\u2026","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1564623249000145"},{"date":"2026-03-25","title":"Happy Women's History Month! We're celebrating by giving the floor\u2026","reactions":5,"comments":0,"shares":1,"link":"https://www.facebook.com/reel/1669201950885546/"},{"date":"2026-03-19","title":"Ramadan is a time of reflection, gratitude, and spiritual growth. \ud83c\udf19\u2728","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1553944480068022"},{"date":"2026-03-12","title":"Space is limited! Are you looking for a fun, educational program for\u2026","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1548012117327925"},{"date":"2026-03-11","title":"This week, we\u2019re celebrating Lubabah Hasan, one of our amazing\u2026","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/881070754969604/"},{"date":"2026-03-10","title":"How has The Dominican Republic shaped Spanish as we know it? \u2b07\ufe0f","reactions":2,"comments":0,"shares":2,"link":"https://www.facebook.com/1699977578798044/posts/1546154854180318"},{"date":"2026-03-06","title":"Stories that bring us together! \ud83d\udcda\u2728Our February Family Reading Time\u2026","reactions":1,"comments":0,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1543039227825214"},{"date":"2026-03-03","title":"Can you guess the theme this year? \u2b07\ufe0f","reactions":2,"comments":1,"shares":0,"link":"https://www.facebook.com/reel/1668224427673364/"},{"date":"2026-02-28","title":"Celebrating the voices behind our mission \ud83d\udc9b","reactions":3,"comments":0,"shares":1,"link":"https://www.facebook.com/reel/1276913477637445/"},{"date":"2026-02-27","title":"Can you guess the theme this year? \u2b07\ufe0f","reactions":4,"comments":1,"shares":3,"link":"https://www.facebook.com/1699977578798044/posts/1537020168427120"},{"date":"2026-02-26","title":"Learning Arabic, building confidence, and connecting across cultures\u2026","reactions":2,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/3059690034232631/"},{"date":"2026-02-25","title":"Why does language access matter? \u2b07\ufe0f","reactions":1,"comments":0,"shares":1,"link":"https://www.facebook.com/reel/1401962204747425/"},{"date":"2026-02-21","title":"From the samba-filled streets of Rio de Janeiro to the masked\u2026","reactions":1,"comments":1,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1531200492342421"},{"date":"2026-02-20","title":"Real Learning. Real Impact. \ud83d\udde3\ufe0f\u2728","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/1633333377660642/"},{"date":"2026-02-19","title":"As we celebrate this sacred season, we honor the values of\u2026","reactions":2,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/1613170506390003/"},{"date":"2026-02-18","title":"Learning two languages at a young age can boost social, cognitive\u2026","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1528438735951930"},{"date":"2026-02-17","title":"Lunar New Year is celebrated around the world\u2014each culture with its\u2026","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1527497549379382"},{"date":"2026-02-16","title":"Ten years of turning ideas into impact by bringing people, cultures,\u2026","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1526748146120989"},{"date":"2026-02-16","title":"This Presidents Day, we're celebrating a lesser-known presidential\u2026","reactions":2,"comments":0,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1526557649473372"},{"date":"2026-02-14","title":"5 Black polyglots who changed the world \ud83c\udf0d","reactions":1,"comments":2,"shares":2,"link":"https://www.facebook.com/reel/2228265171032596/"},{"date":"2026-02-13","title":"From the heart of our programs to the heart of our community\u2014our\u2026","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/911691331486636/"},{"date":"2026-02-12","title":"Last week we celebrated the work of our Academic Achievers Program\u2026","reactions":2,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1522922669836870"},{"date":"2026-02-12","title":"You can take the teacher out of ReDefiners, but you can\u2019t take the\u2026","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/1244733036991754/"},{"date":"2026-02-11","title":"Seeing Spanish take center stage during the Super Bowl halftime show\u2026","reactions":5,"comments":0,"shares":2,"link":"https://www.facebook.com/1699977578798044/posts/1521790366616767"},{"date":"2026-02-10","title":"\ud83c\udf89 Around the world in one birthday song! \ud83c\udfb6","reactions":2,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/745892711935369/"},{"date":"2026-02-09","title":"Every culture has their own unique way of saying things! \u2b07\ufe0f","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1520003663462104"},{"date":"2026-02-06","title":"Here\u2019s a peek into one of our Let\u2019s Learn Spanish classes \ud83d\udca1","reactions":0,"comments":0,"shares":1,"link":"https://www.facebook.com/reel/901495602256499/"}];
+let fbPosts = [{"date":"2026-08-21","title":"On November 3, Florida voters will decide on a constitutional…","reactions":1,"comments":0,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1699583308837471","views":11},{"date":"2026-08-02","title":"Let's bust a few myths about learning English as an adult 🧠✨…","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1681356803993455","views":18},{"date":"2026-07-31","title":"Big news is coming to ReDefiners 👀 We’re getting ready to launch the…","reactions":3,"comments":1,"shares":1,"link":"https://www.facebook.com/reel/805873235885769/","views":48},{"date":"2026-07-29","title":"Learning a language isn't just for our students — it's a journey…","reactions":2,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1677481087714360","views":30},{"date":"2026-07-27","title":"Ever heard a coworker say 'let's touch base' and wonder what that…","reactions":0,"comments":0,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1675539481241854","views":43},{"date":"2026-07-25","title":"Dreaming of your next trip? 🌎 These are just a few of the incredible…","reactions":0,"comments":1,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1673709148091554","views":32},{"date":"2026-07-23","title":"Is there really such a thing as an 'easy' language? 🤔 It depends…","reactions":1,"comments":2,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1671895964939539","views":11},{"date":"2026-07-04","title":"🇺🇸 Happy 4th of July!","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1654634596665676","views":26},{"date":"2026-06-19","title":"Today, we honor Juneteenth—a day that commemorates freedom,…","reactions":3,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1640328848096251","views":63},{"date":"2026-06-16","title":"🌎✨ The world is coming to your neighborhood!","reactions":3,"comments":0,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1637106645085138","views":27},{"date":"2026-06-12","title":"Week 1 MVPs just got interesting!","reactions":1,"comments":1,"shares":0,"link":"https://www.facebook.com/reel/1295313982775871/","views":8},{"date":"2026-06-12","title":"Week 1 MVPs just got interesting!","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/4319832714935248/","views":26},{"date":"2026-06-11","title":"Week 1 MVPs have officially been revealed — and these kids did NOT…","reactions":2,"comments":1,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1632456502216819","views":28},{"date":"2026-06-01","title":"Day 1 of camp is HERE!!!","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1621902443272225","views":44},{"date":"2026-05-25","title":"Today, we honor and remember the brave men and women who gave their…","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1615466017249201","views":24},{"date":"2026-05-04","title":"This week, we celebrate the incredible educators who make our…","reactions":3,"comments":0,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1596092255853244","views":24},{"date":"2026-05-01","title":"Get ready for a summer full of fun, educational adventures! ⬇️","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/948763661392670/","views":40},{"date":"2026-04-25","title":"Caps off to our Academic Achievers! 🎓","reactions":4,"comments":0,"shares":2,"link":"https://www.facebook.com/1699977578798044/posts/1587521553376981","views":100},{"date":"2026-04-24","title":"It was a pleasure to be part of this series, Children's Board of…","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1586573750138428","views":21},{"date":"2026-04-22","title":"Sorry for the confusion. Thank you for your attention.","reactions":4,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1584799790315824","views":60},{"date":"2026-04-17","title":"Your child opens a sealed envelope and discovers whether they're on…","reactions":2,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/2053975941846589/","views":44},{"date":"2026-04-15","title":"This summer, your child has a chance to lead, play, and compete!…","reactions":2,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1578160017646468","views":32},{"date":"2026-04-01","title":"Are you ready for a packed summer camp?","reactions":1,"comments":0,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1566459608816509","views":8},{"date":"2026-03-30","title":"Language is more than just words; it’s the key that unlocked…","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1564623249000145","views":35},{"date":"2026-03-25","title":"Happy Women's History Month! We're celebrating by giving the floor…","reactions":5,"comments":0,"shares":1,"link":"https://www.facebook.com/reel/1669201950885546/","views":105},{"date":"2026-03-19","title":"Ramadan is a time of reflection, gratitude, and spiritual growth. 🌙✨","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1553944480068022","views":18},{"date":"2026-03-12","title":"Space is limited! Are you looking for a fun, educational program for…","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1548012117327925","views":16},{"date":"2026-03-11","title":"This week, we’re celebrating Lubabah Hasan, one of our amazing…","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/881070754969604/","views":34},{"date":"2026-03-10","title":"How has The Dominican Republic shaped Spanish as we know it? ⬇️","reactions":2,"comments":0,"shares":2,"link":"https://www.facebook.com/1699977578798044/posts/1546154854180318","views":28},{"date":"2026-03-06","title":"Stories that bring us together! 📚✨Our February Family Reading Time…","reactions":1,"comments":0,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1543039227825214","views":18},{"date":"2026-03-03","title":"Can you guess the theme this year? ⬇️","reactions":2,"comments":1,"shares":0,"link":"https://www.facebook.com/reel/1668224427673364/","views":22},{"date":"2026-02-28","title":"Celebrating the voices behind our mission 💛","reactions":3,"comments":0,"shares":1,"link":"https://www.facebook.com/reel/1276913477637445/","views":30},{"date":"2026-02-27","title":"Can you guess the theme this year? ⬇️","reactions":4,"comments":1,"shares":3,"link":"https://www.facebook.com/1699977578798044/posts/1537020168427120","views":80},{"date":"2026-02-26","title":"Learning Arabic, building confidence, and connecting across cultures…","reactions":2,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/3059690034232631/","views":22},{"date":"2026-02-25","title":"Why does language access matter? ⬇️","reactions":1,"comments":0,"shares":1,"link":"https://www.facebook.com/reel/1401962204747425/","views":19},{"date":"2026-02-21","title":"From the samba-filled streets of Rio de Janeiro to the masked…","reactions":1,"comments":1,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1531200492342421","views":19},{"date":"2026-02-20","title":"Real Learning. Real Impact. 🗣️✨","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/1633333377660642/","views":16},{"date":"2026-02-19","title":"As we celebrate this sacred season, we honor the values of…","reactions":2,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/1613170506390003/","views":18},{"date":"2026-02-18","title":"Learning two languages at a young age can boost social, cognitive…","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1528438735951930","views":22},{"date":"2026-02-17","title":"Lunar New Year is celebrated around the world—each culture with its…","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1527497549379382","views":25},{"date":"2026-02-16","title":"Ten years of turning ideas into impact by bringing people, cultures,…","reactions":0,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1526748146120989","views":30},{"date":"2026-02-16","title":"This Presidents Day, we're celebrating a lesser-known presidential…","reactions":2,"comments":0,"shares":1,"link":"https://www.facebook.com/1699977578798044/posts/1526557649473372","views":40},{"date":"2026-02-14","title":"5 Black polyglots who changed the world 🌍","reactions":1,"comments":2,"shares":2,"link":"https://www.facebook.com/reel/2228265171032596/","views":10},{"date":"2026-02-13","title":"From the heart of our programs to the heart of our community—our…","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/911691331486636/","views":25},{"date":"2026-02-12","title":"Last week we celebrated the work of our Academic Achievers Program…","reactions":2,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1522922669836870","views":34},{"date":"2026-02-12","title":"You can take the teacher out of ReDefiners, but you can’t take the…","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/1244733036991754/","views":19},{"date":"2026-02-11","title":"Seeing Spanish take center stage during the Super Bowl halftime show…","reactions":5,"comments":0,"shares":2,"link":"https://www.facebook.com/1699977578798044/posts/1521790366616767","views":70},{"date":"2026-02-10","title":"🎉 Around the world in one birthday song! 🎶","reactions":2,"comments":0,"shares":0,"link":"https://www.facebook.com/reel/745892711935369/","views":20},{"date":"2026-02-09","title":"Every culture has their own unique way of saying things! ⬇️","reactions":1,"comments":0,"shares":0,"link":"https://www.facebook.com/1699977578798044/posts/1520003663462104","views":9},{"date":"2026-02-06","title":"Here’s a peek into one of our Let’s Learn Spanish classes 💡","reactions":0,"comments":0,"shares":1,"link":"https://www.facebook.com/reel/901495602256499/","views":44}];
 
-const tkPosts = [{"date":"2026-07-31","title":"Big news is coming to ReDefiners \ud83d\udc40 We're getting ready to launch the\u2026","views":0,"likes":0,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7667681288827997471"},{"date":"2026-06-11","title":"Week 1 MVPs have officially been revealed \u2014 and these kids did NOT\u2026","views":118,"likes":0,"comments":1,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7650152568890412301"},{"date":"2026-05-01","title":"Get ready for a summer full of fun, educational adventures! \u2b07\ufe0f At\u2026","views":73,"likes":0,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7635038985580006670"},{"date":"2026-04-17","title":"Your kid opens an envelope and finds out if they're \ud83d\udfe1 Los Tigres\u2026","views":159,"likes":1,"comments":1,"shares":1,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7629744157187198221"},{"date":"2026-03-11","title":"This week, we\u2019re celebrating Lubabah Hasan, one of our amazing\u2026","views":164,"likes":0,"comments":0,"shares":2,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7616057549619596557"},{"date":"2026-03-03","title":"Can you guess the theme this year? \u2b07\ufe0f La Rep\u00fablica Dominicana! \ud83c\udde9\ud83c\uddf4\u2026","views":205,"likes":0,"comments":1,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7611662950121639181"},{"date":"2026-02-28","title":"Celebrating the voices behind our mission \ud83d\udc9b As we wrap up our\u2026","views":110,"likes":0,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7611663316477299981"},{"date":"2026-02-26","title":"Learning Arabic, building confidence, and connecting across cultures\u2026","views":12,"likes":0,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7611212149544766733"},{"date":"2026-02-20","title":"Real Learning. Real Impact. \ud83d\udde3\ufe0f\u2728 Students in our Spanish Conversation\u2026","views":182,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7608976334403947789"},{"date":"2026-02-19","title":"As we celebrate this sacred season, we honor the values of\u2026","views":300,"likes":17,"comments":1,"shares":2,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7608608084981779726"},{"date":"2026-02-17","title":"Here\u2019s a peek into one of our Let\u2019s Learn Spanish classes \ud83d\udca1 In this\u2026","views":180,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7606016780443618574"},{"date":"2026-02-14","title":"5 Black polyglots who changed the world \ud83c\udf0d \u26ab\ufe0f C.L.R. James spoke 5\u2026","views":185,"likes":3,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7606425946421333262"},{"date":"2026-02-12","title":"You can take the teacher out of ReDefiners, but you can\u2019t take the\u2026","views":104,"likes":1,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7606016041369537806"},{"date":"2026-01-24","title":"Our Academic Achievers team came together and worked to clean up the\u2026","views":102,"likes":1,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7598705951880826126"},{"date":"2026-01-23","title":"The elusive marketing team in their natural habitat \ud83d\udcf8 Did you spot\u2026","views":118,"likes":1,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7598638491500645645"},{"date":"2026-01-17","title":"Our tutors are ready to make a difference! \ud83c\udf93\u2728During our Academic\u2026","views":102,"likes":0,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7596455947841654046"},{"date":"2026-01-13","title":"\u00a1Uno, dos, tres... trece, catorce, quince... and we kept\u2026","views":211,"likes":0,"comments":0,"shares":3,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7594919494867291423"},{"date":"2025-08-25","title":"\u270f\ufe0f\ud83d\udcda Back to school is here! Starting a new language journey this\u2026","views":50,"likes":0,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7542612864549260575"},{"date":"2025-04-04","title":"\ud83c\uddf5\ud83c\udde6\u2764\ufe0f Tampa\u2019s #1 Rated Spanish STEAM Camp Your child will: \u2714\ufe0f Speak\u2026","views":181,"likes":1,"comments":0,"shares":1,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7489497897956969774"},{"date":"2024-11-14","title":"\"\ud83c\udfac Student Check-In Series \ud83c\udf1f How's it going in your language\u2026","views":823,"likes":0,"comments":1,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7437200178769218862"},{"date":"2024-11-06","title":"\ud83c\udf0e Student Story Spotlight: Aerielle\u2019s Language Journey \ud83c\udf0e Join our\u2026","views":1360,"likes":6,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7434235487260314923"},{"date":"2024-09-30","title":"\ud83c\udf89 From colorful carnivals to family dinners, Hispanic traditions are\u2026","views":427,"likes":8,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7420455374567853354"},{"date":"2024-09-25","title":"\ud83c\udf0d\ud83c\udfb6 Spanish: A Symphony of Accents \ud83c\udfb6\ud83c\udf0d Let\u2019s celebrate the voices that\u2026","views":752,"likes":2,"comments":0,"shares":1,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7418599576350756138"},{"date":"2024-09-23","title":"\u2728\ud83d\udcda Family Reading Time is back! \ud83c\udf89 Join us on October 24th for a FREE\u2026","views":632,"likes":5,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7417918907916471598"},{"date":"2024-09-20","title":"\ud83c\udf89 \u00a1Feliz Mes de la Herencia Hispana! \ud83c\udf89 We\u2019re celebrating the beauty\u2026","views":748,"likes":4,"comments":1,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7416755553248267566"},{"date":"2024-09-13","title":"\ud83c\udf1f Meet Monica, one of our dedicated English teachers at the\u2026","views":245,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7414218075987316010"},{"date":"2024-09-09","title":"Ready for a Spanish challenge? \ud83c\udf89 Watch us tackle some tricky tongue\u2026","views":1507,"likes":20,"comments":0,"shares":2,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7412674807428353323"},{"date":"2024-08-21","title":"Saying goodbye to our amazing AmeriCorps STATE tutor, Dominique! \ud83c\udf1f\u2026","views":194,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7405675780899884331"},{"date":"2024-08-16","title":"\ud83c\udf1f Heartwarming memories with our teachers! \ud83c\udf1f Mengmeng, our Mandarin\u2026","views":127,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7403845493341834542"},{"date":"2024-08-13","title":"Meet Gustavo, who\u2019s diving into adjectives with us at the Children's\u2026","views":130,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7402616385899187486"},{"date":"2024-08-09","title":"Meet our amazing Arabic teachers, Richard and Lubabah! \ud83c\udf1f Richard\u2026","views":206,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7401236578477034795"},{"date":"2024-08-07","title":"\ud83c\udf99\ufe0f Watch our staff tackle an Arabic tongue twister! \ud83d\ude02 Can they nail\u2026","views":234,"likes":3,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7400499778670447914"},{"date":"2024-08-05","title":"Take a peek behind the scenes with our Marketing VISTA AmeriCorps\u2026","views":723,"likes":13,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7399757227998940459"},{"date":"2024-08-02","title":"\ud83d\udea8Oh no! Not the robot! \ud83d\udea8\ud83d\ude02 Check out this hilarious moment from our\u2026","views":69,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7398649190978489646"},{"date":"2024-07-31","title":"Check out a day in the life of our Development VISTA AmeriCorps\u2026","views":837,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7397904319766531374"},{"date":"2024-07-29","title":"\ud83c\udf1f Discover English Words from Mandarin! \ud83c\udf1f Did you know that Chinese\u2026","views":269,"likes":11,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7397163847443877163"},{"date":"2024-07-26","title":"\ud83d\udea8 Two types of kids in our Spanish Summer STEAM Camp: the serious\u2026","views":38,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7396068616422149419"},{"date":"2024-07-24","title":"\ud83c\udfa5\u2728 Behind the Scenes of Our \u201cLet\u2019s Learn Spanish\u201d Class! \ud83c\udf1f Watch as\u2026","views":278,"likes":3,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7395307964862565674"},{"date":"2024-07-22","title":"\ud83c\udf1f Discover English Words from Arabic! \ud83c\udf1f Arabic words entered English\u2026","views":354,"likes":11,"comments":4,"shares":3,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7394566804942736683"}];
+let tkPosts = [{"date":"2026-07-31","title":"Big news is coming to ReDefiners \ud83d\udc40 We're getting ready to launch the\u2026","views":0,"likes":0,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7667681288827997471"},{"date":"2026-06-11","title":"Week 1 MVPs have officially been revealed \u2014 and these kids did NOT\u2026","views":118,"likes":0,"comments":1,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7650152568890412301"},{"date":"2026-05-01","title":"Get ready for a summer full of fun, educational adventures! \u2b07\ufe0f At\u2026","views":73,"likes":0,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7635038985580006670"},{"date":"2026-04-17","title":"Your kid opens an envelope and finds out if they're \ud83d\udfe1 Los Tigres\u2026","views":159,"likes":1,"comments":1,"shares":1,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7629744157187198221"},{"date":"2026-03-11","title":"This week, we\u2019re celebrating Lubabah Hasan, one of our amazing\u2026","views":164,"likes":0,"comments":0,"shares":2,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7616057549619596557"},{"date":"2026-03-03","title":"Can you guess the theme this year? \u2b07\ufe0f La Rep\u00fablica Dominicana! \ud83c\udde9\ud83c\uddf4\u2026","views":205,"likes":0,"comments":1,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7611662950121639181"},{"date":"2026-02-28","title":"Celebrating the voices behind our mission \ud83d\udc9b As we wrap up our\u2026","views":110,"likes":0,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7611663316477299981"},{"date":"2026-02-26","title":"Learning Arabic, building confidence, and connecting across cultures\u2026","views":12,"likes":0,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7611212149544766733"},{"date":"2026-02-20","title":"Real Learning. Real Impact. \ud83d\udde3\ufe0f\u2728 Students in our Spanish Conversation\u2026","views":182,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7608976334403947789"},{"date":"2026-02-19","title":"As we celebrate this sacred season, we honor the values of\u2026","views":300,"likes":17,"comments":1,"shares":2,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7608608084981779726"},{"date":"2026-02-17","title":"Here\u2019s a peek into one of our Let\u2019s Learn Spanish classes \ud83d\udca1 In this\u2026","views":180,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7606016780443618574"},{"date":"2026-02-14","title":"5 Black polyglots who changed the world \ud83c\udf0d \u26ab\ufe0f C.L.R. James spoke 5\u2026","views":185,"likes":3,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7606425946421333262"},{"date":"2026-02-12","title":"You can take the teacher out of ReDefiners, but you can\u2019t take the\u2026","views":104,"likes":1,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7606016041369537806"},{"date":"2026-01-24","title":"Our Academic Achievers team came together and worked to clean up the\u2026","views":102,"likes":1,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7598705951880826126"},{"date":"2026-01-23","title":"The elusive marketing team in their natural habitat \ud83d\udcf8 Did you spot\u2026","views":118,"likes":1,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7598638491500645645"},{"date":"2026-01-17","title":"Our tutors are ready to make a difference! \ud83c\udf93\u2728During our Academic\u2026","views":102,"likes":0,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7596455947841654046"},{"date":"2026-01-13","title":"\u00a1Uno, dos, tres... trece, catorce, quince... and we kept\u2026","views":211,"likes":0,"comments":0,"shares":3,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7594919494867291423"},{"date":"2025-08-25","title":"\u270f\ufe0f\ud83d\udcda Back to school is here! Starting a new language journey this\u2026","views":50,"likes":0,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7542612864549260575"},{"date":"2025-04-04","title":"\ud83c\uddf5\ud83c\udde6\u2764\ufe0f Tampa\u2019s #1 Rated Spanish STEAM Camp Your child will: \u2714\ufe0f Speak\u2026","views":181,"likes":1,"comments":0,"shares":1,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7489497897956969774"},{"date":"2024-11-14","title":"\"\ud83c\udfac Student Check-In Series \ud83c\udf1f How's it going in your language\u2026","views":823,"likes":0,"comments":1,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7437200178769218862"},{"date":"2024-11-06","title":"\ud83c\udf0e Student Story Spotlight: Aerielle\u2019s Language Journey \ud83c\udf0e Join our\u2026","views":1360,"likes":6,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7434235487260314923"},{"date":"2024-09-30","title":"\ud83c\udf89 From colorful carnivals to family dinners, Hispanic traditions are\u2026","views":427,"likes":8,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7420455374567853354"},{"date":"2024-09-25","title":"\ud83c\udf0d\ud83c\udfb6 Spanish: A Symphony of Accents \ud83c\udfb6\ud83c\udf0d Let\u2019s celebrate the voices that\u2026","views":752,"likes":2,"comments":0,"shares":1,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7418599576350756138"},{"date":"2024-09-23","title":"\u2728\ud83d\udcda Family Reading Time is back! \ud83c\udf89 Join us on October 24th for a FREE\u2026","views":632,"likes":5,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7417918907916471598"},{"date":"2024-09-20","title":"\ud83c\udf89 \u00a1Feliz Mes de la Herencia Hispana! \ud83c\udf89 We\u2019re celebrating the beauty\u2026","views":748,"likes":4,"comments":1,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7416755553248267566"},{"date":"2024-09-13","title":"\ud83c\udf1f Meet Monica, one of our dedicated English teachers at the\u2026","views":245,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7414218075987316010"},{"date":"2024-09-09","title":"Ready for a Spanish challenge? \ud83c\udf89 Watch us tackle some tricky tongue\u2026","views":1507,"likes":20,"comments":0,"shares":2,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7412674807428353323"},{"date":"2024-08-21","title":"Saying goodbye to our amazing AmeriCorps STATE tutor, Dominique! \ud83c\udf1f\u2026","views":194,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7405675780899884331"},{"date":"2024-08-16","title":"\ud83c\udf1f Heartwarming memories with our teachers! \ud83c\udf1f Mengmeng, our Mandarin\u2026","views":127,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7403845493341834542"},{"date":"2024-08-13","title":"Meet Gustavo, who\u2019s diving into adjectives with us at the Children's\u2026","views":130,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7402616385899187486"},{"date":"2024-08-09","title":"Meet our amazing Arabic teachers, Richard and Lubabah! \ud83c\udf1f Richard\u2026","views":206,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7401236578477034795"},{"date":"2024-08-07","title":"\ud83c\udf99\ufe0f Watch our staff tackle an Arabic tongue twister! \ud83d\ude02 Can they nail\u2026","views":234,"likes":3,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7400499778670447914"},{"date":"2024-08-05","title":"Take a peek behind the scenes with our Marketing VISTA AmeriCorps\u2026","views":723,"likes":13,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7399757227998940459"},{"date":"2024-08-02","title":"\ud83d\udea8Oh no! Not the robot! \ud83d\udea8\ud83d\ude02 Check out this hilarious moment from our\u2026","views":69,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7398649190978489646"},{"date":"2024-07-31","title":"Check out a day in the life of our Development VISTA AmeriCorps\u2026","views":837,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7397904319766531374"},{"date":"2024-07-29","title":"\ud83c\udf1f Discover English Words from Mandarin! \ud83c\udf1f Did you know that Chinese\u2026","views":269,"likes":11,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7397163847443877163"},{"date":"2024-07-26","title":"\ud83d\udea8 Two types of kids in our Spanish Summer STEAM Camp: the serious\u2026","views":38,"likes":2,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7396068616422149419"},{"date":"2024-07-24","title":"\ud83c\udfa5\u2728 Behind the Scenes of Our \u201cLet\u2019s Learn Spanish\u201d Class! \ud83c\udf1f Watch as\u2026","views":278,"likes":3,"comments":0,"shares":0,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7395307964862565674"},{"date":"2024-07-22","title":"\ud83c\udf1f Discover English Words from Arabic! \ud83c\udf1f Arabic words entered English\u2026","views":354,"likes":11,"comments":4,"shares":3,"link":"https://www.tiktok.com/@redefinersworldlanguages/video/7394566804942736683"}];
 
-// Thumbnail lookups (top engaging posts per platform) — merged onto matching posts at runtime by link
-const THUMBS = {
-"https://www.instagram.com/p/DbYZN0Ymhwi/":"https://scontent-iad3-1.cdninstagram.com/v/t51.82787-15/756792081_18449579152140441_5492423453298576733_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=104&ccb=7-5&_nc_sid=18de74&_nc_ohc=OF3zqgZWXHgQ7kNvwEKv-uD&_nc_oc=AdpqzEcAqbLhZ84hrgZhharKrI1vlagxoDfGiMOKKRddxzRLL6ac6Rfzirwn7Eyam6s&_nc_zt=23&_nc_ht=scontent-iad3-1.cdninstagram.com",
-"https://www.instagram.com/p/DUoBjbUmW2f/":"https://scontent-iad3-1.cdninstagram.com/v/t51.82787-15/632016170_18421518817140441_169306710234551272_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=108&ccb=7-5&_nc_sid=18de74&_nc_ohc=uD2jHaVSktwQ7kNvwFuMo4G&_nc_oc=AdrcUj86wmnbJC4XZLT2u9005r1ZGytg3q3v3SeB5qA4CWFyAdOKcxInnPM5NUae9Ls&_nc_zt=23&_nc_ht=scontent-iad3-1.cdninstagram.com",
-"https://www.instagram.com/p/DUrHILzmZij/":"https://scontent-iad3-2.cdninstagram.com/v/t51.82787-15/629946028_18421651393140441_8082327589186805906_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=105&ccb=7-5&_nc_sid=18de74&_nc_ohc=8eoD2Hj04yoQ7kNvwF6PG4E&_nc_oc=Ado2LeJLieGnT1NjGBSNwUlmP2prXakWF0vvhSeJ-qRclGDqV2Hj2Sx12A4Jk_j0CFU&_nc_zt=23&_nc_ht=scontent-iad3-2.cdninstagram.com",
-"https://www.instagram.com/reel/DUqiuNoiVif/":"https://scontent-iad3-1.cdninstagram.com/v/t51.82787-15/628968145_18421626748140441_940559787539407442_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=110&ccb=7-5&_nc_sid=18de74&_nc_ohc=PHJmIXOydfUQ7kNvwH0pgkq&_nc_oc=AdoKj-VduXaSPauRAPCv36e_eUNwmPnraS3Zx1zYG7Qolb0nZuBkQsKckMdtLWKvm_k&_nc_zt=23&_nc_ht=scontent-iad3-1.cdninstagram.com",
-"https://www.instagram.com/p/DVtVGJUjmEa/":"https://scontent-iad6-1.cdninstagram.com/v/t51.82787-15/649198410_18425260870140441_4670680103271517033_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=109&ccb=7-5&_nc_sid=18de74&_nc_ohc=cIGp7VywN2IQ7kNvwHLvo72&_nc_oc=AdoiqdKRCQ61CpdQsjw5vBMAHN9Hq_KRoBzHuOE0y4Ekjfh6QNA-_AMEaNDFJRo1ctg&_nc_zt=23&_nc_ht=scontent-iad6-1.cdninstagram.com",
-"https://www.instagram.com/p/DUTqcl-jw84/":"https://scontent-iad3-2.cdninstagram.com/v/t51.82787-15/625885220_18419664481140441_3584305259363293109_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=111&ccb=7-5&_nc_sid=18de74&_nc_ohc=yU1Wcn7VJFUQ7kNvwEDkw32&_nc_oc=AdrJMrVLm-_mfo4CwmUqxIXoIp4aRUKxS_ZeN3bGKFTEHW92ca5vmMwbIoTUQ82lRCU&_nc_zt=23&_nc_ht=scontent-iad3-2.cdninstagram.com",
-"https://www.instagram.com/p/DWEwXDsmC73/":"https://scontent-iad6-1.cdninstagram.com/v/t51.82787-15/654624861_18427097398140441_3785210915676759457_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=100&ccb=7-5&_nc_sid=18de74&_nc_ohc=-bxedjo3IAMQ7kNvwELnA9a&_nc_oc=AdqK54Y5ohWnvUThwsfimU9oaBONdrn9mAK6NglP2uldbVncWcOCqXU7rsEuyYuqNzk&_nc_zt=23&_nc_ht=scontent-iad6-1.cdninstagram.com",
-"https://www.instagram.com/p/DZcuTW_FYYB/":"https://scontent-iad3-1.cdninstagram.com/v/t51.82787-15/721247517_18441124606140441_8426369198929181819_n.jpg?stp=dst-jpg_e35_tt6&_nc_cat=110&ccb=7-5&_nc_sid=18de74&_nc_ohc=J9wr4vrv5rcQ7kNvwEMSrX3&_nc_oc=AdpdD7cARBj7lbNrO4EZGvbE9DkY3qAmncLDkUAbB3gEX4eDO4xZJKZxnCCMtY7D-PI&_nc_zt=23&_nc_ht=scontent-iad3-1.cdninstagram.com",
-"https://www.facebook.com/1699977578798044/posts/1537020168427120":"https://scontent-iad3-2.xx.fbcdn.net/v/t39.30808-6/643518395_1537020015093802_1574560947326941008_n.jpg?stp=dst-jpg_s720x720_tt6&_nc_cat=105&ccb=1-7&_nc_sid=127cfc&_nc_ohc=o2eeEQ_pcZEQ7kNvwF7gDZf&_nc_oc=AdpczknqqXISfSE4OMgwx1UnALnI_4Mskts9cVkj1xFSP2NrnKHswjkxkStOj6pYI2I&_nc_zt=23&_nc_ht=scontent-iad3-2.xx",
-"https://www.facebook.com/1699977578798044/posts/1521790366616767":"https://scontent-iad6-1.xx.fbcdn.net/v/t39.30808-6/631083315_1521790049950132_3731387830418332641_n.jpg?stp=dst-jpg_p720x720_tt6&_nc_cat=102&ccb=1-7&_nc_sid=127cfc&_nc_ohc=2nMeAaCHTtsQ7kNvwF1TFVv&_nc_oc=AdpjXuN3rSaZ4CFxuEIOSc0YwjImG1_7o7ebMiHzDDFYYI6uKVOAEgUJkfzEFtd1k7g&_nc_zt=23&_nc_ht=scontent-iad6-1.xx",
-"https://www.facebook.com/1699977578798044/posts/1587521553376981":"https://scontent-iad6-1.xx.fbcdn.net/v/t39.30808-6/680132207_1587520866710383_62414547699651083_n.jpg?stp=dst-jpg_p720x720_tt6&_nc_cat=109&ccb=1-7&_nc_sid=127cfc&_nc_ohc=wpZ39uNgSmUQ7kNvwHaHr3u&_nc_oc=Adq3pitM4PCfbOhIwDiiEHJ9k-zAnrTYpayKGCDzw4bI9KpipRB6y9fGZzYPJdaZPgg&_nc_zt=23&_nc_ht=scontent-iad6-1.xx",
-"https://www.facebook.com/reel/1669201950885546/":"https://scontent-iad3-1.xx.fbcdn.net/v/t15.5256-10/656870339_1669438570732544_1096236558219158425_n.jpg?_nc_cat=110&ccb=1-7&_nc_sid=d2b52d&_nc_ohc=QFj5Fm2yeAUQ7kNvwFD02MF&_nc_oc=Adp6DGfGF-y9ikHnSjBXqZs_tzz2ZkQzyL_6sJ8Z4Ng5__UwV2pOdu2D2NzjKlX8aSM&_nc_zt=23&_nc_ht=scontent-iad3-1.xx",
-"https://www.facebook.com/reel/805873235885769/":"https://scontent-iad3-2.xx.fbcdn.net/v/t51.82787-10/761986343_18449985268140441_6653166384505497632_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=5fad0e&_nc_ohc=L59uAun-4KgQ7kNvwGrcMb_&_nc_oc=AdopPiCUdxR0NvcebuLHUKQjfQe7e0mKlycDgslc08t7mWQ6cYoUnu-SlttgDx2fWFo&_nc_zt=23&_nc_ht=scontent-iad3-2.xx",
-"https://www.facebook.com/reel/2228265171032596/":"https://scontent-iad3-2.xx.fbcdn.net/v/t15.5256-10/629804290_838122499277941_7923521969534219456_n.jpg?_nc_cat=111&ccb=1-7&_nc_sid=d2b52d&_nc_ohc=mO0l5-Asu3YQ7kNvwEnGOeG&_nc_oc=AdrWuSFtr-V5Wbjz90UUYV1oyQxkMBBPDvw1dH0BIvvHygjgo4zXapp88flhFpIqR5o&_nc_zt=23&_nc_ht=scontent-iad3-2.xx",
-"https://www.facebook.com/1699977578798044/posts/1671895964939539":"https://scontent-iad3-1.xx.fbcdn.net/v/t39.30808-6/754068867_1671895711606231_7364541372762193421_n.jpg?stp=dst-jpg_s960x960_tt6&_nc_cat=104&ccb=1-7&_nc_sid=127cfc&_nc_ohc=DxED-HUozL8Q7kNvwG2w6F4&_nc_oc=AdpPkbxjrxJ969I6uex0AT6YcHLRWai75FBo9qBl3Tu4V4QBNw5WiAOL0O2NG99vkiQ&_nc_zt=23&_nc_ht=scontent-iad3-1.xx",
-"https://www.facebook.com/1699977578798044/posts/1637106645085138":"https://scontent-iad6-1.xx.fbcdn.net/v/t39.30808-6/724540435_1637106208418515_6193571930347752076_n.jpg?stp=dst-jpg_p720x720_tt6&_nc_cat=100&ccb=1-7&_nc_sid=127cfc&_nc_ohc=tzlyyTSVqywQ7kNvwF9_-Ki&_nc_oc=Adpj0NOAap2ZY2QkEtCssElc8q5kJbyFTczzcMfYb8WN6Fg_2YezTclmnR2Il3kFkqk&_nc_zt=23&_nc_ht=scontent-iad6-1.xx",
-"https://www.tiktok.com/@redefinersworldlanguages/video/7412674807428353323":"https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/dec91649967840b4bb64c11e4edb6e36_1725897854~tplv-tiktokx-cropcenter-q:300:400:q70.jpeg?dr=8596&t=bacd0480&ps=933b5bde&shp=d05b14bd&shcp=8aecc5ac&idc=useast5&biz_tag=tt_video&s=TIKTOK_FOR_DEVELOPER&sc=cover",
-"https://www.tiktok.com/@redefinersworldlanguages/video/7434235487260314923":"https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/c5a983d089484e57905039228f6d5add_1730917845~tplv-tiktokx-cropcenter-q:300:400:q70.jpeg?dr=8596&t=bacd0480&ps=933b5bde&shp=d05b14bd&shcp=8aecc5ac&idc=useast5&biz_tag=tt_video&s=TIKTOK_FOR_DEVELOPER&sc=cover",
-"https://www.tiktok.com/@redefinersworldlanguages/video/7397904319766531374":"https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/oYD4VZfLATgqmFAEFTzCAPSCEqQDRIrgRxFA8e~tplv-tiktokx-cropcenter-q:300:400:q70.jpeg?dr=8596&t=bacd0480&ps=933b5bde&shp=d05b14bd&shcp=8aecc5ac&idc=useast5&sc=cover&biz_tag=tt_video&s=TIKTOK_FOR_DEVELOPER",
-"https://www.tiktok.com/@redefinersworldlanguages/video/7437200178769218862":"https://p19-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/f394c4f5994a48cdbca30eae0f137a7b_1731608113~tplv-tiktokx-cropcenter-q:300:400:q70.jpeg?dr=8596&t=bacd0480&ps=933b5bde&shp=d05b14bd&shcp=8aecc5ac&idc=useast5&biz_tag=tt_video&s=TIKTOK_FOR_DEVELOPER&sc=cover",
-"https://www.tiktok.com/@redefinersworldlanguages/video/7418599576350756138":"https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/f38383eb6f4b42eeb9e7b09a18c41d25_1727277322~tplv-tiktokx-cropcenter-q:300:400:q70.jpeg?dr=8596&t=bacd0480&ps=933b5bde&shp=d05b14bd&shcp=8aecc5ac&idc=useast5&biz_tag=tt_video&s=TIKTOK_FOR_DEVELOPER&sc=cover",
-"https://www.tiktok.com/@redefinersworldlanguages/video/7416755553248267566":"https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/f8a44e1b175a43b38fc6e1b251251b1a_1726847981~tplv-tiktokx-cropcenter-q:300:400:q70.jpeg?dr=8596&t=bacd0480&ps=933b5bde&shp=d05b14bd&shcp=8aecc5ac&idc=useast5&biz_tag=tt_video&s=TIKTOK_FOR_DEVELOPER&sc=cover",
-"https://www.tiktok.com/@redefinersworldlanguages/video/7399757227998940459":"https://p19-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/okJCCWACZiLZABJARz8CIHwAwiEtfB9BIxOAX6~tplv-tiktokx-cropcenter-q:300:400:q70.jpeg?dr=8596&t=bacd0480&ps=933b5bde&shp=d05b14bd&shcp=8aecc5ac&idc=useast5&biz_tag=tt_video&s=TIKTOK_FOR_DEVELOPER&sc=cover",
-"https://www.tiktok.com/@redefinersworldlanguages/video/7417918907916471598":"https://p16-common-sign.tiktokcdn-us.com/tos-useast5-p-0068-tx/00734260e84a41d684f0ad3886620490_1727118842~tplv-tiktokx-cropcenter-q:300:400:q70.jpeg?dr=8596&t=bacd0480&ps=933b5bde&shp=d05b14bd&shcp=8aecc5ac&idc=useast5&biz_tag=tt_video&s=TIKTOK_FOR_DEVELOPER&sc=cover"
+
+// Placeholder for a future live-data backend. No credentials are stored client-side —
+// wire composioApiBase to an authenticated server endpoint that proxies Composio calls.
+const CONFIG = {
+  composioApiBase: null, // e.g. 'https://your-backend.example.com/api/social'
+  composioToken: null
+};
+
+// ---- Audience mock data (fallback / demo mode) ----
+// Deterministic pseudo-random helper so generated series are stable across renders.
+function seeded(n){ const x = Math.sin(n * 999) * 10000; return x - Math.floor(x); }
+
+function genDailyFollowers(endCount, startCount, startDate, endDate, seedBase){
+  const days = Math.max(1, Math.round((endDate - startDate) / 86400000));
+  const series = [];
+  for(let i=0;i<=days;i++){
+    const d = new Date(startDate.getTime() + i*86400000);
+    const progress = i/days;
+    const eased = progress<0.5 ? 2*progress*progress : 1-Math.pow(-2*progress+2,2)/2;
+    const base = startCount + (endCount-startCount)*eased;
+    const noise = (seeded(i+seedBase) - 0.5) * (endCount-startCount) * 0.015;
+    series.push({date: d.toISOString().slice(0,10), count: Math.max(0, Math.round(base+noise))});
+  }
+  return series;
+}
+
+function genOnlineTimes(seedBase){
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const out = [];
+  days.forEach((day, di) => {
+    for(let hour=0; hour<24; hour++){
+      const isWeekday = di>=1 && di<=5;
+      const evening = hour>=17 && hour<=21;
+      const midday = hour>=11 && hour<=13;
+      let base = 0.15;
+      if(isWeekday && evening) base = 0.85;
+      else if(isWeekday && midday) base = 0.5;
+      else if(!isWeekday && hour>=10 && hour<=20) base = 0.6;
+      else if(hour>=0 && hour<=6) base = 0.05;
+      const noise = (seeded(di*24+hour+seedBase) - 0.5) * 0.2;
+      out.push({day, hour, score: Math.max(0.02, Math.min(1, base+noise))});
+    }
+  });
+  return out;
+}
+
+const AUD_RANGE_END = new Date(NOW);
+const AUD_RANGE_START = new Date(AUD_RANGE_END.getTime() - 201*86400000); // ~200 days of history
+
+let igAudience = {
+  dailyFollowers: genDailyFollowers(4154, 3820, AUD_RANGE_START, AUD_RANGE_END, 11),
+  demographics: {
+    gender: { male: 32, female: 61, unknown: 7 },
+    age: [
+      {range:'13-17', male:2, female:3},
+      {range:'18-24', male:6, female:14},
+      {range:'25-34', male:11, female:22},
+      {range:'35-44', male:8, female:14},
+      {range:'45-54', male:3, female:6},
+      {range:'55+', male:2, female:2}
+    ]
+  },
+  topLocations: [
+    {name:'Tampa, FL', percentage:38},
+    {name:'Brandon, FL', percentage:12},
+    {name:'Riverview, FL', percentage:9},
+    {name:'Plant City, FL', percentage:7},
+    {name:'Temple Terrace, FL', percentage:6},
+    {name:'Orlando, FL', percentage:5},
+    {name:'Miami, FL', percentage:4},
+    {name:'St. Petersburg, FL', percentage:3},
+    {name:'Ruskin, FL', percentage:3},
+    {name:'Other', percentage:13}
+  ],
+  onlineTimes: genOnlineTimes(21)
+};
+
+let fbAudience = {
+  dailyFollowers: genDailyFollowers(1623, 1540, AUD_RANGE_START, AUD_RANGE_END, 47),
+  demographics: {
+    gender: { male: 27, female: 66, unknown: 7 },
+    age: [
+      {range:'13-17', male:1, female:1},
+      {range:'18-24', male:3, female:6},
+      {range:'25-34', male:7, female:16},
+      {range:'35-44', male:9, female:24},
+      {range:'45-54', male:5, female:12},
+      {range:'55+', male:2, female:7}
+    ]
+  },
+  topLocations: [
+    {name:'Tampa, FL', percentage:41},
+    {name:'Brandon, FL', percentage:14},
+    {name:'Riverview, FL', percentage:8},
+    {name:'Temple Terrace, FL', percentage:7},
+    {name:'Plant City, FL', percentage:6},
+    {name:'Ruskin, FL', percentage:5},
+    {name:'Orlando, FL', percentage:4},
+    {name:'Wimauma, FL', percentage:3},
+    {name:'Dover, FL', percentage:2},
+    {name:'Other', percentage:10}
+  ],
+  onlineTimes: null
+};
+
+let tkAudience = {
+  dailyFollowers: genDailyFollowers(16, 9, AUD_RANGE_START, AUD_RANGE_END, 83),
+  demographics: {
+    gender: { male: 44, female: 49, unknown: 7 },
+    age: [
+      {range:'13-17', male:3, female:4},
+      {range:'18-24', male:14, female:16},
+      {range:'25-34', male:15, female:17},
+      {range:'35-44', male:7, female:8},
+      {range:'45-54', male:3, female:3},
+      {range:'55+', male:2, female:1}
+    ]
+  },
+  topLocations: [
+    {name:'Tampa, FL', percentage:35},
+    {name:'Brandon, FL', percentage:11},
+    {name:'Miami, FL', percentage:8},
+    {name:'Orlando, FL', percentage:7},
+    {name:'Riverview, FL', percentage:6},
+    {name:'Plant City, FL', percentage:5},
+    {name:'Atlanta, GA', percentage:4},
+    {name:'New York, NY', percentage:3},
+    {name:'Temple Terrace, FL', percentage:3},
+    {name:'Other', percentage:18}
+  ],
+  onlineTimes: null
 };
 
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-const NOW = new Date('2026-08-21T22:00:00');
-
-const pipeline = [
-  {title:'From Lesson to Life', status:'Not started'},
-  {title:'Pronunciation Glow-Up', status:'Idea'},
-  {title:'Tongue Twister Challenge: Teachers', status:'Idea'},
-  {title:'Guess That Language!', status:'Idea'},
-  {title:'Behind the Scenes at ReDefiners', status:'Idea'},
-  {title:'Career Paths for Multilingual Black Professionals', status:'Scheduled'},
-  {title:'Learning Through Play', status:'Not started'},
-  {title:'How Women Changed Language & Translation', status:'Not started'}
-];
-
-const statusColors = {
-  'Idea':'background:rgba(223,240,238,0.12);color:#DFF0EE;',
-  'Not started':'background:rgba(255,193,0,0.14);color:#FFC100;',
-  'Ready for review':'background:rgba(122,157,150,0.22);color:#B9D6D1;',
-  'Scheduled':'background:rgba(63,224,165,0.14);color:#3FE0A5;'
-};
+// NOW is defined once in data.js (single source of truth) and reused here.
 
 let currentRange = {start:null, end:null, key:'90'};
+let compareRange = null;
 let currentTab = 'overview';
-let chart;
+let currentDemoPlat = 'all';
+let charts = {}; // named Chart.js instances, destroyed/recreated on range or tab change
+
+let appState = {
+  usingFallback: true,
+  lastUpdated: null
+};
 
 function parseDate(d){ return new Date(d + 'T12:00:00'); }
 function fmtDate(d){ return d.toLocaleDateString('en-US',{month:'short',day:'numeric'}); }
 function daysBetween(a,b){ return Math.round((b-a)/86400000); }
-function thumbFor(link){ return THUMBS[link] || null; }
+function pct1(n){ return (Math.round(n*10)/10).toFixed(1); }
 
+/* ---------------------------------------------------------------------
+   COMPOSIO INTEGRATION
+   fetchPlatformData() calls an authenticated backend that proxies your
+   Composio connectors (Instagram/Facebook/TikTok). This static file never
+   holds credentials — set CONFIG.composioApiBase to a real endpoint to
+   go live. Until then, initDashboard() falls back to the mock arrays
+   already defined in data.js.
+--------------------------------------------------------------------- */
+async function fetchPlatformData(platform){
+  if(!CONFIG.composioApiBase) throw new Error('No live endpoint configured');
+  const res = await fetch(`${CONFIG.composioApiBase}/${platform}`, {
+    headers: CONFIG.composioToken ? {Authorization:`Bearer ${CONFIG.composioToken}`} : {}
+  });
+  if(!res.ok) throw new Error(`Fetch failed for ${platform}: ${res.status}`);
+  return res.json();
+}
+
+/**
+ * normalizePlatformData(rawData, platform)
+ * Transforms a raw connector payload into this dashboard's internal schema.
+ * All rendering functions consume ONLY this normalized shape — they never
+ * touch raw API field names. Adjust the mappings below to match your
+ * backend's actual response shape once it's wired up.
+ */
+function normalizePlatformData(rawData, platform){
+  if(platform === 'instagram'){
+    const posts = (rawData.posts || []).map(p => ({
+      date: (p.timestamp || p.date || '').slice(0,10),
+      type: p.media_product_type === 'REELS' ? 'Reel'
+        : p.media_type === 'CAROUSEL_ALBUM' ? 'Carousel'
+        : p.media_type === 'IMAGE' ? 'Image' : 'Video',
+      title: (p.caption || '(no caption)').split('\n')[0].slice(0,70),
+      views: p.insights?.views || 0,
+      reach: p.insights?.reach || 0,
+      likes: p.insights?.likes || 0,
+      comments: p.insights?.comments || 0,
+      saved: p.insights?.saved || 0,
+      shares: p.insights?.shares || 0,
+      link: p.permalink || ''
+    }));
+    const audience = rawData.audience ? {
+      dailyFollowers: rawData.audience.dailyFollowers || [],
+      demographics: rawData.audience.demographics || {gender:{male:0,female:0,unknown:0}, age:[]},
+      topLocations: rawData.audience.topLocations || [],
+      onlineTimes: rawData.audience.onlineTimes || null
+    } : null;
+    return {posts, audience, followers: rawData.followers || 0, mediaCount: rawData.mediaCount || posts.length};
+  }
+  if(platform === 'facebook'){
+    const posts = (rawData.posts || []).map(p => ({
+      date: (p.created_time || p.date || '').slice(0,10),
+      title: (p.message || '(no message)').split('\n')[0].slice(0,70),
+      reactions: p.reactions?.summary?.total_count ?? p.reactions ?? 0,
+      comments: p.comments?.summary?.total_count ?? p.comments ?? 0,
+      shares: p.shares?.count ?? p.shares ?? 0,
+      views: p.insights?.views || p.views || 0,
+      link: p.permalink_url || ''
+    }));
+    const audience = rawData.audience ? {
+      dailyFollowers: rawData.audience.dailyFollowers || [],
+      demographics: rawData.audience.demographics || {gender:{male:0,female:0,unknown:0}, age:[]},
+      topLocations: rawData.audience.topLocations || [],
+      onlineTimes: rawData.audience.onlineTimes || null
+    } : null;
+    return {posts, audience, followers: rawData.followers || rawData.fanCount || 0};
+  }
+  if(platform === 'tiktok'){
+    const posts = (rawData.videos || rawData.posts || []).map(v => ({
+      date: v.create_time ? new Date(v.create_time*1000).toISOString().slice(0,10) : (v.date || ''),
+      title: (v.video_description || v.title || '(no caption)').split('\n')[0].slice(0,70),
+      views: v.view_count ?? v.views ?? 0,
+      likes: v.like_count ?? v.likes ?? 0,
+      comments: v.comment_count ?? v.comments ?? 0,
+      shares: v.share_count ?? v.shares ?? 0,
+      link: v.share_url || v.link || ''
+    }));
+    const audience = rawData.audience ? {
+      dailyFollowers: rawData.audience.dailyFollowers || [],
+      demographics: rawData.audience.demographics || {gender:{male:0,female:0,unknown:0}, age:[]},
+      topLocations: rawData.audience.topLocations || [],
+      onlineTimes: null
+    } : null;
+    return {posts, audience, followers: rawData.followers || 0, videoCount: rawData.videoCount || posts.length};
+  }
+  return {posts:[], audience:null, followers:0};
+}
+
+async function initDashboard(){
+  try {
+    const [igRaw, fbRaw, tkRaw] = await Promise.all([
+      fetchPlatformData('instagram'),
+      fetchPlatformData('facebook'),
+      fetchPlatformData('tiktok')
+    ]);
+    const ig = normalizePlatformData(igRaw, 'instagram');
+    const fb = normalizePlatformData(fbRaw, 'facebook');
+    const tk = normalizePlatformData(tkRaw, 'tiktok');
+
+    igPosts = ig.posts; ACCOUNTS.ig.followers = ig.followers; if(ig.mediaCount) ACCOUNTS.ig.mediaCount = ig.mediaCount;
+    fbPosts = fb.posts; ACCOUNTS.fb.followers = fb.followers;
+    tkPosts = tk.posts; ACCOUNTS.tk.followers = tk.followers; if(tk.videoCount) ACCOUNTS.tk.videoCount = tk.videoCount;
+    if(ig.audience) igAudience = ig.audience;
+    if(fb.audience) fbAudience = fb.audience;
+    if(tk.audience) tkAudience = tk.audience;
+
+    appState.usingFallback = false;
+  } catch(err){
+    // The mock arrays from data.js are already in place as the fallback.
+    // Only surface the "cached data" notice if a real endpoint was configured
+    // and actually failed — silent fallback when no endpoint is set at all.
+    appState.usingFallback = true;
+    if(CONFIG.composioApiBase){
+      document.getElementById('fallbackNotice').style.display = 'flex';
+    }
+  }
+  appState.lastUpdated = new Date();
+  const stamp = appState.lastUpdated.toLocaleString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+  document.getElementById('lastUpdatedLabel').textContent = `Last updated: ${stamp}`;
+  document.getElementById('lastUpdatedFoot').textContent = `Last updated: ${stamp}`;
+  document.getElementById('todayLabel').textContent = NOW.toLocaleDateString('en-US',{month:'short', day:'numeric', year:'numeric'});
+  renderFooterDateRange();
+
+  setRange('90');
+}
+
+function renderFooterDateRange(){
+  const allDates = [
+    ...igPosts.map(p=>p.date),
+    ...fbPosts.map(p=>p.date),
+    ...tkPosts.map(p=>p.date)
+  ].filter(Boolean);
+  const el = document.getElementById('footerDateRange');
+  if(!allDates.length){
+    el.textContent = 'Showing content from connected social accounts';
+    return;
+  }
+  const earliest = allDates.reduce((min,d)=> d<min ? d : min, allDates[0]);
+  const formatted = parseDate(earliest).toLocaleDateString('en-US',{month:'short', day:'numeric', year:'numeric'});
+  el.textContent = `Showing content from ${formatted}`;
+}
+
+/* ---------------------------------------------------------------------
+   THUMBNAILS — styled placeholders only. No external <img> URLs, ever.
+--------------------------------------------------------------------- */
+function typeIcon(post, platform){
+  if(platform === 'tk') return 'fa-film';
+  if(post.type === 'Carousel') return 'fa-images';
+  if(post.type === 'Image') return 'fa-image';
+  return 'fa-play'; // Reel / Video / Post
+}
+const PLATFORM_GRADIENT = {
+  ig: 'linear-gradient(135deg, rgba(255,193,0,0.18), rgba(255,116,0,0.18))',
+  fb: 'linear-gradient(135deg, rgba(223,240,238,0.18), rgba(10,70,88,0.85))',
+  tk: 'linear-gradient(135deg, rgba(255,116,0,0.18), rgba(255,138,46,0.18))'
+};
+const PLATFORM_BADGE = {
+  ig: {icon:'fa-instagram', color:'#FFC100'},
+  fb: {icon:'fa-facebook-f', color:'#DFF0EE'},
+  tk: {icon:'fa-tiktok', color:'#FF7400'}
+};
+const PLATFORM_ICON_COLOR = {ig:'#FFC100', fb:'#DFF0EE', tk:'#FF7400'};
+
+function generateThumbnail(post, platform, opts={}){
+  const size = opts.size || 56;
+  const showBadge = opts.badge !== false;
+  const icon = typeIcon(post, platform);
+  const grad = PLATFORM_GRADIENT[platform];
+  const iconColor = PLATFORM_ICON_COLOR[platform];
+  const b = PLATFORM_BADGE[platform];
+  const iconSize = Math.round(size*0.36);
+  return `<div class="thumb-ph" style="width:${size}px;height:${size}px;background:${grad};">
+    <i class="fas ${icon}" style="font-size:${iconSize}px;color:${iconColor};"></i>
+    ${showBadge ? `<span class="thumb-badge" style="color:${b.color};"><i class="fab ${b.icon}"></i></span>` : ''}
+  </div>`;
+}
+
+/* ---------------------------------------------------------------------
+   ENGAGEMENT FORMULAS (per-platform, as specified)
+--------------------------------------------------------------------- */
+function igEngRate(p){ return p.reach > 0 ? ((p.likes+p.comments+p.saved+p.shares)/p.reach*100) : null; }
+function tkEngRate(p){ return p.views > 0 ? ((p.likes+p.comments+p.shares)/p.views*100) : null; }
+function fbEngRate(p){ return p.views > 0 ? ((p.reactions+p.comments+p.shares)/p.views*100) : null; }
+function fmtRate(v){ return (v===null || v===undefined || isNaN(v)) ? '--' : pct1(v)+'%'; }
+function avgRate(fn, arr){
+  const vals = arr.map(fn).filter(v => v!==null && !isNaN(v));
+  if(!vals.length) return null;
+  return vals.reduce((a,b)=>a+b,0)/vals.length;
+}
+function fbType(p){ return p.link.includes('/reel/') ? 'Reel' : 'Post'; }
+
+/* ---------------------------------------------------------------------
+   TABS & RANGE
+--------------------------------------------------------------------- */
 function setTab(tab){
   currentTab = tab;
   document.querySelectorAll('.tab-avatar').forEach(a=>a.classList.remove('active'));
   document.querySelector(`.tab-avatar[data-tab="${tab}"]`).classList.add('active');
   document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active'));
   document.getElementById('tab-'+tab).classList.add('active');
-  if(tab==='overview') renderChart(igPosts.filter(p=>inRange(p.date)), fbPosts.filter(p=>inRange(p.date)), tkPosts.filter(p=>inRange(p.date)));
+  renderActiveTabCharts();
 }
 
 function setRange(key){
@@ -564,6 +931,7 @@ function setRange(key){
   else if(key==='365'){ currentRange.start=new Date(NOW-365*86400000); currentRange.end=NOW; }
   else if(key==='all'){ currentRange.start=new Date('2000-01-01'); currentRange.end=NOW; }
   else if(key==='custom'){ return; }
+  compareRange = key==='all' ? null : computeComparisonRange(currentRange);
   render();
 }
 
@@ -573,18 +941,80 @@ function applyCustom(){
   if(!s || !e) return;
   currentRange.start = parseDate(s);
   currentRange.end = parseDate(e);
+  compareRange = computeComparisonRange(currentRange);
   render();
 }
 
 function inRange(dateStr){
+  if(!dateStr) return false;
   const d = parseDate(dateStr);
   return d >= currentRange.start && d <= currentRange.end;
 }
 
-function igEng(p){ return p.reach>0 ? ((p.likes+p.comments+p.saved+p.shares)/p.reach*100) : 0; }
-function fbEng(p){ return p.reactions+p.comments+p.shares; }
-function fbType(p){ return p.link.includes('/reel/') ? 'Reel' : 'Post'; }
+function inCompareRange(dateStr){
+  if(!dateStr || !compareRange) return false;
+  const d = parseDate(dateStr);
+  return d >= compareRange.start && d <= compareRange.end;
+}
 
+function destroyChart(key){
+  if(charts[key]){ charts[key].destroy(); delete charts[key]; }
+}
+
+/* ---------------------------------------------------------------------
+   PERIOD-OVER-PERIOD COMPARISON ENGINE
+--------------------------------------------------------------------- */
+function computeComparisonRange(range){
+  const duration = range.end - range.start;
+  return {
+    start: new Date(range.start.getTime() - duration),
+    end: new Date(range.start.getTime())
+  };
+}
+
+function calcChange(current, previous){
+  if(previous === null || previous === undefined || previous === 0) return null;
+  if(current === null || current === undefined) return null;
+  return ((current - previous) / previous) * 100;
+}
+
+function fmtChangeBadge(pct){
+  if(pct === null || pct === undefined || isNaN(pct)) return '';
+  const fixed = pct1(Math.abs(pct));
+  if(Math.abs(pct) < 0.5) return `<span class="metric-change flat"><i class="fas fa-minus"></i> 0%</span>`;
+  if(pct > 0) return `<span class="metric-change"><i class="fas fa-arrow-up"></i> ${fixed}%</span>`;
+  return `<span class="metric-change" style="background:rgba(255,107,107,0.08);color:#FF6B6B;border-color:rgba(255,107,107,0.08);"><i class="fas fa-arrow-down"></i> ${fixed}%</span>`;
+}
+
+function setChange(elId, pct){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  el.innerHTML = fmtChangeBadge(pct);
+}
+
+// Sums the nearest-available dailyFollowers snapshot (on or before `date`) across
+// all three platforms. Returns null if no historical data exists for any of them.
+function followerCountAt(date){
+  const sources = [igAudience, fbAudience, tkAudience];
+  let total = 0, found = false;
+  sources.forEach(aud=>{
+    const series = aud?.dailyFollowers || [];
+    if(!series.length) return;
+    let best = null;
+    for(const pt of series){
+      const d = parseDate(pt.date);
+      if(d <= date && (!best || d > parseDate(best.date))) best = pt;
+    }
+    if(!best) best = series[0]; // fall back to earliest known point
+    total += best.count;
+    found = true;
+  });
+  return found ? total : null;
+}
+
+/* ---------------------------------------------------------------------
+   MASTER RENDER
+--------------------------------------------------------------------- */
 function render(){
   const igF = igPosts.filter(p=>inRange(p.date));
   const fbF = fbPosts.filter(p=>inRange(p.date));
@@ -595,83 +1025,133 @@ function render(){
   renderIgTab(igF, rangeLabel);
   renderFbTab(fbF, rangeLabel);
   renderTkTab(tkF, rangeLabel);
-  if(currentTab==='overview') renderChart(igF, fbF, tkF);
+  renderAudienceTab(rangeLabel);
+  renderActiveTabCharts();
 }
 
+function renderActiveTabCharts(){
+  const igF = igPosts.filter(p=>inRange(p.date));
+  const fbF = fbPosts.filter(p=>inRange(p.date));
+  const tkF = tkPosts.filter(p=>inRange(p.date));
+  if(currentTab==='overview') renderOverviewChart(igF, fbF, tkF);
+  if(currentTab==='audience') renderGrowthChart();
+  if(currentTab==='instagram') renderTrendChart('igTrendChart', igF, 'views', '#FFC100');
+  if(currentTab==='facebook') renderTrendChart('fbTrendChart', fbF, 'views', '#DFF0EE');
+  if(currentTab==='tiktok') renderTrendChart('tkTrendChart', tkF, 'views', '#FF7400');
+}
+
+/* ---------------------------------------------------------------------
+   ZONE A-D: OVERVIEW TAB
+--------------------------------------------------------------------- */
 function renderOverview(igF, fbF, tkF, rangeLabel){
-  document.getElementById('ovIgFollowers').textContent = ACCOUNTS.ig.followers.toLocaleString();
-  document.getElementById('ovFbFollowers').textContent = ACCOUNTS.fb.followers.toLocaleString();
-  document.getElementById('ovTkFollowers').textContent = ACCOUNTS.tk.followers.toLocaleString();
-  document.getElementById('ovIgPostsSub').textContent = igF.length ? igF.length+' posts in range' : 'no posts in range';
-  document.getElementById('ovFbPostsSub').textContent = fbF.length ? fbF.length+' posts in range' : 'no posts in range';
-  document.getElementById('ovTkPostsSub').textContent = tkF.length ? tkF.length+' videos in range' : 'no videos in range';
+  // Zone A — Executive Snapshot
+  const totalAudience = ACCOUNTS.ig.followers + ACCOUNTS.fb.followers + ACCOUNTS.tk.followers;
+  const totalContent = igF.length + fbF.length + tkF.length;
+  const igViews = igF.reduce((s,p)=>s+p.views,0);
+  const fbViews = fbF.reduce((s,p)=>s+p.views,0);
+  const tkViews = tkF.reduce((s,p)=>s+p.views,0);
+  const crossViews = igViews + fbViews + tkViews;
 
-  const igTotalReach = igF.reduce((s,p)=>s+p.reach,0);
-  const fbTotalShares = fbF.reduce((s,p)=>s+p.shares,0);
-  const tkTotalViews = tkF.reduce((s,p)=>s+p.views,0);
+  document.getElementById('execAudience').textContent = totalAudience.toLocaleString();
+  document.getElementById('execContent').textContent = totalContent.toLocaleString();
+  document.getElementById('execContentSub').textContent = `${igF.length} IG \u00b7 ${fbF.length} FB \u00b7 ${tkF.length} TikTok`;
+  document.getElementById('execViews').textContent = crossViews.toLocaleString();
 
-  document.getElementById('ovIgEngagement').textContent = igF.length ? (igF.reduce((s,p)=>s+igEng(p),0)/igF.length).toFixed(1)+'%' : '--';
-  document.getElementById('ovIgEngagementSub').textContent = igF.length ? igF.length+' posts in range' : 'no posts logged';
-  document.getElementById('ovFbShares').textContent = fbF.length ? fbTotalShares.toLocaleString() : '--';
-  document.getElementById('ovTkViews').textContent = tkF.length ? tkTotalViews.toLocaleString() : '--';
-  document.getElementById('ovTkViewsSub').textContent = tkF.length ? tkF.length+' videos in range' : 'no videos in range';
-
-  document.getElementById('igBreakCount').textContent = igF.length ? igF.length+' posts' : '--';
-  document.getElementById('igBreakBadge').textContent = igF.length ? 'reach '+igTotalReach.toLocaleString() : 'no data';
-  document.getElementById('igBreakBadge').className = igF.length ? 'trend-badge' : 'trend-badge flat';
-  document.getElementById('fbBreakCount').textContent = fbF.length ? fbF.length+' posts' : '--';
-  document.getElementById('fbBreakBadge').textContent = fbF.length ? fbTotalShares+' shares' : 'no data';
-  document.getElementById('fbBreakBadge').className = fbF.length ? 'trend-badge' : 'trend-badge flat';
-  document.getElementById('tkBreakCount').textContent = tkF.length ? tkF.length+' videos' : '--';
-  document.getElementById('tkBreakBadge').textContent = tkF.length ? tkTotalViews.toLocaleString()+' views' : 'no data';
-  document.getElementById('tkBreakBadge').className = tkF.length ? 'trend-badge' : 'trend-badge flat';
+  const rates = [];
+  const igR = avgRate(igEngRate, igF); if(igR!==null) rates.push(igR);
+  const fbR = avgRate(fbEngRate, fbF); if(fbR!==null) rates.push(fbR);
+  const tkR = avgRate(tkEngRate, tkF); if(tkR!==null) rates.push(tkR);
+  const overallRate = rates.length ? rates.reduce((a,b)=>a+b,0)/rates.length : null;
+  document.getElementById('execEngagement').textContent = overallRate!==null ? pct1(overallRate)+'%' : '--';
 
   document.getElementById('chartRangeLabel').textContent = rangeLabel;
   document.getElementById('topContentRangeLabel').textContent = rangeLabel;
-  document.getElementById('chartFootLeft').textContent = (igF.length+fbF.length+tkF.length)+' posts logged';
+  document.getElementById('chartFootLeft').textContent = `${totalContent} posts logged`;
+
+  // Zone C — Platform Breakdown table
+  const rows = [
+    {plat:'ig', name:'Instagram', icon:'fa-instagram', posts:igF.length, val:igViews, rate:igR},
+    {plat:'fb', name:'Facebook', icon:'fa-facebook-f', posts:fbF.length, val:fbViews, rate:fbR},
+    {plat:'tk', name:'TikTok', icon:'fa-tiktok', posts:tkF.length, val:tkViews, rate:tkR}
+  ];
+  document.getElementById('breakdownBody').innerHTML = rows.map(r=>`
+    <tr>
+      <td><span class="plat-name"><i class="fab ${r.icon} ${r.plat}"></i>${r.name}</span></td>
+      <td>${r.posts}</td>
+      <td>${r.val.toLocaleString()}</td>
+      <td>${fmtRate(r.rate)}</td>
+    </tr>`).join('');
 
   renderTopContent(igF, fbF, tkF);
-  renderPipeline();
+
+  // --- Period-over-period comparison badges (Overview) ---
+  if(compareRange){
+    const igC = igPosts.filter(p=>inCompareRange(p.date));
+    const fbC = fbPosts.filter(p=>inCompareRange(p.date));
+    const tkC = tkPosts.filter(p=>inCompareRange(p.date));
+
+    const prevAudience = followerCountAt(compareRange.end);
+    setChange('execAudienceChange', calcChange(totalAudience, prevAudience));
+
+    const prevContent = igC.length + fbC.length + tkC.length;
+    setChange('execContentChange', calcChange(totalContent, prevContent));
+
+    const prevViews = igC.reduce((s,p)=>s+p.views,0) + fbC.reduce((s,p)=>s+p.views,0) + tkC.reduce((s,p)=>s+p.views,0);
+    setChange('execViewsChange', calcChange(crossViews, prevViews));
+
+    const prevRates = [];
+    const igRp = avgRate(igEngRate, igC); if(igRp!==null) prevRates.push(igRp);
+    const fbRp = avgRate(fbEngRate, fbC); if(fbRp!==null) prevRates.push(fbRp);
+    const tkRp = avgRate(tkEngRate, tkC); if(tkRp!==null) prevRates.push(tkRp);
+    const prevOverallRate = prevRates.length ? prevRates.reduce((a,b)=>a+b,0)/prevRates.length : null;
+    setChange('execEngagementChange', calcChange(overallRate, prevOverallRate));
+  } else {
+    ['execAudienceChange','execContentChange','execViewsChange','execEngagementChange'].forEach(id=>{
+      document.getElementById(id).innerHTML = '';
+    });
+  }
 }
 
-function renderChart(igF, fbF, tkF){
-  const wrap = document.getElementById('chartWrap');
-  const empty = document.getElementById('chartEmpty');
-  if(igF.length===0 && fbF.length===0 && tkF.length===0){
-    wrap.style.display='none'; empty.style.display='block';
-    if(chart){ chart.destroy(); chart=null; }
-    return;
-  }
-  wrap.style.display='block'; empty.style.display='none';
-
+function bucketedSeries(igF, fbF, tkF){
   const spanDays = Math.max(1, daysBetween(currentRange.start, currentRange.end));
-  const bucketDays = spanDays > 240 ? 7 : 1; // weekly buckets for very wide ranges
+  const bucketDays = spanDays > 240 ? 7 : 1;
   const buckets = [];
   for(let t=currentRange.start.getTime(); t<=currentRange.end.getTime(); t+=bucketDays*86400000){
     buckets.push(new Date(t));
   }
   const labels = buckets.map(d=>fmtDate(d));
-  const igData = new Array(buckets.length).fill(0);
-  const fbData = new Array(buckets.length).fill(0);
-  const tkData = new Array(buckets.length).fill(0);
-
-  function bucketIndex(dateStr){
+  const ig = new Array(buckets.length).fill(0);
+  const fb = new Array(buckets.length).fill(0);
+  const tk = new Array(buckets.length).fill(0);
+  function idx(dateStr){
     const d = parseDate(dateStr).getTime();
-    let idx = Math.floor((d - currentRange.start.getTime()) / (bucketDays*86400000));
-    if(idx<0) idx=0; if(idx>=buckets.length) idx=buckets.length-1;
-    return idx;
+    let i = Math.floor((d - currentRange.start.getTime()) / (bucketDays*86400000));
+    return Math.max(0, Math.min(buckets.length-1, i));
   }
-  igF.forEach(p=>{ igData[bucketIndex(p.date)] += p.reach; });
-  fbF.forEach(p=>{ fbData[bucketIndex(p.date)] += p.shares; });
-  tkF.forEach(p=>{ tkData[bucketIndex(p.date)] += p.views; });
+  igF.forEach(p=>{ ig[idx(p.date)] += p.views; });
+  fbF.forEach(p=>{ fb[idx(p.date)] += p.views; });
+  tkF.forEach(p=>{ tk[idx(p.date)] += p.views; });
+  return {labels, ig, fb, tk, bucketDays};
+}
 
-  if(chart) chart.destroy();
-  chart = new Chart(document.getElementById('dailyChart'), {
+function renderOverviewChart(igF, fbF, tkF){
+  const wrap = document.getElementById('chartWrap');
+  const empty = document.getElementById('chartEmpty');
+  if(igF.length===0 && fbF.length===0 && tkF.length===0){
+    wrap.style.display='none'; empty.style.display='block';
+    destroyChart('overview');
+    return;
+  }
+  wrap.style.display='block'; empty.style.display='none';
+  const {labels, ig, fb, tk, bucketDays} = bucketedSeries(igF, fbF, tkF);
+
+  destroyChart('overview');
+  charts.overview = new Chart(document.getElementById('dailyChart'), {
     type:'line',
     data:{ labels, datasets:[
-      {label:'Instagram reach', data:igData, borderColor:'#FFC100', backgroundColor:'rgba(255,193,0,0.14)', borderWidth:2.5, pointRadius:bucketDays===1?3:2, pointBackgroundColor:'#FFC100', pointBorderColor:'#00131A', tension:0.3, fill:true, yAxisID:'y'},
-      {label:'Facebook shares', data:fbData, borderColor:'#DFF0EE', backgroundColor:'rgba(223,240,238,0.06)', borderWidth:2, borderDash:[5,4], pointRadius:bucketDays===1?3:2, pointBackgroundColor:'#DFF0EE', pointBorderColor:'#00131A', tension:0.3, fill:false, yAxisID:'y1'},
-      {label:'TikTok views', data:tkData, borderColor:'#FF7400', backgroundColor:'rgba(255,116,0,0.08)', borderWidth:2, borderDash:[2,3], pointRadius:bucketDays===1?3:2, pointBackgroundColor:'#FF7400', pointBorderColor:'#00131A', tension:0.3, fill:false, yAxisID:'y'}
+      {label:'Instagram views', data:ig, borderColor:'#FFC100', backgroundColor:'rgba(255,193,0,0.14)', borderWidth:2.5, pointRadius:bucketDays===1?3:2, pointBackgroundColor:'#FFC100', pointBorderColor:'#00131A', tension:0.3, fill:true},
+      {label:'Facebook views', data:fb, borderColor:'#DFF0EE', backgroundColor:'rgba(223,240,238,0.06)', borderWidth:2, borderDash:[5,4], pointRadius:bucketDays===1?3:2, pointBackgroundColor:'#DFF0EE', pointBorderColor:'#00131A', tension:0.3, fill:false},
+      {label:'TikTok views', data:tk, borderColor:'#FF7400', backgroundColor:'rgba(255,116,0,0.08)', borderWidth:2, borderDash:[2,3], pointRadius:bucketDays===1?3:2, pointBackgroundColor:'#FF7400', pointBorderColor:'#00131A', tension:0.3, fill:false}
     ]},
     options:{
       responsive:true, maintainAspectRatio:false,
@@ -679,8 +1159,7 @@ function renderChart(igF, fbF, tkF){
       plugins:{ legend:{display:true, position:'top', labels:{color:'#a8c2bc', boxWidth:10, font:{size:10.5}}}, tooltip:{backgroundColor:'#001019', titleColor:'#FAF5E6', bodyColor:'#DFF0EE', borderColor:'#7A9D96', borderWidth:1, padding:10, cornerRadius:10} },
       scales:{
         x:{ ticks:{color:'#7a9d97', maxRotation:0, autoSkip:true, font:{size:10.5}}, grid:{color:'rgba(255,255,255,0.04)'} },
-        y:{ position:'left', ticks:{color:'#FFC100', font:{size:10.5}}, grid:{color:'rgba(255,255,255,0.04)'}, title:{display:true, text:'IG reach / TikTok views', color:'#FFC100', font:{size:10.5}} },
-        y1:{ position:'right', ticks:{color:'#DFF0EE', stepSize:1, font:{size:10.5}}, grid:{display:false}, title:{display:true, text:'FB shares', color:'#DFF0EE', font:{size:11}} }
+        y:{ ticks:{color:'#a8c2bc', font:{size:10.5}}, grid:{color:'rgba(255,255,255,0.04)'}, title:{display:true, text:'Views', color:'#a8c2bc', font:{size:10.5}} }
       }
     }
   });
@@ -690,50 +1169,33 @@ function renderTopContent(igF, fbF, tkF){
   const list = document.getElementById('topContentList');
   const empty = document.getElementById('topContentEmpty');
   const combined = [
-    ...igF.map(p=>({platform:'IG', platformColor:'#FFC100', icon:'fa-instagram', iconClass:'', title:p.title, metric:igEng(p).toFixed(1)+'% engagement', sub:`${p.type} \u00b7 ${fmtDate(parseDate(p.date))} \u00b7 reach ${p.reach}`, link:p.link, sortVal:igEng(p)})),
-    ...fbF.map(p=>({platform:'FB', platformColor:'#DFF0EE', icon:'fa-facebook-f', iconClass:'fb', title:p.title, metric:fbEng(p)+' interactions', sub:`${fbType(p)} \u00b7 ${fmtDate(parseDate(p.date))} \u00b7 shares ${p.shares}`, link:p.link, sortVal:fbEng(p)})),
-    ...tkF.map(p=>({platform:'TK', platformColor:'#FF7400', icon:'fa-tiktok', iconClass:'tk', title:p.title, metric:p.views.toLocaleString()+' views', sub:`Video \u00b7 ${fmtDate(parseDate(p.date))} \u00b7 ${p.likes} likes`, link:p.link, sortVal:p.views}))
-  ].sort((a,b)=>b.sortVal - a.sortVal).slice(0,6);
+    ...igF.map(p=>({platform:'ig', platformLabel:'IG', title:p.title, metric:fmtRate(igEngRate(p))+' engagement', sub:`${p.type} \u00b7 ${fmtDate(parseDate(p.date))} \u00b7 ${p.views} views`, link:p.link, post:p, sortVal:igEngRate(p)||0})),
+    ...fbF.map(p=>({platform:'fb', platformLabel:'FB', title:p.title, metric:(p.reactions+p.comments+p.shares)+' interactions', sub:`${fbType(p)} \u00b7 ${fmtDate(parseDate(p.date))} \u00b7 ${p.reactions} reactions`, link:p.link, post:p, sortVal:p.reactions+p.comments+p.shares})),
+    ...tkF.map(p=>({platform:'tk', platformLabel:'TK', title:p.title, metric:p.views.toLocaleString()+' views', sub:`Video \u00b7 ${fmtDate(parseDate(p.date))} \u00b7 ${p.likes} likes`, link:p.link, post:p, sortVal:p.views}))
+  ].sort((a,b)=>b.sortVal - a.sortVal).slice(0,5);
 
   if(combined.length===0){
     list.innerHTML=''; list.style.display='none'; empty.style.display='block';
     return;
   }
   list.style.display='flex'; empty.style.display='none';
-  list.innerHTML = combined.map(item=>{
-    const thumb = thumbFor(item.link);
-    const media = thumb
-      ? `<img class="activity-thumb" src="${thumb}" alt="" onerror="this.outerHTML='<div class=&quot;activity-icon ${item.iconClass}&quot;><i class=&quot;fab ${item.icon}&quot;></i></div>'">`
-      : `<div class="activity-icon ${item.iconClass}"><i class="fab ${item.icon}"></i></div>`;
-    return `
+  list.innerHTML = combined.map(item=>`
     <a href="${item.link}" target="_blank" rel="noopener" class="activity-item">
-      ${media}
+      ${generateThumbnail(item.post, item.platform, {size:48})}
       <div class="activity-content">
-        <p>${item.title}<span class="plat-chip" style="background:${item.platformColor}22;color:${item.platformColor};">${item.platform}</span></p>
+        <p>${item.title}<span class="plat-chip" style="background:${PLATFORM_ICON_COLOR[item.platform]}22;color:${PLATFORM_ICON_COLOR[item.platform]};">${item.platformLabel}</span></p>
         <small><i class="fas fa-chart-simple"></i>${item.metric} &middot; ${item.sub}</small>
       </div>
-    </a>`;
-  }).join('');
+    </a>`).join('');
 }
 
-function renderPipeline(){
-  const list = document.getElementById('pipelineList');
-  list.innerHTML = pipeline.map(row=>`
-    <div class="pipe-row">
-      <span class="pipe-title">${row.title}</span>
-      <span class="pipe-tag" style="${statusColors[row.status]}">${row.status}</span>
-    </div>
-  `).join('');
-}
-
+/* ---------------------------------------------------------------------
+   PLATFORM TABS — identical 4-card structure
+--------------------------------------------------------------------- */
 function postRow(item){
-  const thumb = thumbFor(item.link);
-  const media = thumb
-    ? `<img class="post-thumb" src="${thumb}" alt="" onerror="this.style.background='linear-gradient(145deg,#0a4658,#062f3c)'; this.src='';">`
-    : `<div class="post-thumb" style="display:flex;align-items:center;justify-content:center;"><i class="${item.iconClass} fas ${item.icon}" style="color:${item.color};font-size:18px;"></i></div>`;
   return `
     <a href="${item.link}" target="_blank" rel="noopener" class="post-row">
-      ${media}
+      ${generateThumbnail(item.post, item.platform, {size:56, badge:false})}
       <div class="post-body">
         <p class="title">${item.title}</p>
         <p class="meta">${item.sub}</p>
@@ -742,30 +1204,74 @@ function postRow(item){
     </a>`;
 }
 
+function renderTrendChart(canvasId, posts, field, color){
+  const spanDays = Math.max(1, daysBetween(currentRange.start, currentRange.end));
+  const bucketDays = spanDays > 240 ? 7 : 1;
+  const buckets = [];
+  for(let t=currentRange.start.getTime(); t<=currentRange.end.getTime(); t+=bucketDays*86400000){
+    buckets.push(new Date(t));
+  }
+  const labels = buckets.map(d=>fmtDate(d));
+  const data = new Array(buckets.length).fill(0);
+  function idx(dateStr){
+    const d = parseDate(dateStr).getTime();
+    let i = Math.floor((d - currentRange.start.getTime()) / (bucketDays*86400000));
+    return Math.max(0, Math.min(buckets.length-1, i));
+  }
+  posts.forEach(p=>{ data[idx(p.date)] += p[field]||0; });
+
+  destroyChart(canvasId);
+  const el = document.getElementById(canvasId);
+  if(!el) return;
+  charts[canvasId] = new Chart(el, {
+    type:'line',
+    data:{ labels, datasets:[{ data, borderColor:color, backgroundColor:color+'22', borderWidth:2.5, pointRadius:bucketDays===1?3:2, pointBackgroundColor:color, pointBorderColor:'#00131A', tension:0.3, fill:true }]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{backgroundColor:'#001019', titleColor:'#FAF5E6', bodyColor:'#DFF0EE', borderColor:'#7A9D96', borderWidth:1, padding:10, cornerRadius:10} },
+      scales:{
+        x:{ ticks:{color:'#7a9d97', maxRotation:0, autoSkip:true, font:{size:10}}, grid:{color:'rgba(255,255,255,0.04)'} },
+        y:{ ticks:{color:'#7a9d97', font:{size:10}}, grid:{color:'rgba(255,255,255,0.04)'} }
+      }
+    }
+  });
+}
+
 function renderIgTab(igF, rangeLabel){
   document.getElementById('igAcctFollowers').textContent = ACCOUNTS.ig.followers.toLocaleString();
   document.getElementById('igAcctSub').textContent = `of ${ACCOUNTS.ig.mediaCount.toLocaleString()} total posts (last 50 shown)`;
   document.getElementById('igTabPosts').textContent = igF.length || '--';
   document.getElementById('igTabRange').textContent = igF.length ? rangeLabel : 'no posts logged';
   document.getElementById('igTabRangeLabel').textContent = rangeLabel;
-  const totalReach = igF.reduce((s,p)=>s+p.reach,0);
-  document.getElementById('igTabReach').textContent = igF.length ? totalReach.toLocaleString() : '--';
-  document.getElementById('igTabEngagement').textContent = igF.length ? (igF.reduce((s,p)=>s+igEng(p),0)/igF.length).toFixed(1)+'%' : '--';
+  document.getElementById('igTrendRangeLabel').textContent = rangeLabel;
+  const totalViews = igF.reduce((s,p)=>s+p.views,0);
+  document.getElementById('igTabViews').textContent = igF.length ? totalViews.toLocaleString() : '--';
+  const igRate = avgRate(igEngRate, igF);
+  document.getElementById('igTabEngagement').textContent = fmtRate(igRate);
+
+  if(compareRange){
+    const igC = igPosts.filter(p=>inCompareRange(p.date));
+    const prevFollowers = followerCountAt(compareRange.end);
+    setChange('igFollowersChange', calcChange(ACCOUNTS.ig.followers, prevFollowers));
+    setChange('igPostsChange', calcChange(igF.length, igC.length));
+    setChange('igViewsChange', calcChange(totalViews, igC.reduce((s,p)=>s+p.views,0)));
+    setChange('igEngagementChange', calcChange(igRate, avgRate(igEngRate, igC)));
+  } else {
+    ['igFollowersChange','igPostsChange','igViewsChange','igEngagementChange'].forEach(id=>document.getElementById(id).innerHTML='');
+  }
 
   const list = document.getElementById('igPostList');
   const empty = document.getElementById('igPostEmpty');
   if(igF.length===0){ list.innerHTML=''; list.style.display='none'; empty.style.display='block'; return; }
   list.style.display='block'; empty.style.display='none';
   list.innerHTML = igF.slice().sort((a,b)=>parseDate(b.date)-parseDate(a.date)).map(p=>postRow({
-    link:p.link, title:p.title, sub:`${p.type} \u00b7 ${fmtDate(parseDate(p.date))}`, icon:'fa-instagram', iconClass:'fab', color:'#FFC100',
+    link:p.link, title:p.title, sub:`${p.type} \u00b7 ${fmtDate(parseDate(p.date))}`, platform:'ig', post:p,
     metricsHtml:`
       <div><span class="num">${p.views}</span><span class="lbl">Views</span></div>
-      <div><span class="num">${p.reach}</span><span class="lbl">Reach</span></div>
       <div><span class="num">${p.likes}</span><span class="lbl">Likes</span></div>
       <div><span class="num">${p.comments}</span><span class="lbl">Comm.</span></div>
-      <div><span class="num">${p.saved}</span><span class="lbl">Saved</span></div>
       <div><span class="num">${p.shares}</span><span class="lbl">Shares</span></div>
-      <div><span class="num">${igEng(p).toFixed(1)}%</span><span class="lbl">Eng.</span></div>`
+      <div><span class="num">${fmtRate(igEngRate(p))}</span><span class="lbl">Eng.</span></div>`
   })).join('');
 }
 
@@ -774,19 +1280,35 @@ function renderFbTab(fbF, rangeLabel){
   document.getElementById('fbTabPosts').textContent = fbF.length || '--';
   document.getElementById('fbTabRange').textContent = fbF.length ? rangeLabel : 'no posts logged';
   document.getElementById('fbTabRangeLabel').textContent = rangeLabel;
-  const totalShares = fbF.reduce((s,p)=>s+p.shares,0);
-  document.getElementById('fbTabShares').textContent = fbF.length ? totalShares.toLocaleString() : '--';
+  document.getElementById('fbTrendRangeLabel').textContent = rangeLabel;
+  const totalViews = fbF.reduce((s,p)=>s+p.views,0);
+  document.getElementById('fbTabViews').textContent = fbF.length ? totalViews.toLocaleString() : '--';
+  const fbRate = avgRate(fbEngRate, fbF);
+  document.getElementById('fbTabEngagement').textContent = fmtRate(fbRate);
+
+  if(compareRange){
+    const fbC = fbPosts.filter(p=>inCompareRange(p.date));
+    const prevFollowers = followerCountAt(compareRange.end);
+    setChange('fbFollowersChange', calcChange(ACCOUNTS.fb.followers, prevFollowers));
+    setChange('fbPostsChange', calcChange(fbF.length, fbC.length));
+    setChange('fbViewsChange', calcChange(totalViews, fbC.reduce((s,p)=>s+p.views,0)));
+    setChange('fbEngagementChange', calcChange(fbRate, avgRate(fbEngRate, fbC)));
+  } else {
+    ['fbFollowersChange','fbPostsChange','fbViewsChange','fbEngagementChange'].forEach(id=>document.getElementById(id).innerHTML='');
+  }
 
   const list = document.getElementById('fbPostList');
   const empty = document.getElementById('fbPostEmpty');
   if(fbF.length===0){ list.innerHTML=''; list.style.display='none'; empty.style.display='block'; return; }
   list.style.display='block'; empty.style.display='none';
   list.innerHTML = fbF.slice().sort((a,b)=>parseDate(b.date)-parseDate(a.date)).map(p=>postRow({
-    link:p.link, title:p.title, sub:`${fbType(p)} \u00b7 ${fmtDate(parseDate(p.date))}`, icon:'fa-facebook-f', iconClass:'fab', color:'#DFF0EE',
+    link:p.link, title:p.title, sub:`${fbType(p)} \u00b7 ${fmtDate(parseDate(p.date))}`, platform:'fb', post:p,
     metricsHtml:`
+      <div><span class="num">${p.views}</span><span class="lbl">Views</span></div>
       <div><span class="num">${p.reactions}</span><span class="lbl">React.</span></div>
       <div><span class="num">${p.comments}</span><span class="lbl">Comm.</span></div>
-      <div><span class="num">${p.shares}</span><span class="lbl">Shares</span></div>`
+      <div><span class="num">${p.shares}</span><span class="lbl">Shares</span></div>
+      <div><span class="num">${fmtRate(fbEngRate(p))}</span><span class="lbl">Eng.</span></div>`
   })).join('');
 }
 
@@ -796,23 +1318,171 @@ function renderTkTab(tkF, rangeLabel){
   document.getElementById('tkTabPosts').textContent = tkF.length || '--';
   document.getElementById('tkTabRange').textContent = tkF.length ? rangeLabel : 'no videos logged';
   document.getElementById('tkTabRangeLabel').textContent = rangeLabel;
+  document.getElementById('tkTrendRangeLabel').textContent = rangeLabel;
   const totalViews = tkF.reduce((s,p)=>s+p.views,0);
-  const totalLikes = tkF.reduce((s,p)=>s+p.likes,0);
   document.getElementById('tkTabViews').textContent = tkF.length ? totalViews.toLocaleString() : '--';
-  document.getElementById('tkTabLikes').textContent = tkF.length ? totalLikes.toLocaleString() : '--';
+  const tkRate = avgRate(tkEngRate, tkF);
+  document.getElementById('tkTabEngagement').textContent = fmtRate(tkRate);
+
+  if(compareRange){
+    const tkC = tkPosts.filter(p=>inCompareRange(p.date));
+    const prevFollowers = followerCountAt(compareRange.end);
+    setChange('tkFollowersChange', calcChange(ACCOUNTS.tk.followers, prevFollowers));
+    setChange('tkPostsChange', calcChange(tkF.length, tkC.length));
+    setChange('tkViewsChange', calcChange(totalViews, tkC.reduce((s,p)=>s+p.views,0)));
+    setChange('tkEngagementChange', calcChange(tkRate, avgRate(tkEngRate, tkC)));
+  } else {
+    ['tkFollowersChange','tkPostsChange','tkViewsChange','tkEngagementChange'].forEach(id=>document.getElementById(id).innerHTML='');
+  }
 
   const list = document.getElementById('tkPostList');
   const empty = document.getElementById('tkPostEmpty');
   if(tkF.length===0){ list.innerHTML=''; list.style.display='none'; empty.style.display='block'; return; }
   list.style.display='block'; empty.style.display='none';
   list.innerHTML = tkF.slice().sort((a,b)=>parseDate(b.date)-parseDate(a.date)).map(p=>postRow({
-    link:p.link, title:p.title, sub:`Video \u00b7 ${fmtDate(parseDate(p.date))}`, icon:'fa-tiktok', iconClass:'fab', color:'#FF7400',
+    link:p.link, title:p.title, sub:`Video \u00b7 ${fmtDate(parseDate(p.date))}`, platform:'tk', post:p,
     metricsHtml:`
       <div><span class="num">${p.views}</span><span class="lbl">Views</span></div>
       <div><span class="num">${p.likes}</span><span class="lbl">Likes</span></div>
       <div><span class="num">${p.comments}</span><span class="lbl">Comm.</span></div>
-      <div><span class="num">${p.shares}</span><span class="lbl">Shares</span></div>`
+      <div><span class="num">${p.shares}</span><span class="lbl">Shares</span></div>
+      <div><span class="num">${fmtRate(tkEngRate(p))}</span><span class="lbl">Eng.</span></div>`
   })).join('');
+}
+
+/* ---------------------------------------------------------------------
+   AUDIENCE TAB
+--------------------------------------------------------------------- */
+function renderAudienceTab(rangeLabel){
+  document.getElementById('audienceRangeLabel').textContent = rangeLabel;
+  renderDemographics(currentDemoPlat);
+  renderLocations();
+  renderHeatmap();
+}
+
+function renderGrowthChart(){
+  const start = currentRange.start, end = currentRange.end;
+  function seriesInRange(aud){
+    return aud.dailyFollowers.filter(d => {
+      const dd = parseDate(d.date);
+      return dd>=start && dd<=end;
+    });
+  }
+  const igS = seriesInRange(igAudience);
+  const fbS = seriesInRange(fbAudience);
+  const tkS = seriesInRange(tkAudience);
+
+  destroyChart('growth');
+  if(igS.length===0 && fbS.length===0 && tkS.length===0){
+    return;
+  }
+  const labels = (igS.length?igS:fbS.length?fbS:tkS).map(d=>fmtDate(parseDate(d.date)));
+  charts.growth = new Chart(document.getElementById('growthChart'), {
+    type:'line',
+    data:{ labels, datasets:[
+      {label:'Instagram', data:igS.map(d=>d.count), borderColor:'#FFC100', backgroundColor:'rgba(255,193,0,0.1)', borderWidth:2.5, pointRadius:0, tension:0.3, fill:true, yAxisID:'y'},
+      {label:'Facebook', data:fbS.map(d=>d.count), borderColor:'#DFF0EE', backgroundColor:'rgba(223,240,238,0.06)', borderWidth:2, borderDash:[5,4], pointRadius:0, tension:0.3, fill:false, yAxisID:'y'},
+      {label:'TikTok', data:tkS.map(d=>d.count), borderColor:'#FF7400', backgroundColor:'rgba(255,116,0,0.08)', borderWidth:2, borderDash:[2,3], pointRadius:0, tension:0.3, fill:false, yAxisID:'y1'}
+    ]},
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      interaction:{mode:'index', intersect:false},
+      plugins:{ legend:{display:true, position:'top', labels:{color:'#a8c2bc', boxWidth:10, font:{size:10.5}}}, tooltip:{backgroundColor:'#001019', titleColor:'#FAF5E6', bodyColor:'#DFF0EE', borderColor:'#7A9D96', borderWidth:1, padding:10, cornerRadius:10} },
+      scales:{
+        x:{ ticks:{color:'#7a9d97', maxRotation:0, autoSkip:true, font:{size:10.5}}, grid:{color:'rgba(255,255,255,0.04)'} },
+        y:{ position:'left', ticks:{color:'#FFC100', font:{size:10}}, grid:{color:'rgba(255,255,255,0.04)'}, title:{display:true, text:'IG / FB followers', color:'#a8c2bc', font:{size:10}} },
+        y1:{ position:'right', ticks:{color:'#FF7400', font:{size:10}}, grid:{display:false}, title:{display:true, text:'TikTok followers', color:'#FF7400', font:{size:10}} }
+      }
+    }
+  });
+}
+
+function aggregateDemographics(plat){
+  // Weight each platform's demographic percentages by its follower count so a
+  // 16-follower TikTok account doesn't get equal say with a 4,154-follower IG account.
+  const weighted = plat==='all'
+    ? [[igAudience, ACCOUNTS.ig.followers], [fbAudience, ACCOUNTS.fb.followers], [tkAudience, ACCOUNTS.tk.followers]]
+    : plat==='ig' ? [[igAudience, 1]] : plat==='fb' ? [[fbAudience, 1]] : [[tkAudience, 1]];
+  const totalWeight = weighted.reduce((s,[,w])=>s+w, 0) || 1;
+
+  const ageMap = {};
+  weighted.forEach(([src, weight])=>{
+    (src.demographics.age||[]).forEach(a=>{
+      if(!ageMap[a.range]) ageMap[a.range] = {range:a.range, male:0, female:0};
+      ageMap[a.range].male += a.male * (weight/totalWeight);
+      ageMap[a.range].female += a.female * (weight/totalWeight);
+    });
+  });
+  const order = ['13-17','18-24','25-34','35-44','45-54','55+'];
+  return order.map(r => ageMap[r] || {range:r, male:0, female:0});
+}
+
+function renderDemographics(plat){
+  const rows = aggregateDemographics(plat);
+  const maxVal = Math.max(1, ...rows.map(r=>r.male+r.female));
+  const html = rows.map(r => {
+    const malePct = (r.male/maxVal*100);
+    const femalePct = (r.female/maxVal*100);
+    return `
+    <div class="demo-row">
+      <span class="demo-label">${r.range}</span>
+      <div class="demo-bar-track">
+        <div class="demo-bar-seg" style="width:${malePct}%; background:#FFC100;" title="Male ${pct1(r.male)}%"></div>
+        <div class="demo-bar-seg" style="width:${femalePct}%; background:#DFF0EE;" title="Female ${pct1(r.female)}%"></div>
+      </div>
+      <span style="font-size:11px; color:#7a9d97; width:70px; text-align:right;">${pct1(r.male+r.female)}%</span>
+    </div>`;
+  }).join('');
+  document.getElementById('demoChart').innerHTML = html;
+}
+
+function renderLocations(){
+  const src = currentDemoPlat==='all' ? null
+    : currentDemoPlat==='ig' ? igAudience : currentDemoPlat==='fb' ? fbAudience : tkAudience;
+  let locs;
+  if(src){
+    locs = src.topLocations.slice(0,10);
+  } else {
+    // blend all three, weighted by follower count, for "All Platforms"
+    const blend = {};
+    [[igAudience, ACCOUNTS.ig.followers], [fbAudience, ACCOUNTS.fb.followers], [tkAudience, ACCOUNTS.tk.followers]].forEach(([aud, weight])=>{
+      aud.topLocations.forEach(l=>{
+        blend[l.name] = (blend[l.name]||0) + l.percentage*weight;
+      });
+    });
+    const totalWeight = ACCOUNTS.ig.followers + ACCOUNTS.fb.followers + ACCOUNTS.tk.followers;
+    locs = Object.entries(blend).map(([name,val])=>({name, percentage: val/totalWeight}))
+      .sort((a,b)=>b.percentage-a.percentage).slice(0,10);
+  }
+  const maxPct = Math.max(1, ...locs.map(l=>l.percentage));
+  document.getElementById('locChart').innerHTML = locs.map(l => `
+    <div class="loc-row">
+      <span class="loc-label">${l.name}</span>
+      <div class="loc-bar-track"><div class="loc-bar-fill" style="width:${(l.percentage/maxPct*100)}%;"></div></div>
+      <span class="loc-pct">${pct1(l.percentage)}%</span>
+    </div>`).join('');
+}
+
+function renderHeatmap(){
+  const wrap = document.getElementById('heatmapWrap');
+  if(!igAudience.onlineTimes){
+    wrap.innerHTML = `<div class="empty-state"><p class="big">Connect Instagram Business account to see follower activity patterns.</p></div>`;
+    return;
+  }
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let html = `<div class="heatmap-wrap"><div class="heatmap-grid">`;
+  html += `<div></div>`;
+  for(let h=0; h<24; h++){ html += `<div class="heatmap-hourlabel">${h}</div>`; }
+  days.forEach(day=>{
+    html += `<div class="heatmap-daylabel">${day}</div>`;
+    for(let h=0; h<24; h++){
+      const cell = igAudience.onlineTimes.find(c=>c.day===day && c.hour===h);
+      const score = cell ? cell.score : 0.05;
+      html += `<div class="heatmap-cell" style="--a:${score};" title="${day} ${h}:00 \u2014 activity ${pct1(score*100)}%"></div>`;
+    }
+  });
+  html += `</div></div>`;
+  wrap.innerHTML = html;
 }
 
 document.querySelectorAll('.filter-tag').forEach(btn=>{
@@ -822,8 +1492,17 @@ document.querySelectorAll('.tab-avatar').forEach(btn=>{
   btn.addEventListener('click', ()=> setTab(btn.dataset.tab));
 });
 document.getElementById('applyCustom').addEventListener('click', applyCustom);
+document.getElementById('demoToggle').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.toggle-pill');
+  if(!btn) return;
+  document.querySelectorAll('#demoToggle .toggle-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentDemoPlat = btn.dataset.plat;
+  renderDemographics(currentDemoPlat);
+  renderLocations();
+});
 
-setRange('90');
+initDashboard();
 </script>
 </body>
 </html>
