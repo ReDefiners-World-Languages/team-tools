@@ -187,18 +187,28 @@
   .progress-track { width:100%; height:10px; border-radius:8px; background:rgba(255,255,255,0.05); overflow:hidden; }
   .progress-fill { height:100%; background:linear-gradient(90deg,#FFC100,#FF7400); border-radius:8px; }
 
+  /* MCP enrollment tab — top summary row */
+  .mcp-top-grid { display:grid; grid-template-columns:1fr 1fr 1.7fr; gap:18px; margin-bottom:24px; align-items:stretch; }
+  .mcp-top-grid .metric-card { display:flex; flex-direction:column; justify-content:center; }
+  .mcp-fy-compare-card { display:flex; flex-direction:column; justify-content:center; padding:18px 20px 16px; }
+
   /* MCP enrollment tab — category cards */
   .mcp-category-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-bottom:24px; }
   .category-block { display:flex; flex-direction:column; gap:16px; }
   .category-card {
     background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
     border-radius:12px; padding:20px 20px 16px; border:1px solid rgba(255,255,255,0.04);
-    box-shadow:0 8px 18px -6px rgba(0,0,0,0.5);
+    box-shadow:0 8px 18px -6px rgba(0,0,0,0.5); overflow:visible;
   }
   .category-card .cat-title { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; gap:8px; }
   .category-card .cat-title h4 { font-size:14px; font-weight:700; color:#e6f3ef; letter-spacing:-0.1px; }
   .category-card .cat-title .cat-total { font-size:20px; font-weight:800; color:#FFC100; }
-  .category-card .cat-sub { font-size:11px; color:#7a9d97; margin-bottom:10px; }
+  .category-card .cat-sub { font-size:11px; color:#7a9d97; margin-bottom:12px; }
+  .cat-bar-chart { position:relative; height:92px; margin-bottom:14px; }
+  .cat-legend { display:flex; flex-wrap:wrap; gap:7px 14px; padding-top:2px; }
+  .cat-legend-item { display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; white-space:nowrap; }
+  .cat-legend-dot { width:8px; height:8px; border-radius:3px; flex-shrink:0; }
+  .cat-legend-count { color:#8fb0aa; font-weight:500; }
   .completion-card {
     background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); border-radius:12px;
     padding:16px 20px 14px;
@@ -226,12 +236,18 @@
 
   @media (max-width:1200px) {
     .mcp-category-grid { grid-template-columns:repeat(2,1fr); }
+    .mcp-top-grid { grid-template-columns:1fr 1fr; }
+    .mcp-fy-compare-card { grid-column:1 / -1; }
   }
   @media (max-width:1100px) {
     .metric-grid { grid-template-columns:repeat(2,1fr); }
     .row-duo, .bottom-grid { grid-template-columns:1fr; }
     .dashboard { padding:24px 20px; }
     .mcp-category-grid { grid-template-columns:1fr; }
+  }
+  @media (max-width:580px) {
+    .mcp-top-grid { grid-template-columns:1fr; }
+    .mcp-fy-compare-card { grid-column:auto; }
   }
   @media (max-width:580px) {
     .metric-grid { grid-template-columns:1fr; }
@@ -472,13 +488,16 @@
     <div class="filter-row" style="margin-bottom:8px;">
       <span class="filter-select-label">Fiscal Year</span>
       <select class="tag-select" id="filterFiscalYear"></select>
-      <span style="font-size:11.5px; color:#5c9d8f;"><i class="fas fa-circle-info" style="margin-right:6px;"></i>The date-range filter above narrows further within the selected fiscal year.</span>
     </div>
     <div id="mcpEmptyWarning" class="notice-banner danger" style="display:none;"></div>
 
-    <div class="metric-grid" style="grid-template-columns:repeat(2,1fr); max-width:640px;">
+    <div class="mcp-top-grid">
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Total Enrollment Volume</span><i class="fas fa-users"></i></div><div class="metric-value" id="mcpTotal">--</div><p class="metric-sub" id="mcpTotalSub">--</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Completion Rate (%)</span><i class="fas fa-circle-check"></i></div><div class="metric-value" id="mcpCompletion">--</div><p class="metric-sub" id="mcpCompletionSub">--</p></div>
+      <div class="chart-card mcp-fy-compare-card">
+        <div class="card-title" style="margin-bottom:10px;"><h3><i class="fas fa-chart-column"></i>Enrollment Volume by Fiscal Year</h3></div>
+        <div style="position:relative; height:130px;"><canvas id="mcpFyCompareChart"></canvas></div>
+      </div>
     </div>
 
     <div class="mcp-category-grid" id="mcpCategoryGrid"></div>
@@ -1039,6 +1058,14 @@ function fiscalYearsInData(){
   return uniq(found).sort();
 }
 
+// The Enrollment tab runs on Fiscal Year alone — the global date-range and
+// Program Category/Location/Platform/Email Type filters don't apply to it, so hide them there.
+function updateGlobalFilterVisibility(){
+  const onMcp = state.activeTab === 'mcp';
+  el('dateFilterRow').style.display = onMcp ? 'none' : 'flex';
+  document.querySelector('.filter-select-row').style.display = onMcp ? 'none' : 'flex';
+}
+
 function wireFilters(){
   document.querySelectorAll('#dateFilterRow .filter-tag').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1075,6 +1102,7 @@ function wireFilters(){
       const tab = t.dataset.tab;
       el('tab-' + tab).classList.add('active');
       state.activeTab = tab;
+      updateGlobalFilterVisibility();
       renderActiveTab();
     });
   });
@@ -1391,43 +1419,27 @@ function renderOutreach(){
 /* =========================================================================================
    PART 15 — RENDER: TAB 8 MCP PROGRAM ENROLLMENTS
    ========================================================================================= */
-const CATEGORY_ICONS = {
-  'ESOL for Adults': 'fa-language',
-  "Let's Learn Courses": 'fa-comments',
-  'Workshops for Adults': 'fa-chalkboard-user',
-  'Professionals': 'fa-briefcase',
-  'English for School Success': 'fa-school',
-  'Youth Clubs': 'fa-child-reaching'
-};
 const SEG_COLORS = [PALETTE.gold, PALETTE.blue, PALETTE.teal, PALETTE.purple, PALETTE.pink, PALETTE.orange, PALETTE.ice];
 function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
 function fyOf(row){ const m = str(row.classProgramCohort).match(/FY\d{2}-\d{2}/i); return m ? m[0].toUpperCase() : str(row.classProgramCohort); }
-
-// FY-only filter (ignores the global date range) — used to tell apart "no data for this FY at
-// all" from "this FY has data, just not in the currently selected date range".
-function filteredMcpByFY(){
+function mcpRowsForFY(fy){
+  return DATA.MCP_Enrollment_Data.filter(r => fyOf(r) === fy).map(r => ({ ...r, ...categorizeCourse(r.classCourse) }));
+}
+// Fiscal Year is the only filter on this tab — scoped to the selected FY, or every FY when "all".
+function filteredMcp(){
   return DATA.MCP_Enrollment_Data
     .filter(r => state.fiscalYear === 'all' || fyOf(r) === state.fiscalYear)
     .map(r => ({ ...r, ...categorizeCourse(r.classCourse) }));
 }
-function filteredMcp(){
-  return filteredMcpByFY().filter(r => inRange(r.enrollmentDate));
-}
 
 function renderMcp(){
-  const fyRows = filteredMcpByFY();
-  const rows = fyRows.filter(r => inRange(r.enrollmentDate));
+  const rows = filteredMcp();
 
   const warnEl = el('mcpEmptyWarning');
   if (!rows.length) {
-    let msg;
-    if (!fyRows.length) {
-      msg = state.fiscalYear === 'all'
-        ? 'No MCP enrollment records are available.'
-        : `No enrollments found for ${state.fiscalYear} in any date range. Try a different fiscal year.`;
-    } else {
-      msg = `${state.fiscalYear === 'all' ? 'The available fiscal years have' : state.fiscalYear + ' has'} enrollments, but none fall within ${rangeLabel()}. Widen the date-range filter above or switch fiscal year.`;
-    }
+    const msg = state.fiscalYear === 'all'
+      ? 'No MCP enrollment records are available.'
+      : `No enrollments found for ${state.fiscalYear}. Try a different fiscal year.`;
     warnEl.innerHTML = `<i class="fas fa-triangle-exclamation"></i><span>${msg}</span>`;
     warnEl.style.display = 'flex';
   } else {
@@ -1437,34 +1449,72 @@ function renderMcp(){
   const total = rows.length;
   const completed = rows.filter(r => r.status === 'Completed').length;
   el('mcpTotal').textContent = fmtInt(total);
-  el('mcpTotalSub').textContent = `${state.fiscalYear === 'all' ? 'All fiscal years' : state.fiscalYear} · ${rangeLabel()}`;
+  el('mcpTotalSub').textContent = state.fiscalYear === 'all' ? 'All fiscal years' : state.fiscalYear;
   el('mcpCompletion').textContent = total ? fmtPct(safeDiv(completed,total)*100) : '--';
   el('mcpCompletionSub').textContent = total ? `${fmtInt(completed)} of ${fmtInt(total)} completed` : 'No enrollments in this filter';
 
-  renderMcpCategoryGrid(rows);
+  renderMcpFyCompareChart();
+  renderMcpCategoryGrid();
   renderTeacherBoard(rows);
 }
 
-function renderMcpCategoryGrid(rows){
+// Vertical bar comparing total enrollment volume across every fiscal year on record,
+// independent of the FY filter — the filter only decides which bar gets highlighted.
+function renderMcpFyCompareChart(){
+  const fys = fiscalYearsInData();
+  const totals = fys.map(fy => DATA.MCP_Enrollment_Data.filter(r => fyOf(r) === fy).length);
+  const highlightFY = state.fiscalYear === 'all' ? fys[fys.length - 1] : state.fiscalYear;
+  makeChart('mcpFyCompareChart', {
+    type: 'bar',
+    data: { labels: fys, datasets: [{
+      data: totals,
+      backgroundColor: fys.map(fy => fy === highlightFY ? PALETTE.gold : 'rgba(122,157,151,0.5)'),
+      borderRadius: 6, maxBarThickness: 44
+    }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { grid: { display:false }, ticks: { color:'#a2c2bb', font:{size:11, weight:'600'} } },
+        y: { grid: { color:gridColor }, ticks: { color:'#7a9d97', font:{size:10} } }
+      },
+      plugins: { legend: { display:false }, tooltip: { callbacks: { label: (ctx) => `${fmtInt(ctx.parsed.y)} enrollments` } } }
+    }
+  });
+}
+
+function renderMcpCategoryGrid(){
+  const fys = fiscalYearsInData();
+  const currentFY = state.fiscalYear === 'all' ? fys[fys.length - 1] : state.fiscalYear;
+  const currentIdx = fys.indexOf(currentFY);
+  const previousFY = currentIdx > 0 ? fys[currentIdx - 1] : null;
+  const currentRows = currentFY ? mcpRowsForFY(currentFY) : [];
+  const previousRows = previousFY ? mcpRowsForFY(previousFY) : [];
+
   const grid = el('mcpCategoryGrid');
   grid.innerHTML = COURSE_TAXONOMY.map(cat => {
     const slug = slugify(cat.category);
-    const catRows = rows.filter(r => r.category === cat.category);
-    const catTotal = catRows.length;
-    const catCompleted = catRows.filter(r => r.status === 'Completed').length;
+    const curCatRows = currentRows.filter(r => r.category === cat.category);
+    const prevCatRows = previousRows.filter(r => r.category === cat.category);
+    const catTotal = curCatRows.length;
+    const prevCatTotal = prevCatRows.length;
+    const catCompleted = curCatRows.filter(r => r.status === 'Completed').length;
     const catRate = catTotal ? safeDiv(catCompleted, catTotal) * 100 : 0;
-    const icon = CATEGORY_ICONS[cat.category] || 'fa-layer-group';
+    const delta = (previousFY && prevCatTotal) ? safeDiv(catTotal - prevCatTotal, prevCatTotal) * 100 : null;
 
     const groupStats = cat.groups.map(g => {
-      const gRows = catRows.filter(r => r.group === g);
+      const gRows = curCatRows.filter(r => r.group === g);
       const gTotal = gRows.length;
       const gCompleted = gRows.filter(r => r.status === 'Completed').length;
       return { group: g, total: gTotal, completed: gCompleted, rate: gTotal ? safeDiv(gCompleted, gTotal) * 100 : 0 };
     });
 
-    const chartBlock = catTotal
-      ? `<div style="position:relative; height:130px;"><canvas id="mcpCatChart_${slug}"></canvas></div>`
+    const hasChartData = catTotal > 0 || prevCatTotal > 0;
+    const chartBlock = hasChartData
+      ? `<div class="cat-bar-chart"><canvas id="mcpCatChart_${slug}"></canvas></div><div class="cat-legend" id="mcpCatLegend_${slug}"></div>`
       : `<div class="cat-empty">No enrollments in this filter.</div>`;
+
+    const deltaBadge = delta === null ? '' :
+      `<span class="badge ${delta >= 0 ? 'green' : 'red'}" style="display:inline-block; margin-top:6px;">${delta >= 0 ? '+' : ''}${delta.toFixed(1)}% vs ${previousFY}</span>`;
 
     const completionRows = groupStats.map(g => `
       <div class="cc-row">
@@ -1475,8 +1525,11 @@ function renderMcpCategoryGrid(rows){
     return `
       <div class="category-block" data-cat="${slug}">
         <div class="category-card">
-          <div class="cat-title"><h4><i class="fas ${icon}" style="color:#FFC100; margin-right:8px; opacity:.8;"></i>${cat.category}</h4><span class="cat-total">${fmtInt(catTotal)}</span></div>
-          <p class="cat-sub">Enrollments by Mid-Level Group</p>
+          <div class="cat-title">
+            <h4>${cat.category}</h4>
+            <div style="text-align:right;"><span class="cat-total">${fmtInt(catTotal)}</span>${deltaBadge}</div>
+          </div>
+          <p class="cat-sub">${previousFY ? `${previousFY} vs. ${currentFY}` : (currentFY || 'No fiscal year data')} · by Mid-Level Group</p>
           ${chartBlock}
         </div>
         <div class="completion-card">
@@ -1490,34 +1543,48 @@ function renderMcpCategoryGrid(rows){
     const slug = slugify(cat.category);
     const canvas = el(`mcpCatChart_${slug}`);
     if (!canvas) return;
-    const catRows = rows.filter(r => r.category === cat.category);
+    const curCatRows = currentRows.filter(r => r.category === cat.category);
+    const prevCatRows = previousRows.filter(r => r.category === cat.category);
+    const labels = previousFY ? [previousFY, currentFY] : [currentFY];
+
     makeChart(`mcpCatChart_${slug}`, {
       type: 'bar',
       data: {
-        labels: [cat.category],
+        labels,
         datasets: cat.groups.map((g, gi) => ({
           label: g,
-          data: [catRows.filter(r => r.group === g).length],
+          data: previousFY
+            ? [prevCatRows.filter(r => r.group === g).length, curCatRows.filter(r => r.group === g).length]
+            : [curCatRows.filter(r => r.group === g).length],
           backgroundColor: SEG_COLORS[gi % SEG_COLORS.length],
           borderRadius: 3
         }))
       },
       options: {
         indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-        scales: { x: { stacked: true, display: false }, y: { stacked: true, display: false } },
+        scales: {
+          x: { stacked: true, display: false },
+          y: { stacked: true, grid: { display:false }, ticks: { color:'#a2c2bb', font:{size:10.5, weight:'700'} } }
+        },
         plugins: {
-          legend: {
-            position: 'right', labels: {
-              color: '#c9ddd8', boxWidth: 9, font: { size: 10.5 },
-              generateLabels: (chart) => chart.data.datasets.map((ds, i) => ({
-                text: `${ds.label} — ${ds.data[0]}`, fillStyle: ds.backgroundColor, strokeStyle: ds.backgroundColor, index: i
-              }))
-            }
-          },
+          legend: { display: false },
           tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.x}` } }
         }
       }
     });
+
+    // Custom HTML legend — colored to match each segment (never a flat dark grey) and free to
+    // wrap onto multiple lines, so nothing gets clipped the way a canvas-drawn side legend can.
+    const legendEl = el(`mcpCatLegend_${slug}`);
+    if (legendEl) {
+      legendEl.innerHTML = cat.groups.map((g, gi) => {
+        const count = curCatRows.filter(r => r.group === g).length;
+        const prevCount = prevCatRows.filter(r => r.group === g).length;
+        if (!count && !prevCount) return '';
+        const color = SEG_COLORS[gi % SEG_COLORS.length];
+        return `<span class="cat-legend-item" style="color:${color};"><span class="cat-legend-dot" style="background:${color};"></span>${g}<span class="cat-legend-count">${count}</span></span>`;
+      }).join('');
+    }
   });
 }
 
@@ -1552,7 +1619,9 @@ const RENDERERS = { overview: renderOverview, traffic: renderTraffic, content: r
   paid: renderPaid, email: renderEmail, outreach: renderOutreach, mcp: renderMcp };
 
 function renderActiveTab(){
-  el('footerRangeLabel').textContent = `Showing ${rangeLabel()} · filtered marketing funnel data`;
+  el('footerRangeLabel').textContent = state.activeTab === 'mcp'
+    ? `Showing ${state.fiscalYear === 'all' ? 'all fiscal years' : state.fiscalYear} · filtered marketing funnel data`
+    : `Showing ${rangeLabel()} · filtered marketing funnel data`;
   const fn = RENDERERS[state.activeTab];
   if (fn) fn();
 }
@@ -1579,6 +1648,7 @@ function init(){
   el('lastUpdatedLabel').textContent = 'Last updated: ' + NOW.toLocaleString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
   buildFilterOptions();
   wireFilters();
+  updateGlobalFilterVisibility();
   renderAll();
   loadLiveDataIfConfigured();
 }
