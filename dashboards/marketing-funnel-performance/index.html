@@ -199,25 +199,27 @@
     background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
     border-radius:12px; padding:20px 20px 16px; border:1px solid rgba(255,255,255,0.04);
     box-shadow:0 8px 18px -6px rgba(0,0,0,0.5); overflow:visible;
+    display:flex; flex-direction:column; min-height:300px;
   }
-  .category-card .cat-title { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; gap:8px; }
-  .category-card .cat-title h4 { font-size:14px; font-weight:700; color:#e6f3ef; letter-spacing:-0.1px; }
+  .category-card .cat-title { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:4px; gap:8px; }
+  .category-card .cat-title h4 { font-size:14px; font-weight:700; color:#e6f3ef; letter-spacing:-0.1px; padding-top:2px; }
+  .category-card .cat-title .cat-title-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
   .category-card .cat-title .cat-total { font-size:20px; font-weight:800; color:#FFC100; }
   .category-card .cat-sub { font-size:11px; color:#7a9d97; margin-bottom:12px; }
-  .cat-bar-chart { position:relative; height:92px; margin-bottom:14px; }
+  .cat-chart-wrap { flex:1; display:flex; flex-direction:column; justify-content:center; }
+  .cat-bar-chart { position:relative; height:92px; margin-bottom:14px; flex-shrink:0; }
   .cat-legend { display:flex; flex-wrap:wrap; gap:7px 14px; padding-top:2px; }
   .cat-legend-item { display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; white-space:nowrap; }
   .cat-legend-dot { width:8px; height:8px; border-radius:3px; flex-shrink:0; }
   .cat-legend-count { color:#8fb0aa; font-weight:500; }
   .completion-card {
     background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); border-radius:12px;
-    padding:16px 20px 14px;
+    padding:16px 20px 14px; display:flex; flex-direction:column; min-height:224px;
   }
-  .completion-card .cc-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px; }
+  .completion-card .cc-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px; flex-shrink:0; }
   .completion-card .cc-head .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#7a9d97; font-weight:700; }
   .completion-card .cc-head .rate { font-size:22px; font-weight:800; color:#3FE0A5; }
-  .cc-row { margin-bottom:9px; }
-  .cc-row:last-child { margin-bottom:0; }
+  .cc-rows-wrap { flex:1; display:flex; flex-direction:column; justify-content:space-between; }
   .cc-row .cc-row-top { display:flex; justify-content:space-between; font-size:11.5px; color:#c9ddd8; margin-bottom:4px; }
   .cc-row .cc-row-top .cc-pct { font-weight:700; color:#dceeE9; }
   .cat-empty { font-size:12px; color:#7a9d97; padding:18px 4px; text-align:center; }
@@ -1482,13 +1484,33 @@ function renderMcpFyCompareChart(){
   });
 }
 
-function renderMcpCategoryGrid(){
+// Resolves which rows/labels make up the "current" bar and the "previous" bar for the
+// category comparison charts. A specific FY compares against the single FY right before it;
+// "All Fiscal Years" compares the latest FY against every prior FY combined into one bar.
+function resolveMcpComparison(){
   const fys = fiscalYearsInData();
-  const currentFY = state.fiscalYear === 'all' ? fys[fys.length - 1] : state.fiscalYear;
-  const currentIdx = fys.indexOf(currentFY);
-  const previousFY = currentIdx > 0 ? fys[currentIdx - 1] : null;
-  const currentRows = currentFY ? mcpRowsForFY(currentFY) : [];
-  const previousRows = previousFY ? mcpRowsForFY(previousFY) : [];
+  if (state.fiscalYear === 'all') {
+    const currentFY = fys[fys.length - 1] || null;
+    const priorFYs = fys.slice(0, -1);
+    const previousLabel = priorFYs.length > 1 ? 'Prior FYs' : (priorFYs[0] || null);
+    return {
+      currentFY, previousLabel,
+      currentRows: currentFY ? mcpRowsForFY(currentFY) : [],
+      previousRows: priorFYs.flatMap(mcpRowsForFY)
+    };
+  }
+  const currentFY = state.fiscalYear;
+  const idx = fys.indexOf(currentFY);
+  const previousLabel = idx > 0 ? fys[idx - 1] : null;
+  return {
+    currentFY, previousLabel,
+    currentRows: mcpRowsForFY(currentFY),
+    previousRows: previousLabel ? mcpRowsForFY(previousLabel) : []
+  };
+}
+
+function renderMcpCategoryGrid(){
+  const { currentFY, previousLabel, currentRows, previousRows } = resolveMcpComparison();
 
   const grid = el('mcpCategoryGrid');
   grid.innerHTML = COURSE_TAXONOMY.map(cat => {
@@ -1499,7 +1521,7 @@ function renderMcpCategoryGrid(){
     const prevCatTotal = prevCatRows.length;
     const catCompleted = curCatRows.filter(r => r.status === 'Completed').length;
     const catRate = catTotal ? safeDiv(catCompleted, catTotal) * 100 : 0;
-    const delta = (previousFY && prevCatTotal) ? safeDiv(catTotal - prevCatTotal, prevCatTotal) * 100 : null;
+    const delta = (previousLabel && prevCatTotal) ? safeDiv(catTotal - prevCatTotal, prevCatTotal) * 100 : null;
 
     const groupStats = cat.groups.map(g => {
       const gRows = curCatRows.filter(r => r.group === g);
@@ -1514,7 +1536,7 @@ function renderMcpCategoryGrid(){
       : `<div class="cat-empty">No enrollments in this filter.</div>`;
 
     const deltaBadge = delta === null ? '' :
-      `<span class="badge ${delta >= 0 ? 'green' : 'red'}" style="display:inline-block; margin-top:6px;">${delta >= 0 ? '+' : ''}${delta.toFixed(1)}% vs ${previousFY}</span>`;
+      `<span class="badge ${delta >= 0 ? 'green' : 'red'}">${delta >= 0 ? '+' : ''}${delta.toFixed(1)}% vs ${previousLabel}</span>`;
 
     const completionRows = groupStats.map(g => `
       <div class="cc-row">
@@ -1527,14 +1549,14 @@ function renderMcpCategoryGrid(){
         <div class="category-card">
           <div class="cat-title">
             <h4>${cat.category}</h4>
-            <div style="text-align:right;"><span class="cat-total">${fmtInt(catTotal)}</span>${deltaBadge}</div>
+            <div class="cat-title-right">${deltaBadge}<span class="cat-total">${fmtInt(catTotal)}</span></div>
           </div>
-          <p class="cat-sub">${previousFY ? `${previousFY} vs. ${currentFY}` : (currentFY || 'No fiscal year data')} · by Mid-Level Group</p>
-          ${chartBlock}
+          <p class="cat-sub">${previousLabel ? `${previousLabel} vs. ${currentFY}` : (currentFY || 'No fiscal year data')} · by Mid-Level Group</p>
+          <div class="cat-chart-wrap">${chartBlock}</div>
         </div>
         <div class="completion-card">
           <div class="cc-head"><span class="lbl">Completion Rate</span><span class="rate">${catTotal ? fmtPct(catRate) : '--'}</span></div>
-          ${completionRows}
+          <div class="cc-rows-wrap">${completionRows}</div>
         </div>
       </div>`;
   }).join('');
@@ -1545,7 +1567,7 @@ function renderMcpCategoryGrid(){
     if (!canvas) return;
     const curCatRows = currentRows.filter(r => r.category === cat.category);
     const prevCatRows = previousRows.filter(r => r.category === cat.category);
-    const labels = previousFY ? [previousFY, currentFY] : [currentFY];
+    const labels = previousLabel ? [previousLabel, currentFY] : [currentFY];
 
     makeChart(`mcpCatChart_${slug}`, {
       type: 'bar',
@@ -1553,7 +1575,7 @@ function renderMcpCategoryGrid(){
         labels,
         datasets: cat.groups.map((g, gi) => ({
           label: g,
-          data: previousFY
+          data: previousLabel
             ? [prevCatRows.filter(r => r.group === g).length, curCatRows.filter(r => r.group === g).length]
             : [curCatRows.filter(r => r.group === g).length],
           backgroundColor: SEG_COLORS[gi % SEG_COLORS.length],
