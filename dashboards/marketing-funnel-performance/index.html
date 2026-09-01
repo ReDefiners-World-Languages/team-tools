@@ -27,7 +27,7 @@
     background: rgba(255,255,255,0.05);
     backdrop-filter: blur(18px) saturate(180%);
     -webkit-backdrop-filter: blur(18px) saturate(180%);
-    border-radius:48px;
+    border-radius:12px;
     padding:32px 36px 40px;
     box-shadow: 0 30px 60px -20px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.06);
@@ -73,9 +73,11 @@
   .tab-avatar:hover .tab-name { opacity:1; }
 
   .notice-banner { background:rgba(255,193,0,0.08); border:1px solid rgba(255,193,0,0.22); color:#FFC100;
-    padding:11px 18px; border-radius:16px; font-size:12.5px; font-weight:500; margin-bottom:16px;
+    padding:11px 18px; border-radius:12px; font-size:12.5px; font-weight:500; margin-bottom:16px;
     display:flex; align-items:center; gap:10px; }
   .notice-banner i { font-size:13px; }
+  .notice-banner.subtle { background:rgba(255,255,255,0.03); border-color:rgba(255,255,255,0.08); color:#a2c2bb; }
+  .notice-banner.danger { background:rgba(255,116,0,0.08); border-color:rgba(255,116,0,0.22); color:#ffb27a; }
 
   .filter-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:12px; }
   .filter-tag {
@@ -94,8 +96,10 @@
   .filter-select-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:20px; }
   .tag-select {
     background:rgba(255,255,255,0.03); border:1px solid rgba(223,240,238,0.10); color:#dceeE9;
-    font-size:12.5px; font-weight:500; padding:8px 14px; border-radius:60px; outline:none; cursor:pointer;
-    font-family:'Montserrat',sans-serif;
+    font-size:12.5px; font-weight:500; padding:8px 34px 8px 16px; border-radius:60px; outline:none; cursor:pointer;
+    font-family:'Montserrat',sans-serif; appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%237a9d97' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 14px center; background-size:10px 7px;
   }
   .tag-select option { background:#0a2530; color:#eef6f3; }
   .filter-select-label { font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:#5c9d8f; margin-right:-4px; }
@@ -104,7 +108,7 @@
   .metric-grid.cols-8 { grid-template-columns:repeat(4,1fr); }
   .metric-card {
     background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    border-radius:28px; padding:20px 20px 18px; border:1px solid rgba(255,255,255,0.04);
+    border-radius:12px; padding:20px 20px 18px; border:1px solid rgba(255,255,255,0.04);
     box-shadow:0 8px 18px -8px rgba(0,0,0,0.5); transition:all .2s ease;
   }
   .metric-card:hover { background:rgba(255,255,255,0.045); border-color:rgba(255,255,255,0.08); transform:translateY(-2px); }
@@ -118,11 +122,15 @@
   .metric-value { font-size:28px; font-weight:700; letter-spacing:-0.5px; line-height:1.2;
     background:linear-gradient(to bottom,#ffffff,#d9ecE6); -webkit-background-clip:text; background-clip:text; color:transparent; }
   .metric-sub { font-size:11.5px; color:#7a9d97; margin-top:8px; }
+  .metric-change { font-size:12px; font-weight:500; margin-top:8px; display:inline-flex; align-items:center; gap:6px;
+    background:rgba(63,224,165,0.08); padding:3px 10px 3px 8px; border-radius:60px; color:#7fe0c0; border:1px solid rgba(63,224,165,0.08); }
+  .metric-change.down { background:rgba(255,116,0,0.1); color:#ffb27a; border-color:rgba(255,116,0,0.12); }
+  .metric-change.flat { background:rgba(255,255,255,0.05); color:#a2c2bb; border-color:rgba(255,255,255,0.06); }
 
   .row-duo { display:grid; grid-template-columns:1.2fr 0.8fr; gap:22px; margin-bottom:24px; }
   .chart-card {
     background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    border-radius:32px; padding:24px 24px 28px; border:1px solid rgba(255,255,255,0.04);
+    border-radius:12px; padding:24px 24px 28px; border:1px solid rgba(255,255,255,0.04);
     box-shadow:0 8px 18px -6px rgba(0,0,0,0.5);
   }
   .card-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:8px; }
@@ -137,7 +145,7 @@
   .bottom-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:8px; margin-bottom:24px; }
   .platform-card {
     background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    border-radius:32px; padding:22px 24px 26px; border:1px solid rgba(255,255,255,0.04);
+    border-radius:12px; padding:22px 24px 26px; border:1px solid rgba(255,255,255,0.04);
   }
 
   .breakdown-table { width:100%; border-collapse:collapse; font-size:12.5px; }
@@ -163,7 +171,7 @@
 
   .kpi-mini-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:14px; margin-bottom:24px; }
   .kpi-mini {
-    background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.05); border-radius:22px; padding:16px 18px;
+    background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.05); border-radius:12px; padding:16px 18px;
   }
   .kpi-mini .lbl { font-size:11.5px; color:#a2c2bb; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .kpi-mini .val { font-size:22px; font-weight:700; color:#eef6f3; margin-top:6px; }
@@ -179,10 +187,51 @@
   .progress-track { width:100%; height:10px; border-radius:8px; background:rgba(255,255,255,0.05); overflow:hidden; }
   .progress-fill { height:100%; background:linear-gradient(90deg,#FFC100,#FF7400); border-radius:8px; }
 
+  /* MCP enrollment tab — category cards */
+  .mcp-category-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-bottom:24px; }
+  .category-block { display:flex; flex-direction:column; gap:16px; }
+  .category-card {
+    background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border-radius:12px; padding:20px 20px 16px; border:1px solid rgba(255,255,255,0.04);
+    box-shadow:0 8px 18px -6px rgba(0,0,0,0.5);
+  }
+  .category-card .cat-title { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; gap:8px; }
+  .category-card .cat-title h4 { font-size:14px; font-weight:700; color:#e6f3ef; letter-spacing:-0.1px; }
+  .category-card .cat-title .cat-total { font-size:20px; font-weight:800; color:#FFC100; }
+  .category-card .cat-sub { font-size:11px; color:#7a9d97; margin-bottom:10px; }
+  .completion-card {
+    background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); border-radius:12px;
+    padding:16px 20px 14px;
+  }
+  .completion-card .cc-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px; }
+  .completion-card .cc-head .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#7a9d97; font-weight:700; }
+  .completion-card .cc-head .rate { font-size:22px; font-weight:800; color:#3FE0A5; }
+  .cc-row { margin-bottom:9px; }
+  .cc-row:last-child { margin-bottom:0; }
+  .cc-row .cc-row-top { display:flex; justify-content:space-between; font-size:11.5px; color:#c9ddd8; margin-bottom:4px; }
+  .cc-row .cc-row-top .cc-pct { font-weight:700; color:#dceeE9; }
+  .cat-empty { font-size:12px; color:#7a9d97; padding:18px 4px; text-align:center; }
+
+  .teacher-board { display:flex; flex-direction:column; gap:8px; }
+  .teacher-row { display:flex; align-items:center; gap:14px; padding:10px 14px; border-radius:12px;
+    background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); }
+  .teacher-rank { width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:800; color:#dceeE9; background:rgba(255,255,255,0.06); flex-shrink:0; }
+  .teacher-rank.gold { background:linear-gradient(145deg,#FFC100,#FF7400); color:#00131A; }
+  .teacher-rank.silver { background:linear-gradient(145deg,#DFF0EE,#a8c2bc); color:#00131A; }
+  .teacher-rank.bronze { background:linear-gradient(145deg,#d99a5c,#a66a34); color:#00131A; }
+  .teacher-name { flex:1; min-width:0; font-size:13px; font-weight:600; color:#e6f3ef; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .teacher-meta { font-size:11px; color:#7a9d97; flex-shrink:0; }
+  .teacher-rate { font-size:15px; font-weight:800; color:#3FE0A5; flex-shrink:0; width:56px; text-align:right; }
+
+  @media (max-width:1200px) {
+    .mcp-category-grid { grid-template-columns:repeat(2,1fr); }
+  }
   @media (max-width:1100px) {
     .metric-grid { grid-template-columns:repeat(2,1fr); }
     .row-duo, .bottom-grid { grid-template-columns:1fr; }
     .dashboard { padding:24px 20px; }
+    .mcp-category-grid { grid-template-columns:1fr; }
   }
   @media (max-width:580px) {
     .metric-grid { grid-template-columns:1fr; }
@@ -220,7 +269,7 @@
         <div class="tab-avatar" data-tab="conversions" title="Conversions & Key Events"><i class="fas fa-bullseye"></i><span class="tab-name">Conversions</span></div>
         <div class="tab-avatar" data-tab="paid" title="Paid Media"><i class="fas fa-bullhorn"></i><span class="tab-name">Paid Media</span></div>
         <div class="tab-avatar" data-tab="email" title="Email Marketing"><i class="fas fa-envelope"></i><span class="tab-name">Email</span></div>
-        <div class="tab-avatar" data-tab="outreach" title="Field Outreach"><i class="fas fa-people-group"></i><span class="tab-name">Outreach</span></div>
+        <div class="tab-avatar" data-tab="outreach" title="Field Outreach"><i class="fas fa-hands-helping"></i><span class="tab-name">Outreach</span></div>
         <div class="tab-avatar" data-tab="mcp" title="MCP Enrollments"><i class="fas fa-graduation-cap"></i><span class="tab-name">Enrollments</span></div>
         <!-- Reserved navigation slot — enable once Sales Funnel Analytics data source is connected
         <div class="tab-avatar" data-tab="sales-funnel" title="Sales Funnel Analytics"><i class="fas fa-filter"></i><span class="tab-name">Sales Funnel</span></div>
@@ -420,36 +469,23 @@
 
   <!-- TAB 8: MCP PROGRAM ENROLLMENTS -->
   <div class="tab-section" id="tab-mcp">
-    <div class="filter-row" style="margin-bottom:16px;">
-      <span class="filter-select-label">High-Level Category</span>
-      <select class="tag-select" id="filterMcpCategory"></select>
-      <span class="filter-select-label">Mid-Level Group</span>
-      <select class="tag-select" id="filterMcpGroup"></select>
-      <span class="filter-select-label">Cohort</span>
-      <select class="tag-select" id="filterMcpCohort"></select>
-      <span class="filter-select-label">Status</span>
-      <select class="tag-select" id="filterMcpStatus"></select>
+    <div class="filter-row" style="margin-bottom:8px;">
+      <span class="filter-select-label">Fiscal Year</span>
+      <select class="tag-select" id="filterFiscalYear"></select>
+      <span style="font-size:11.5px; color:#5c9d8f;"><i class="fas fa-circle-info" style="margin-right:6px;"></i>The date-range filter above narrows further within the selected fiscal year.</span>
     </div>
+    <div id="mcpEmptyWarning" class="notice-banner danger" style="display:none;"></div>
+
     <div class="metric-grid" style="grid-template-columns:repeat(2,1fr); max-width:640px;">
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Total Enrollment Volume</span><i class="fas fa-users"></i></div><div class="metric-value" id="mcpTotal">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Completion Rate (%)</span><i class="fas fa-circle-check"></i></div><div class="metric-value" id="mcpCompletion">--</div></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Total Enrollment Volume</span><i class="fas fa-users"></i></div><div class="metric-value" id="mcpTotal">--</div><p class="metric-sub" id="mcpTotalSub">--</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Completion Rate (%)</span><i class="fas fa-circle-check"></i></div><div class="metric-value" id="mcpCompletion">--</div><p class="metric-sub" id="mcpCompletionSub">--</p></div>
     </div>
-    <div class="row-duo">
-      <div class="chart-card">
-        <div class="card-title"><h3><i class="fas fa-layer-group"></i>Enrollments by High-Level Category</h3></div>
-        <div style="position:relative; height:300px;"><canvas id="mcpCategoryChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="card-title"><h3><i class="fas fa-diagram-project"></i>Drill-down: Mid-Level Groups</h3><span class="meta">Click a category bar to filter</span></div>
-        <div style="position:relative; height:300px;"><canvas id="mcpGroupChart"></canvas></div>
-      </div>
-    </div>
+
+    <div class="mcp-category-grid" id="mcpCategoryGrid"></div>
+
     <div class="platform-card">
-      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table"></i>Cohort Roster</h3></div>
-      <div class="table-scroll"><table class="breakdown-table">
-        <thead><tr><th>Status</th><th>High-Level Category</th><th>Mid-Level Group</th><th>Class: Course</th><th>Class: Class Name</th><th>Instructor</th></tr></thead>
-        <tbody id="mcpTableBody"></tbody>
-      </table></div>
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-award"></i>Top 10 Teachers by Completion Rate</h3><span class="meta">Min. 3 enrollments in range</span></div>
+      <div class="teacher-board" id="teacherBoard"></div>
     </div>
   </div>
 
@@ -558,9 +594,13 @@ const CRM_CAMPAIGNS = ['Fall Enrollment Drive','Welcome Series','Spring Newslett
 const SUBSCRIPTIONS = ['Newsletter','Enrollment Updates','Event Invites','Donor Updates'];
 const OUTREACH_TYPES = ['Community Event','School Fair','Door-to-Door','Partner Referral Table','Pop-up Workshop'];
 const OUTREACH_LOCATIONS = ['Tampa Family Center','Brandon Library','Riverview Community Center','East Tampa Resource Hub','Plant City Outreach Site'];
-const COHORTS = ['Fall 2025','Spring 2026','Summer 2026'];
+// Fiscal years present in Class: Program Cohort, each with its own historical window so the
+// Fiscal Year filter and the global date-range filter produce realistic overlaps (or realistic
+// empty combinations, which is what drives the empty-state warning on the Enrollment tab).
+const FISCAL_YEARS = ['FY23-24', 'FY24-25', 'FY25-26'];
+const FY_DAY_RANGES = { 'FY23-24': [500, 800], 'FY24-25': [150, 499], 'FY25-26': [0, 150] };
 const STATUSES = ['Enrolled','Completed','Withdrawn','Waitlisted'];
-const INSTRUCTORS = ['M. Alvarez','R. Chen','L. Hasan','D. Okafor','S. Delgado','P. Novak'];
+const INSTRUCTORS = ['M. Alvarez','R. Chen','L. Hasan','D. Okafor','S. Delgado','P. Novak','A. Ibrahim','K. Zhang','J. Ferreira','T. Osei','N. Marchetti','C. Reyes'];
 const COURSE_VARIANTS = [': Beginner', ': Intermediate', ': Advanced', ' - Morning Cohort', ' - Evening Cohort', ''];
 
 function genDailySeries(days, seedBase, base, growth, noiseFrac){
@@ -766,22 +806,25 @@ MOCK.MCP_Enrollment_Data = (() => {
   const rows = [];
   let id = 0;
   ALL_GROUPS.forEach((g) => {
-    const n = randInt(id + 1000 + g.group.length, 4, 12);
-    for (let k = 0; k < n; k++) {
-      id++;
-      const variant = pick(COURSE_VARIANTS, id+1001);
-      const courseName = `${g.group}${variant}`;
-      const i = randInt(id+1003, 0, MOCK_DAYS);
-      rows.push({
-        enrollmentDate: toISODate(daysAgo(i)),
-        status: pick(STATUSES, id+1005),
-        classCourse: courseName,
-        classProgramCohort: pick(COHORTS, id+1007),
-        className: `${g.group.split(' ')[0]} ${pick(COHORTS, id+1009)} Section ${randInt(id+1011,1,3)}`,
-        classInstructor: pick(INSTRUCTORS, id+1013),
-        location: pick(LOCATIONS, id+1015)
-      });
-    }
+    FISCAL_YEARS.forEach((fy) => {
+      const [dMin, dMax] = FY_DAY_RANGES[fy];
+      const n = randInt(id + 1000 + g.group.length, 6, 18);
+      for (let k = 0; k < n; k++) {
+        id++;
+        const variant = pick(COURSE_VARIANTS, id+1001);
+        const courseName = `${g.group}${variant}`;
+        const i = randInt(id+1003, dMin, dMax);
+        rows.push({
+          enrollmentDate: toISODate(daysAgo(i)),
+          status: pick(STATUSES, id+1005),
+          classCourse: courseName,
+          classProgramCohort: fy,
+          className: `${g.group.split(' ')[0]} ${fy} Section ${randInt(id+1011,1,3)}`,
+          classInstructor: pick(INSTRUCTORS, id+1013),
+          location: pick(LOCATIONS, id+1015)
+        });
+      }
+    });
   });
   return rows;
 })();
@@ -940,10 +983,7 @@ const state = {
   objective: 'all',
   crmCampaign: 'all',
   subscription: 'all',
-  mcpCategory: 'all',
-  mcpGroup: 'all',
-  mcpCohort: 'all',
-  mcpStatus: 'all',
+  fiscalYear: 'all',
   activeTab: 'overview',
   trafficSearch: ''
 };
@@ -986,10 +1026,17 @@ function buildFilterOptions(){
   fillSelect(el('filterObjective'), uniq(OBJECTIVES), true, 'All Objectives');
   fillSelect(el('filterCrmCampaign'), uniq(DATA.Email_Marketing_Data.map(r => r.campaignCRM)), true, 'All Campaigns');
   fillSelect(el('filterSubscription'), uniq(DATA.Email_Marketing_Data.map(r => r.subscription)), true, 'All Subscriptions');
-  fillSelect(el('filterMcpCategory'), uniq(COURSE_TAXONOMY.map(c => c.category)), true, 'All Categories');
-  fillSelect(el('filterMcpGroup'), uniq(ALL_GROUPS.map(g => g.group)), true, 'All Groups');
-  fillSelect(el('filterMcpCohort'), uniq(COHORTS), true, 'All Cohorts');
-  fillSelect(el('filterMcpStatus'), uniq(STATUSES), true, 'All Statuses');
+  fillSelect(el('filterFiscalYear'), fiscalYearsInData(), true, 'All Fiscal Years');
+}
+
+// Pulls every distinct FYxx-xx token actually present in Class: Program Cohort, so the filter
+// always reflects real cohorts rather than a hardcoded list.
+function fiscalYearsInData(){
+  const found = DATA.MCP_Enrollment_Data.map(r => {
+    const m = str(r.classProgramCohort).match(/FY\d{2}-\d{2}/i);
+    return m ? m[0].toUpperCase() : null;
+  });
+  return uniq(found).sort();
 }
 
 function wireFilters(){
@@ -1016,8 +1063,7 @@ function wireFilters(){
   const bind = (id, key) => el(id).addEventListener('change', (e) => { state[key] = e.target.value; renderActiveTab(); });
   bind('filterCategory','category'); bind('filterLocation','location'); bind('filterPlatform','platform');
   bind('filterEmailType','emailType'); bind('filterObjective','objective'); bind('filterCrmCampaign','crmCampaign');
-  bind('filterSubscription','subscription'); bind('filterMcpCategory','mcpCategory'); bind('filterMcpGroup','mcpGroup');
-  bind('filterMcpCohort','mcpCohort'); bind('filterMcpStatus','mcpStatus');
+  bind('filterSubscription','subscription'); bind('filterFiscalYear','fiscalYear');
 
   el('trafficSearch').addEventListener('input', (e) => { state.trafficSearch = e.target.value.toLowerCase(); renderTraffic(); });
 
@@ -1345,62 +1391,158 @@ function renderOutreach(){
 /* =========================================================================================
    PART 15 — RENDER: TAB 8 MCP PROGRAM ENROLLMENTS
    ========================================================================================= */
+const CATEGORY_ICONS = {
+  'ESOL for Adults': 'fa-language',
+  "Let's Learn Courses": 'fa-comments',
+  'Workshops for Adults': 'fa-chalkboard-user',
+  'Professionals': 'fa-briefcase',
+  'English for School Success': 'fa-school',
+  'Youth Clubs': 'fa-child-reaching'
+};
+const SEG_COLORS = [PALETTE.gold, PALETTE.blue, PALETTE.teal, PALETTE.purple, PALETTE.pink, PALETTE.orange, PALETTE.ice];
+function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+function fyOf(row){ const m = str(row.classProgramCohort).match(/FY\d{2}-\d{2}/i); return m ? m[0].toUpperCase() : str(row.classProgramCohort); }
+
+// FY-only filter (ignores the global date range) — used to tell apart "no data for this FY at
+// all" from "this FY has data, just not in the currently selected date range".
+function filteredMcpByFY(){
+  return DATA.MCP_Enrollment_Data
+    .filter(r => state.fiscalYear === 'all' || fyOf(r) === state.fiscalYear)
+    .map(r => ({ ...r, ...categorizeCourse(r.classCourse) }));
+}
 function filteredMcp(){
-  return DATA.MCP_Enrollment_Data.filter(r => {
-    const cat = r.highLevelCategory ? { category: r.highLevelCategory, group: r.midLevelGroup } : categorizeCourse(r.classCourse);
-    if (!inRange(r.enrollmentDate)) return false;
-    if (state.category !== 'all' && cat.category !== state.category) return false;
-    if (state.mcpCategory !== 'all' && cat.category !== state.mcpCategory) return false;
-    if (state.mcpGroup !== 'all' && cat.group !== state.mcpGroup) return false;
-    if (state.mcpCohort !== 'all' && r.classProgramCohort !== state.mcpCohort) return false;
-    if (state.mcpStatus !== 'all' && r.status !== state.mcpStatus) return false;
-    if (state.location !== 'all' && r.location !== state.location) return false;
-    return true;
-  }).map(r => ({ ...r, ...categorizeCourse(r.classCourse) }));
+  return filteredMcpByFY().filter(r => inRange(r.enrollmentDate));
 }
 
 function renderMcp(){
-  const rows = filteredMcp();
+  const fyRows = filteredMcpByFY();
+  const rows = fyRows.filter(r => inRange(r.enrollmentDate));
+
+  const warnEl = el('mcpEmptyWarning');
+  if (!rows.length) {
+    let msg;
+    if (!fyRows.length) {
+      msg = state.fiscalYear === 'all'
+        ? 'No MCP enrollment records are available.'
+        : `No enrollments found for ${state.fiscalYear} in any date range. Try a different fiscal year.`;
+    } else {
+      msg = `${state.fiscalYear === 'all' ? 'The available fiscal years have' : state.fiscalYear + ' has'} enrollments, but none fall within ${rangeLabel()}. Widen the date-range filter above or switch fiscal year.`;
+    }
+    warnEl.innerHTML = `<i class="fas fa-triangle-exclamation"></i><span>${msg}</span>`;
+    warnEl.style.display = 'flex';
+  } else {
+    warnEl.style.display = 'none';
+  }
+
   const total = rows.length;
   const completed = rows.filter(r => r.status === 'Completed').length;
-
   el('mcpTotal').textContent = fmtInt(total);
-  el('mcpCompletion').textContent = fmtPct(safeDiv(completed,total)*100);
+  el('mcpTotalSub').textContent = `${state.fiscalYear === 'all' ? 'All fiscal years' : state.fiscalYear} · ${rangeLabel()}`;
+  el('mcpCompletion').textContent = total ? fmtPct(safeDiv(completed,total)*100) : '--';
+  el('mcpCompletionSub').textContent = total ? `${fmtInt(completed)} of ${fmtInt(total)} completed` : 'No enrollments in this filter';
 
-  const byCat = {};
-  rows.forEach(r => { byCat[r.category] = (byCat[r.category]||0) + 1; });
-  const catEntries = COURSE_TAXONOMY.map(c => [c.category, byCat[c.category]||0]);
+  renderMcpCategoryGrid(rows);
+  renderTeacherBoard(rows);
+}
 
-  makeChart('mcpCategoryChart', {
-    type: 'bar',
-    data: { labels: catEntries.map(c=>c[0]), datasets: [{ label: 'Enrollments', data: catEntries.map(c=>c[1]), backgroundColor: PALETTE.gold, borderRadius: 6 }] },
-    options: { responsive: true, maintainAspectRatio: false, scales: { y:{grid:{color:gridColor}}, x:{grid:{display:false}, ticks:{maxRotation:20,minRotation:0,font:{size:10}}} },
-      plugins: { legend: { display:false } },
-      onClick: (evt, elements) => {
-        if (!elements.length) return;
-        const idx = elements[0].index;
-        state.mcpCategory = catEntries[idx][0];
-        el('filterMcpCategory').value = state.mcpCategory;
-        renderMcp();
-      } }
+function renderMcpCategoryGrid(rows){
+  const grid = el('mcpCategoryGrid');
+  grid.innerHTML = COURSE_TAXONOMY.map(cat => {
+    const slug = slugify(cat.category);
+    const catRows = rows.filter(r => r.category === cat.category);
+    const catTotal = catRows.length;
+    const catCompleted = catRows.filter(r => r.status === 'Completed').length;
+    const catRate = catTotal ? safeDiv(catCompleted, catTotal) * 100 : 0;
+    const icon = CATEGORY_ICONS[cat.category] || 'fa-layer-group';
+
+    const groupStats = cat.groups.map(g => {
+      const gRows = catRows.filter(r => r.group === g);
+      const gTotal = gRows.length;
+      const gCompleted = gRows.filter(r => r.status === 'Completed').length;
+      return { group: g, total: gTotal, completed: gCompleted, rate: gTotal ? safeDiv(gCompleted, gTotal) * 100 : 0 };
+    });
+
+    const chartBlock = catTotal
+      ? `<div style="position:relative; height:130px;"><canvas id="mcpCatChart_${slug}"></canvas></div>`
+      : `<div class="cat-empty">No enrollments in this filter.</div>`;
+
+    const completionRows = groupStats.map(g => `
+      <div class="cc-row">
+        <div class="cc-row-top"><span>${g.group}</span><span class="cc-pct">${g.total ? fmtPct(g.rate) : '—'}</span></div>
+        <div class="progress-track"><div class="progress-fill" style="width:${g.total ? g.rate : 0}%;"></div></div>
+      </div>`).join('');
+
+    return `
+      <div class="category-block" data-cat="${slug}">
+        <div class="category-card">
+          <div class="cat-title"><h4><i class="fas ${icon}" style="color:#FFC100; margin-right:8px; opacity:.8;"></i>${cat.category}</h4><span class="cat-total">${fmtInt(catTotal)}</span></div>
+          <p class="cat-sub">Enrollments by Mid-Level Group</p>
+          ${chartBlock}
+        </div>
+        <div class="completion-card">
+          <div class="cc-head"><span class="lbl">Completion Rate</span><span class="rate">${catTotal ? fmtPct(catRate) : '--'}</span></div>
+          ${completionRows}
+        </div>
+      </div>`;
+  }).join('');
+
+  COURSE_TAXONOMY.forEach(cat => {
+    const slug = slugify(cat.category);
+    const canvas = el(`mcpCatChart_${slug}`);
+    if (!canvas) return;
+    const catRows = rows.filter(r => r.category === cat.category);
+    makeChart(`mcpCatChart_${slug}`, {
+      type: 'bar',
+      data: {
+        labels: [cat.category],
+        datasets: cat.groups.map((g, gi) => ({
+          label: g,
+          data: [catRows.filter(r => r.group === g).length],
+          backgroundColor: SEG_COLORS[gi % SEG_COLORS.length],
+          borderRadius: 3
+        }))
+      },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        scales: { x: { stacked: true, display: false }, y: { stacked: true, display: false } },
+        plugins: {
+          legend: {
+            position: 'right', labels: {
+              color: '#c9ddd8', boxWidth: 9, font: { size: 10.5 },
+              generateLabels: (chart) => chart.data.datasets.map((ds, i) => ({
+                text: `${ds.label} — ${ds.data[0]}`, fillStyle: ds.backgroundColor, strokeStyle: ds.backgroundColor, index: i
+              }))
+            }
+          },
+          tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.x}` } }
+        }
+      }
+    });
   });
+}
 
-  const groupScope = state.mcpCategory === 'all' ? ALL_GROUPS : ALL_GROUPS.filter(g => g.category === state.mcpCategory);
-  const byGroup = {};
-  rows.forEach(r => { byGroup[r.group] = (byGroup[r.group]||0) + 1; });
-  const groupEntries = groupScope.map(g => [g.group, byGroup[g.group]||0]);
-
-  makeChart('mcpGroupChart', {
-    type: 'bar',
-    data: { labels: groupEntries.map(g=>g[0]), datasets: [{ label: 'Enrollments', data: groupEntries.map(g=>g[1]), backgroundColor: PALETTE.purple, borderRadius: 6 }] },
-    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x:{grid:{color:gridColor}}, y:{grid:{display:false}, ticks:{font:{size:10}}} },
-      plugins: { legend: { display:false } } }
+function renderTeacherBoard(rows){
+  const byTeacher = {};
+  rows.forEach(r => {
+    if (!byTeacher[r.classInstructor]) byTeacher[r.classInstructor] = { total: 0, completed: 0 };
+    byTeacher[r.classInstructor].total++;
+    if (r.status === 'Completed') byTeacher[r.classInstructor].completed++;
   });
+  const ranked = Object.entries(byTeacher)
+    .filter(([,v]) => v.total >= 3)
+    .map(([name,v]) => ({ name, total: v.total, completed: v.completed, rate: safeDiv(v.completed, v.total) * 100 }))
+    .sort((a,b) => b.rate - a.rate || b.total - a.total)
+    .slice(0, 10);
 
-  el('mcpTableBody').innerHTML = rows.slice(0,250).map(r => {
-    const statusColor = r.status==='Completed'?'green':(r.status==='Withdrawn'?'red':(r.status==='Waitlisted'?'grey':'blue'));
-    return `<tr><td><span class="badge ${statusColor}">${r.status}</span></td><td>${r.category}</td><td>${r.group}</td><td>${r.classCourse}</td><td>${r.className}</td><td>${r.classInstructor}</td></tr>`;
-  }).join('') || `<tr><td colspan="6" style="text-align:center;color:#7a9d97;">No enrollments match these filters.</td></tr>`;
+  el('teacherBoard').innerHTML = ranked.map((t,i) => {
+    const rankClass = i===0 ? 'gold' : (i===1 ? 'silver' : (i===2 ? 'bronze' : ''));
+    return `<div class="teacher-row">
+      <div class="teacher-rank ${rankClass}">${i+1}</div>
+      <div class="teacher-name">${t.name}</div>
+      <div class="teacher-meta">${fmtInt(t.completed)}/${fmtInt(t.total)} completed</div>
+      <div class="teacher-rate">${fmtPct(t.rate)}</div>
+    </div>`;
+  }).join('') || `<div class="cat-empty">Not enough data in this filter — each instructor needs at least 3 enrollments to rank.</div>`;
 }
 
 /* =========================================================================================
