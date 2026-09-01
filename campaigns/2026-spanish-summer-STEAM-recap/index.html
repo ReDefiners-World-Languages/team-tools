@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ReDefiners · Spanish Summer STEAM Campaign Recap 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=PT+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#00131A;
+    font-family:'Montserrat', sans-serif;
+    padding:24px;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    color:#eef6f3;
+  }
+  .voice { font-family:'PT Serif', serif; }
+
+  .dashboard {
+    max-width:1280px;
+    width:100%;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    border-radius:12px;
+    padding:36px 40px 44px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; flex-wrap:wrap; gap:16px 12px; }
+  .brand { display:flex; align-items:center; gap:16px; }
+  .brand-logo { height:38px; width:auto; object-fit:contain; }
+  .brand h1 { font-weight:700; font-size:24px; letter-spacing:-0.3px;
+    background:linear-gradient(to right, #f7f4ea, #ffe9b0);
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .brand h1 span { font-weight:inherit; font-size:inherit; letter-spacing:inherit;
+    background:inherit; -webkit-background-clip:inherit; background-clip:inherit;
+    color:inherit; opacity:.72; }
+
+  .date-badge {
+    background:rgba(255,255,255,0.04); padding:8px 18px 8px 16px; border-radius:60px;
+    font-size:14px; font-weight:450; color:#c9ddd8; border:1px solid rgba(255,255,255,0.05);
+    backdrop-filter:blur(4px); display:flex; align-items:center; gap:10px;
+  }
+  .date-badge i { color:#FFC100; font-size:14px; }
+
+  .hero {
+    display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:20px;
+    margin-bottom:28px; padding-bottom:24px; border-bottom:1px solid rgba(255,255,255,0.06);
+  }
+  .hero h2 { font-family:'PT Serif', serif; font-weight:700; font-size:34px; color:#f7f4ea; margin-bottom:8px; }
+  .hero p { color:#a2c2bb; font-size:15px; max-width:560px; line-height:1.6; }
+  .hero-goal { text-align:right; }
+  .hero-goal .lbl { font-size:11.5px; text-transform:uppercase; letter-spacing:.08em; color:#7a9d97; margin-bottom:6px; }
+  .hero-goal .val { font-size:40px; font-weight:800; color:#3FE0A5; line-height:1; }
+  .hero-goal .sub { font-size:12.5px; color:#a2c2bb; margin-top:6px; }
+
+  .metric-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:28px; }
+  .metric-card {
+    background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border-radius:12px; padding:20px 20px 18px; border:1px solid rgba(255,255,255,0.04);
+    box-shadow:0 8px 18px -8px rgba(0,0,0,0.5); transition:all .2s ease;
+  }
+  .metric-card:hover { background:rgba(255,255,255,0.045); border-color:rgba(255,255,255,0.08); transform:translateY(-2px); }
+  .metric-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .metric-header i { font-size:17px; color:#FFC100; opacity:.9; background:rgba(255,193,0,0.1); padding:9px; border-radius:14px; }
+  .metric-label { font-size:12.5px; font-weight:500; color:#a2c2bb; letter-spacing:0.2px; }
+  .metric-value { font-size:26px; font-weight:700; letter-spacing:-0.5px; line-height:1.2;
+    background:linear-gradient(to bottom,#ffffff,#d9ecE6); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .metric-change { font-size:12px; font-weight:500; margin-top:8px; display:inline-flex; align-items:center; gap:6px;
+    background:rgba(63,224,165,0.08); padding:3px 10px 3px 8px; border-radius:60px; color:#7fe0c0; border:1px solid rgba(63,224,165,0.08); }
+  .metric-change.warn { background:rgba(255,116,0,0.1); color:#ffb27a; border-color:rgba(255,116,0,0.12); }
+
+  .section-label { display:flex; align-items:center; gap:10px; margin:34px 0 16px; }
+  .section-label .num { width:26px; height:26px; border-radius:8px; background:linear-gradient(145deg,#FFC100,#FF7400);
+    color:#00131A; font-weight:800; font-size:13px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .section-label h3 { font-weight:700; font-size:18px; color:#f0f6f3; letter-spacing:-0.2px; }
+
+  .row-duo { display:grid; grid-template-columns:1.3fr 0.7fr; gap:20px; margin-bottom:8px; }
+  .chart-card {
+    background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border-radius:12px; padding:24px 24px 20px; border:1px solid rgba(255,255,255,0.04);
+    box-shadow:0 8px 18px -6px rgba(0,0,0,0.5);
+  }
+  .card-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px; }
+  .card-title h4 { font-weight:600; font-size:15.5px; color:#d9ecE6; letter-spacing:-0.2px; }
+  .card-title h4 i { color:#FFC100; opacity:.7; font-size:15px; margin-right:8px; }
+  .card-title .meta { font-size:11.5px; color:#7a9d97; }
+
+  .callout {
+    background:rgba(255,193,0,0.06); border:1px solid rgba(255,193,0,0.18); border-radius:12px;
+    padding:16px 20px; margin-top:16px; font-size:13px; color:#f0d9a0; line-height:1.6;
+  }
+  .callout b { color:#FFC100; }
+  .callout.mint { background:rgba(63,224,165,0.06); border-color:rgba(63,224,165,0.18); color:#c9ecdd; }
+  .callout.mint b { color:#3FE0A5; }
+
+  .channel-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:8px; }
+  .channel-card {
+    background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border-radius:12px; padding:22px 22px 20px; border:1px solid rgba(255,255,255,0.04);
+  }
+  .channel-card .ch-head { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .channel-card .ch-head i { font-size:16px; color:#00131A; background:#FFC100; width:32px; height:32px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .channel-card.orange .ch-head i { background:#FF7400; }
+  .channel-card.mint .ch-head i { background:#DFF0EE; }
+  .channel-card.purple .ch-head i { background:#B18CFF; }
+  .channel-card .ch-head h5 { font-size:14.5px; font-weight:700; color:#e6f3ef; }
+  .ch-stat { display:flex; justify-content:space-between; align-items:baseline; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .ch-stat:last-child { border-bottom:none; }
+  .ch-stat .k { font-size:12px; color:#a2c2bb; }
+  .ch-stat .v { font-size:14px; font-weight:700; color:#eef6f3; }
+  .ch-stat .v.up { color:#3FE0A5; }
+  .ch-stat .v.down { color:#ff8a6a; }
+
+  .insight-card {
+    background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border-radius:12px; padding:26px 26px 24px; border:1px solid rgba(255,255,255,0.04); margin-bottom:8px;
+  }
+  .insight-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:26px; }
+  .insight-col p.heading { font-size:11.5px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; margin-bottom:12px;
+    display:flex; align-items:center; gap:8px; }
+  .insight-col.continue p.heading { color:#3FE0A5; }
+  .insight-col.start p.heading { color:#FFC100; }
+  .insight-col.reconsider p.heading { color:#ff8a6a; }
+  .insight-col ul { list-style:none; display:flex; flex-direction:column; gap:11px; }
+  .insight-col li { font-size:13px; line-height:1.6; padding-left:15px; position:relative; color:#dceeE9; }
+  .insight-col li::before { content:''; position:absolute; left:0; top:8px; width:5px; height:5px; border-radius:50%; background:currentColor; }
+  .insight-col.continue li::before { color:#3FE0A5; }
+  .insight-col.start li::before { color:#FFC100; }
+  .insight-col.reconsider li::before { color:#ff8a6a; }
+
+  .learn-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:8px; }
+  .learn-item {
+    background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); border-radius:12px;
+    padding:16px 18px; display:flex; gap:14px; align-items:flex-start;
+  }
+  .learn-item .n { font-family:'PT Serif', serif; font-size:22px; font-weight:700; color:#FFC100; opacity:.55; flex-shrink:0; line-height:1; }
+  .learn-item p { font-size:13px; line-height:1.6; color:#dceeE9; }
+
+  .footer-row { margin-top:28px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:#3f6a63;
+    letter-spacing:0.3px; border-top:1px solid rgba(255,255,255,0.05); padding-top:18px; }
+  .glow-dot { display:inline-block; width:8px; height:8px; background:#3FE0A5; border-radius:20px; box-shadow:0 0 12px #3FE0A580; margin-right:6px; }
+
+  @media (max-width:1000px) {
+    .metric-grid { grid-template-columns:repeat(2,1fr); }
+    .row-duo, .channel-grid, .insight-grid, .learn-grid { grid-template-columns:1fr; }
+    .dashboard { padding:24px 20px; }
+    .hero { flex-direction:column; align-items:flex-start; }
+    .hero-goal { text-align:left; }
+  }
+</style>
+</head>
+<body>
+<div class="dashboard">
+
+  <div class="top-bar">
+    <div class="brand">
+      <img class="brand-logo" src="https://redefinerswl.org/hubfs/Brand%20Kit/OfficialLogo(white).png" alt="ReDefiners World Languages logo" onerror="this.outerHTML='<span style=&quot;color:#FAF5E6;font-weight:900;font-size:15px;letter-spacing:.02em;&quot;>REDEFINERS</span>'">
+      <h1>Summer STEAM<span> Campaign Recap</span></h1>
+    </div>
+    <div class="date-badge">
+      <i class="fas fa-calendar-alt"></i> <span>2026 &nbsp;·&nbsp; Prepared September 2026</span>
+    </div>
+  </div>
+
+  <div class="hero">
+    <div>
+      <h2 class="voice">A modest win on a mature engine.</h2>
+      <p>Four years of steady mid-50s enrollment, powered almost entirely by email and community trust — with a payment funnel and a registration calendar now clear enough to act on for 2027.</p>
+    </div>
+    <div class="hero-goal">
+      <div class="lbl">Enrollment Goal Attainment</div>
+      <div class="val">110%</div>
+      <div class="sub">55 actual vs. 50 goal</div>
+    </div>
+  </div>
+
+  <!-- TOP METRICS -->
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-header"><span class="metric-label">Total Enrollment</span><i class="fas fa-user-graduate"></i></div>
+      <div class="metric-value">55</div>
+      <div class="metric-change warn"><i class="fas fa-arrow-down"></i>−3.5% YoY</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-header"><span class="metric-label">Emails Sent</span><i class="fas fa-envelope"></i></div>
+      <div class="metric-value">56,493</div>
+      <div class="metric-change"><i class="fas fa-layer-group"></i>91 emails · 4 yrs</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-header"><span class="metric-label">Meta Ads Spend</span><i class="fas fa-bullseye"></i></div>
+      <div class="metric-value">$0</div>
+      <div class="metric-change"><i class="fas fa-leaf"></i>Organic & outreach-led</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-header"><span class="metric-label">Outreach Conversations</span><i class="fas fa-comments"></i></div>
+      <div class="metric-value">207</div>
+      <div class="metric-change"><i class="fas fa-arrow-up"></i>1,275 flyers</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-header"><span class="metric-label">Website Sessions</span><i class="fas fa-globe"></i></div>
+      <div class="metric-value">820</div>
+      <div class="metric-change"><i class="fas fa-arrow-up"></i>+79% YoY</div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: ENROLLMENT -->
+  <div class="section-label"><div class="num">1</div><h3>Enrollment by Year</h3></div>
+  <div class="row-duo">
+    <div class="chart-card">
+      <div class="card-title">
+        <h4><i class="fas fa-chart-bar"></i>2023–2026 Qualified Enrollment</h4>
+        <span class="meta">4 years</span>
+      </div>
+      <div id="enrollChart" style="position:relative;"></div>
+    </div>
+    <div class="chart-card">
+      <div class="card-title"><h4><i class="fas fa-calendar-check"></i>2026 Registration Pacing</h4></div>
+      <div class="ch-stat"><span class="k">February</span><span class="v">2 → 1 qualified</span></div>
+      <div class="ch-stat"><span class="k">March</span><span class="v">37 → 19 qualified</span></div>
+      <div class="ch-stat"><span class="k">April</span><span class="v up">14 → 10 qualified</span></div>
+      <div class="ch-stat"><span class="k">May</span><span class="v">37 → 24 qualified</span></div>
+      <div class="ch-stat"><span class="k">June (1–2)</span><span class="v down">4 → 1 qualified</span></div>
+      <div class="callout mint" style="margin-top:16px;">
+        <b>Two concentrated waves.</b> March and May are tied as the biggest months — 79% of the year's registration activity — with May also carrying the heaviest share of payment failures (13 of 37 attempts).
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: CHANNELS -->
+  <div class="section-label"><div class="num">2</div><h3>Channel Performance</h3></div>
+  <div class="channel-grid">
+    <div class="channel-card">
+      <div class="ch-head"><i class="fas fa-globe"></i><h5>Website & Search</h5></div>
+      <div class="ch-stat"><span class="k">Campaign Sessions</span><span class="v">820</span></div>
+      <div class="ch-stat"><span class="k">Engaged Sessions</span><span class="v">365 (44.5%)</span></div>
+      <div class="ch-stat"><span class="k">From Email</span><span class="v up">84.5%</span></div>
+      <div class="ch-stat"><span class="k">Landing Page Views</span><span class="v">3,669</span></div>
+    </div>
+    <div class="channel-card orange">
+      <div class="ch-head"><i class="fas fa-envelope"></i><h5>Email Marketing</h5></div>
+      <div class="ch-stat"><span class="k">Open Rate</span><span class="v">17.5%</span></div>
+      <div class="ch-stat"><span class="k">Click Rate</span><span class="v">0.98%</span></div>
+      <div class="ch-stat"><span class="k">Sends</span><span class="v">56,493</span></div>
+      <div class="ch-stat"><span class="k">Send-Weeks</span><span class="v">117</span></div>
+    </div>
+    <div class="channel-card mint">
+      <div class="ch-head"><i class="fas fa-hands-helping"></i><h5>Community Outreach</h5></div>
+      <div class="ch-stat"><span class="k">Flyers Distributed</span><span class="v">1,275</span></div>
+      <div class="ch-stat"><span class="k">Meaningful Conversations</span><span class="v">207</span></div>
+      <div class="ch-stat"><span class="k">Community Events</span><span class="v up">2.46 conv./flyer</span></div>
+      <div class="ch-stat"><span class="k">Flyer Drop-off</span><span class="v down">0.01 conv./flyer</span></div>
+    </div>
+    <div class="channel-card">
+      <div class="ch-head"><i class="fas fa-bullseye"></i><h5>Paid Media</h5></div>
+      <div class="ch-stat"><span class="k">Meta Ads Spend</span><span class="v">$0</span></div>
+      <div class="ch-stat"><span class="k">Google Ads Sessions</span><span class="v">210</span></div>
+      <div class="ch-stat"><span class="k">Google Ads Spend</span><span class="v">Not loaded</span></div>
+      <div class="ch-stat"><span class="k">Org 2026 Meta Budget</span><span class="v down">100% → MCP courses</span></div>
+    </div>
+    <div class="channel-card orange">
+      <div class="ch-head"><i class="fas fa-share-nodes"></i><h5>Organic Social</h5></div>
+      <div class="ch-stat"><span class="k">Campaign Posts</span><span class="v">38</span></div>
+      <div class="ch-stat"><span class="k">Views</span><span class="v">7,622</span></div>
+      <div class="ch-stat"><span class="k">Reach (FB + IG)</span><span class="v">4,946</span></div>
+      <div class="ch-stat"><span class="k">Top Platform</span><span class="v up">Facebook · 3,618 views</span></div>
+    </div>
+    <div class="channel-card purple">
+      <div class="ch-head"><i class="fab fa-youtube"></i><h5>YouTube</h5></div>
+      <div class="ch-stat"><span class="k">Videos</span><span class="v">5</span></div>
+      <div class="ch-stat"><span class="k">Views</span><span class="v">398</span></div>
+      <div class="ch-stat"><span class="k">Likes + Comments</span><span class="v">4</span></div>
+      <div class="ch-stat"><span class="k">vs. 2024 / 2025</span><span class="v up">0 videos</span></div>
+    </div>
+  </div>
+
+  <div class="callout" style="margin-top:18px;">
+    <b>Flyers and conversations are two different jobs — same pattern as the MCP recap.</b> Flyer Drop-off accounts for 94% of all flyers distributed but only 6% of conversations; Community Events are the inverse — 6% of flyers, 94% of conversations. Both tactics matter, but they shouldn't be tracked as one blended rate.
+  </div>
+
+  <!-- SECTION 3: WHAT WE LEARNED -->
+  <div class="section-label"><div class="num">3</div><h3>What We Learned</h3></div>
+  <div class="learn-grid">
+    <div class="learn-item"><span class="n voice">1</span><p>Enrollment held steady but plateaued. 55 qualified enrollments beat the 50-student goal (110%) for a fourth straight year, but settled 3.5% below 2025's peak of 57.</p></div>
+    <div class="learn-item"><span class="n voice">2</span><p>Nearly 42% of registration attempts failed at payment. 39 of 94 CRM records never converted to a paid seat — the single biggest funnel-health finding this year.</p></div>
+    <div class="learn-item"><span class="n voice">3</span><p>Registration comes in two concentrated waves. March and May are 79% of the year's registration volume — and May carries the largest share of payment failures.</p></div>
+    <div class="learn-item"><span class="n voice">4</span><p>This campaign runs on organic and relationship channels, not paid. Zero 2026 Meta spend and 84.5% of tagged website sessions arriving via email.</p></div>
+    <div class="learn-item"><span class="n voice">5</span><p>Outreach tactics do two different jobs, org-wide. Flyer Drop-off builds reach; Community Events build the relationships that convert — the same split the MCP recap found.</p></div>
+    <div class="learn-item"><span class="n voice">6</span><p>Parent satisfaction is the strongest asset. 100% satisfied overall, 100% would recommend — a strong word-of-mouth foundation for organic growth next year.</p></div>
+  </div>
+
+  <!-- SECTION 4: RECOMMENDATIONS -->
+  <div class="section-label"><div class="num">4</div><h3>Recommendations for 2027</h3></div>
+  <div class="insight-card">
+    <div class="insight-grid">
+      <div class="insight-col continue">
+        <p class="heading"><i class="fas fa-circle-check"></i>Continue</p>
+        <ul>
+          <li>The email-led, multi-touch nurture sequence — the single largest driver of website traffic and, plausibly, enrollment.</li>
+          <li>The community outreach model concentrated at trusted partner sites, with Community Events weighted at least as heavily as Flyer Drop-off.</li>
+          <li>Surveying parents post-program — the satisfaction and recommend-intent data is strong and worth protecting as a recurring measurement.</li>
+        </ul>
+      </div>
+      <div class="insight-col start">
+        <p class="heading"><i class="fas fa-play"></i>Start</p>
+        <ul>
+          <li>Fix the registration-payment funnel and investigate whether price, the income-based discount, or scheduling are contributing.</li>
+          <li>Concentrate registration reminders and nurture-email intensity specifically around the March and May windows.</li>
+          <li>Decide deliberately whether Summer STEAM should get any 2027 paid media allocation, rather than defaulting to organic-only again.</li>
+          <li>Track Chinese-language and second-location interest with a direct 2027 survey question.</li>
+        </ul>
+      </div>
+      <div class="insight-col reconsider">
+        <p class="heading"><i class="fas fa-rotate-left"></i>Reconsider</p>
+        <ul>
+          <li>Reporting Community-Based Outreach as a single blended conversations-per-flyer rate — it masks a 150x difference between tactics.</li>
+          <li>Treating payment failures as a marketing problem alone — schedule, programming, and pricing may be contributing to buyer hesitation too.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-row">
+    <span><span class="glow-dot"></span>ReDefiners World Languages · Marketing & Communications</span>
+    <span>Summer STEAM Campaign Recap · 2026</span>
+  </div>
+
+</div>
+
+<script>
+// Pure inline SVG bar chart — no external chart library dependency.
+(function(){
+  const years = [
+    { label: '2023', v: 50 },
+    { label: '2024', v: 47 },
+    { label: '2025', v: 57 },
+    { label: '2026', v: 55 },
+  ];
+  const w = 620, h = 260, padTop = 16, padBottom = 34, padLeft = 6, padRight = 6;
+  const plotH = h - padTop - padBottom;
+  const maxVal = Math.max(...years.map(p => p.v)) * 1.2;
+  const groupW = (w - padLeft - padRight) / years.length;
+  const barW = groupW * 0.44;
+
+  const yScale = v => plotH - (v / maxVal) * plotH;
+
+  let bars = '';
+  let labels = '';
+  let gridLines = '';
+  [0, 0.25, 0.5, 0.75, 1].forEach(t => {
+    const y = padTop + plotH * (1 - t);
+    gridLines += `<line x1="${padLeft}" y1="${y}" x2="${w - padRight}" y2="${y}" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>`;
+  });
+
+  years.forEach((p, i) => {
+    const gx = padLeft + i * groupW;
+    const x = gx + groupW/2 - barW/2;
+    const y = padTop + yScale(p.v);
+    const barH = plotH - yScale(p.v);
+    const isCurrent = p.label === '2026';
+    const fill = isCurrent ? '#FFC100' : 'rgba(122,157,150,0.55)';
+    const textFill = isCurrent ? '#FFC100' : '#a2c2bb';
+
+    bars += `<rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="6" fill="${fill}"/>`;
+    bars += `<text x="${x + barW/2}" y="${y - 8}" text-anchor="middle" font-size="13" font-weight="700" fill="${textFill}" font-family="Montserrat">${p.v}</text>`;
+    labels += `<text x="${gx + groupW/2}" y="${padTop + plotH + 22}" text-anchor="middle" font-size="11" fill="#a2c2bb" font-family="Montserrat">${p.label}</text>`;
+  });
+
+  const svg = `
+    <svg viewBox="0 0 ${w} ${h}" width="100%" height="260" xmlns="http://www.w3.org/2000/svg">
+      ${gridLines}
+      ${bars}
+      ${labels}
+    </svg>
+    <div style="display:flex; gap:20px; justify-content:center; margin-top:8px;">
+      <span style="font-size:11px; color:#a2c2bb; display:flex; align-items:center; gap:6px;"><span style="width:9px;height:9px;border-radius:3px;background:rgba(122,157,150,0.7);display:inline-block;"></span>Prior Years</span>
+      <span style="font-size:11px; color:#a2c2bb; display:flex; align-items:center; gap:6px;"><span style="width:9px;height:9px;border-radius:3px;background:#FFC100;display:inline-block;"></span>2026</span>
+    </div>
+  `;
+  document.getElementById('enrollChart').innerHTML = svg;
+})();
+</script>
+</body>
+</html>
