@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ReDefiners &middot; Blog &amp; Marketing Personas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=PT+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background:#00131A;
+    font-family:'Montserrat', sans-serif;
+    padding:24px;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    color:#eef6f3;
+  }
+  .voice { font-family:'PT Serif', serif; }
+
+  .ico { width:1em; height:1em; display:inline-block; vertical-align:-0.14em; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+  .ico.filled { fill:currentColor; stroke:none; }
+
+  .dashboard {
+    max-width:1320px;
+    width:100%;
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    border-radius:12px;
+    padding:32px 36px 40px;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* ---- top bar ---- */
+  .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:16px 12px; }
+  .brand { display:flex; align-items:center; gap:14px; }
+  .brand-mark { width:38px; height:38px; border-radius:11px; background:linear-gradient(145deg,#FFC100,#FF7400); display:flex; align-items:center; justify-content:center; color:#00131A; font-weight:900; font-size:15px; flex-shrink:0; }
+  .brand h1 { font-weight:700; font-size:24px; letter-spacing:-0.3px;
+    background:linear-gradient(to right, #f7f4ea, #ffe9b0);
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .brand h1 span { font-weight:inherit; font-size:inherit; letter-spacing:inherit;
+    background:inherit; -webkit-background-clip:inherit; background-clip:inherit;
+    color:inherit; opacity:.72; }
+  .date-badge {
+    background:rgba(255,255,255,0.04); padding:8px 18px 8px 16px; border-radius:60px;
+    font-size:13px; font-weight:450; color:#c9ddd8; border:1px solid rgba(255,255,255,0.05);
+    backdrop-filter:blur(4px); display:flex; align-items:center; gap:9px;
+  }
+  .date-badge .ico { color:#FFC100; }
+
+  .intro-line { color:#a2c2bb; font-size:14.5px; line-height:1.65; max-width:780px; margin:14px 0 24px; }
+
+  /* ---- filter row ---- */
+  .filter-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:24px; }
+  .filter-tag {
+    border:1px solid rgba(223,240,238,0.10); background:rgba(255,255,255,0.03);
+    color:#a8c2bc; font-size:13px; font-weight:500; padding:8px 18px; border-radius:60px;
+    cursor:pointer; transition:.15s ease; display:inline-flex; align-items:center; gap:8px;
+  }
+  .filter-tag:hover { background:rgba(255,255,255,0.07); }
+  .filter-tag.active { color:#00131A; font-weight:700; border-color:transparent; }
+
+  /* ---- persona grid & cards ---- */
+  .persona-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(290px,1fr)); gap:18px; margin-bottom:28px; }
+  .persona-card {
+    background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border-radius:12px; padding:22px 22px 20px; border:1px solid rgba(255,255,255,0.04);
+    box-shadow:0 8px 18px -8px rgba(0,0,0,0.5); transition:all .2s ease; cursor:pointer;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .persona-card:hover { background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1); transform:translateY(-3px); }
+  .persona-top { display:flex; gap:14px; align-items:flex-start; }
+  .avatar-tile { width:58px; height:58px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:24px; color:#00131A; }
+  .persona-id h4 { font-size:16px; font-weight:700; color:#eef6f3; margin-bottom:2px; }
+  .persona-id .role { font-size:11.5px; color:#a2c2bb; font-weight:500; line-height:1.4; }
+  .persona-id .demo { font-size:11px; color:#7a9d97; margin-top:3px; }
+  .group-pill { font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.045em; padding:3px 10px; border-radius:60px; display:inline-block; }
+  .persona-quote { font-family:'PT Serif', serif; font-style:italic; font-size:13.5px; color:#cfe4e0; line-height:1.55; padding-left:14px; border-left:2px solid rgba(255,255,255,0.12); }
+
+  .funnel-track { display:flex; align-items:center; gap:0; margin-top:auto; }
+  .funnel-step { width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,0.12); flex-shrink:0; transition:.2s; }
+  .funnel-line { flex:1; height:2px; background:rgba(255,255,255,0.08); }
+  .funnel-labels { display:flex; justify-content:space-between; font-size:8.5px; color:#7a9d97; text-transform:uppercase; letter-spacing:.03em; margin-top:5px; }
+
+  .view-btn { align-self:flex-start; font-size:12px; font-weight:700; color:#FFC100; background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:6px; padding:0; }
+  .view-btn .ico { transition:.15s; }
+  .persona-card:hover .view-btn .ico { transform:translateX(3px); }
+
+  /* ---- chips ---- */
+  .chip-row { display:flex; flex-wrap:wrap; gap:7px; }
+  .chip { font-size:11.5px; color:#a8c2bc; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.07); padding:5px 12px; border-radius:60px; }
+
+  /* ---- comparison table ---- */
+  .chart-card {
+    background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border-radius:12px; padding:24px 24px 20px; border:1px solid rgba(255,255,255,0.04);
+    box-shadow:0 8px 18px -6px rgba(0,0,0,0.5); margin-bottom:22px; overflow-x:auto;
+  }
+  .card-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:8px; }
+  .card-title h3 { font-weight:600; font-size:16.5px; color:#d9ecE6; letter-spacing:-0.2px; display:flex; align-items:center; gap:10px; }
+  .card-title h3 .ico { color:#FFC100; opacity:.8; }
+  .card-title .meta { font-size:12px; color:#7a9d97; }
+  .breakdown-table { width:100%; border-collapse:collapse; font-size:12.5px; min-width:760px; }
+  .breakdown-table th { text-align:left; font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;
+    color:#7a9d97; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1); }
+  .breakdown-table td { padding:12px 10px 12px 0; border-bottom:1px solid rgba(255,255,255,0.06); color:#dceeE9; vertical-align:top; }
+  .breakdown-table tr:last-child td { border-bottom:none; }
+  .breakdown-table .p-name { display:flex; align-items:center; gap:10px; font-weight:600; white-space:nowrap; }
+  .mini-badge { width:24px; height:24px; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#00131A; font-size:11px; flex-shrink:0; }
+
+  /* ---- insight card ---- */
+  .insight-card {
+    background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border-radius:12px; padding:26px 26px 24px; border:1px solid rgba(255,255,255,0.04); margin-bottom:22px;
+  }
+  .insight-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:30px; }
+  .insight-col p.heading { font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; margin-bottom:12px; }
+  .insight-col ul { list-style:none; display:flex; flex-direction:column; gap:11px; }
+  .insight-col li { font-size:13px; line-height:1.62; padding-left:16px; position:relative; color:#dceeE9; }
+  .insight-col li::before { content:''; position:absolute; left:0; top:8px; width:5px; height:5px; border-radius:50%; background:currentColor; }
+
+  /* ---- footer ---- */
+  .footer-row { margin-top:8px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:#3f6a63;
+    letter-spacing:0.3px; border-top:1px solid rgba(255,255,255,0.05); padding-top:18px; }
+  .glow-dot { display:inline-block; width:8px; height:8px; background:#3FE0A5; border-radius:20px; box-shadow:0 0 12px #3FE0A580; margin-right:6px; }
+
+  /* ---- callouts ---- */
+  .callout { background:rgba(255,193,0,0.06); border:1px solid rgba(255,193,0,0.18); border-radius:12px;
+    padding:14px 18px; margin-top:16px; font-size:12.5px; color:#f0d9a0; line-height:1.6; }
+  .callout b { color:#FFC100; }
+  .callout.red { background:rgba(255,107,107,0.08); border-color:rgba(255,107,107,0.22); color:#ffcfc9; }
+  .callout.red b { color:#FF6B6B; }
+
+  /* ---- modal ---- */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,10,13,0.75); backdrop-filter:blur(4px); display:none; align-items:flex-start; justify-content:center; z-index:50; padding:40px 20px; overflow-y:auto; }
+  .modal-overlay.open { display:flex; }
+  .modal-box { background:#03181f; border:1px solid rgba(255,255,255,0.08); border-radius:12px; max-width:720px; width:100%;
+    padding:30px 32px 34px; box-shadow:0 40px 80px -20px rgba(0,0,0,0.9); position:relative; }
+  .modal-close { position:absolute; top:18px; right:18px; background:rgba(255,255,255,0.06); border:none; color:#eef6f3; width:32px; height:32px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .modal-close:hover { background:rgba(255,255,255,0.12); }
+  .modal-head { display:flex; gap:16px; align-items:flex-start; padding-right:40px; }
+  .modal-head .avatar-tile { width:64px; height:64px; font-size:27px; border-radius:16px; }
+  .modal-head h3 { font-size:20px; font-weight:700; color:#f7f4ea; }
+  .modal-head .role { font-size:13px; color:#a2c2bb; margin-top:2px; }
+  .modal-head .demo { font-size:11.5px; color:#7a9d97; margin-top:3px; }
+  .modal-quote { font-family:'PT Serif', serif; font-style:italic; font-size:16px; color:#e3f1ee; line-height:1.55; margin:20px 0 6px; padding-left:16px; border-left:2px solid rgba(255,255,255,0.15); display:flex; gap:10px; }
+  .modal-quote .ico { color:#7a9d97; margin-top:5px; }
+  .modal-intro { font-size:13.5px; line-height:1.68; color:#c9ddd8; margin-top:16px; }
+  .modal-section { margin-top:24px; }
+  .modal-section h5 { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#7a9d97; margin-bottom:11px; display:flex; align-items:center; gap:8px; }
+  .modal-section h5 .ico { color:#FFC100; }
+  .modal-section ul { list-style:none; display:flex; flex-direction:column; gap:9px; }
+  .modal-section li { font-size:13.5px; line-height:1.6; color:#dceeE9; padding-left:16px; position:relative; }
+  .modal-section li::before { content:''; position:absolute; left:0; top:8px; width:5px; height:5px; border-radius:50%; background:#7EA39D; }
+  .modal-section p { font-size:13.5px; line-height:1.65; color:#dceeE9; }
+  .cta-row { display:flex; align-items:center; justify-content:space-between; gap:14px; background:rgba(255,255,255,0.045); padding:14px 18px; border-radius:12px; margin-top:10px; flex-wrap:wrap; }
+  .cta-row .stage-lbl { font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:#7a9d97; margin-bottom:4px; display:block; }
+  .cta-row .cta-text { font-weight:700; color:#eef6f3; font-size:13.5px; }
+  .cta-btn { background:linear-gradient(145deg,#ff8a2e,#FF7400); padding:8px 16px; border-radius:60px; font-size:12px; font-weight:700; color:#fff; white-space:nowrap; flex-shrink:0; }
+  .cta-btn.muted { background:rgba(255,255,255,0.07); color:#a2c2bb; }
+  .buyer-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:6px; }
+  .buyer-table th { text-align:left; font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:#7a9d97; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.1); }
+  .buyer-table td { padding:10px 10px 10px 0; border-bottom:1px solid rgba(255,255,255,0.06); color:#dceeE9; vertical-align:top; line-height:1.5; }
+  .buyer-table tr:last-child td { border-bottom:none; }
+
+  @media (max-width:1000px) {
+    .insight-grid { grid-template-columns:1fr; }
+    .dashboard { padding:24px 20px; }
+  }
+  @media (max-width:580px) {
+    .top-bar { flex-direction:column; align-items:start; }
+    .date-badge { font-size:12px; padding:4px 14px; }
+    .modal-box { padding:24px 20px 28px; }
+    .modal-head { flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+<div class="dashboard">
+
+  <div class="top-bar">
+    <div class="brand">
+      <div class="brand-mark">RD</div>
+      <h1>Blog &amp; Marketing<span> Personas</span></h1>
+    </div>
+    <div class="date-badge"><span class="ico" id="icoCalendar"></span> v4 &middot; Revised Sep 10, 2026</div>
+  </div>
+
+  <p class="intro-line">These seven personas anchor every blog pillar and campaign brief ReDefiners runs. Meet each one below in plain terms: who they are, what's actually stopping them, and the one call to action that fits where they stand in the funnel. Names and faces here are invented characters standing in for each audience. Everything else, goals, barriers, channels, and quotes, comes straight from the persona doc.</p>
+
+  <div class="filter-row" id="filterRow">
+    <button class="filter-tag active" data-group="all" style="background:#FFC100;color:#00131A;"><span class="ico" data-icon="layers"></span>All personas</button>
+    <button class="filter-tag" data-group="enrollment"><span class="ico" data-icon="grad"></span>Enrollment</button>
+    <button class="filter-tag" data-group="partnership"><span class="ico" data-icon="link"></span>Partnership &amp; Workforce</button>
+    <button class="filter-tag" data-group="funding"><span class="ico" data-icon="heart"></span>Funding</button>
+    <button class="filter-tag" data-group="awareness"><span class="ico" data-icon="eye"></span>Awareness</button>
+  </div>
+
+  <div class="persona-grid" id="personaGrid"></div>
+
+  <div class="chart-card">
+    <div class="card-title"><h3><span class="ico" data-icon="table"></span>Quick reference</h3><span class="meta">All seven, side by side</span></div>
+    <table class="breakdown-table">
+      <thead><tr><th>Persona</th><th>Group</th><th>Primary channels</th><th>Messaging pillar</th><th>Funnel stage</th><th>Primary CTA</th></tr></thead>
+      <tbody id="refTableBody"></tbody>
+    </table>
+  </div>
+
+  <div class="insight-card">
+    <div class="card-title" style="margin-bottom:20px;"><h3><span class="ico" data-icon="info"></span>Version notes</h3><span class="meta">v4, down from 9 personas in v2</span></div>
+    <div class="insight-grid">
+      <div class="insight-col" style="color:#3FE0A5;">
+        <p class="heading" style="color:#3FE0A5;">What changed in v4</p>
+        <ul>
+          <li>Seven personas, down from eight in v3 and nine in v2.</li>
+          <li>Educators &amp; School Partners merged into Community Partners &amp; Advocates. Both described the same behavior: a third party deciding whether to host, refer, or spread the word, for free, with no transaction attached.</li>
+          <li>Employers &amp; Workforce Training Buyers stayed separate. It's the one persona in this set with a real revenue line and an actual targeting brief behind it.</li>
+          <li>Donors split into two: Individual Donors and Institutional &amp; Grant Funders. The content and the compliance requirements genuinely diverge.</li>
+          <li>Priority Community Neighbor added. It's the only persona serving the Awareness priority on its own terms, instead of borrowing an enrollment persona that doesn't quite fit.</li>
+        </ul>
+      </div>
+      <div class="insight-col" style="color:#FFC100;">
+        <p class="heading" style="color:#FFC100;">Open follow-up</p>
+        <ul>
+          <li>The FY26-27 Marketing Plan's Section 3 priority table still lists six personas under the old names.</li>
+          <li>It needs updating to: Individual Donors and Institutional &amp; Grant Funders in place of the single Donor row.</li>
+          <li>Priority Community Neighbor added, leading the Awareness priority.</li>
+          <li>Community Partners &amp; Advocates absorbing the old, separate Educators &amp; School Partners row.</li>
+        </ul>
+      </div>
+      <div class="insight-col" style="color:#FF6B6B;">
+        <p class="heading" style="color:#FF6B6B;">Flags to watch</p>
+        <ul>
+          <li>Employers persona: no defined pain points yet for Property Management &amp; Landscaping or Food Service &amp; Manufacturing. Hold off on content for those verticals until that gap is filled.</li>
+          <li>Institutional &amp; Grant Funders: any "Know What Funds Us" content needs Executive Director sign-off before publishing, and has to stay nonpartisan.</li>
+          <li>Global Explorers content aimed at parents carries no enrollment CTA. It runs on school rosters, not parent registration.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-row">
+    <span><span class="glow-dot"></span>Source: ReDefiners' Blog &amp; Marketing Personas v4, Marketing &amp; Communications</span>
+    <span id="todayLabel">--</span>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box" id="modalBox"></div>
+</div>
+
+<script>
+const NOW = new Date();
+document.getElementById('todayLabel').textContent = 'Viewed ' + NOW.toLocaleDateString('en-US',{month:'short', day:'numeric', year:'numeric'});
+
+/* ---- inline icon set (feather-style, stroke=currentColor) ---- */
+const ICONS = {
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  layers: '<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>',
+  grad: '<path d="M22 10 12 5 2 10l10 5 10-5Z"/><path d="M6 12.5V17c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5"/><path d="M22 10v6"/>',
+  link: '<path d="M10 13a5 5 0 0 0 7.07 0l1.93-1.93a5 5 0 0 0-7.07-7.07L10.5 5.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-1.93 1.93a5 5 0 0 0 7.07 7.07L13.5 18.5"/>',
+  heart: '<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 1 0-7.8 7.8l1 1L12 21l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8Z"/>',
+  eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/>',
+  table: '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/>',
+  info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+  x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+  arrow: '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+  quote: '<path d="M7 7h3v4c0 2.2-1.3 4-3.5 4"/><path d="M15 7h3v4c0 2.2-1.3 4-3.5 4"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="2"/>',
+  alert: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+  compass: '<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>',
+  search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  megaphone: '<path d="M3 10.5v3a1.7 1.7 0 0 0 1.7 1.7h.8l3.8 3.5v-3.5.02h1.3l6.9-3v-3.44l-6.9-3H5.5A1.7 1.7 0 0 0 3 7.06Z"/><path d="M15 8v8"/>',
+  bulb: '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2.3h6c0-1.1.4-1.8 1-2.3A7 7 0 0 0 12 2Z"/>',
+  users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  briefcase: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+  trending: '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>',
+  message: '<path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.4 8.4 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z"/>',
+  smile: '<circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/>',
+  book: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2Z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7Z"/>'
+};
+
+function svgIcon(name, filled){
+  const body = ICONS[name] || '';
+  return '<svg class="ico'+(filled?' filled':'')+'" viewBox="0 0 24 24">'+body+'</svg>';
+}
+document.querySelectorAll('[data-icon]').forEach(el=>{ el.innerHTML = svgIcon(el.dataset.icon); });
+document.getElementById('icoCalendar').innerHTML = svgIcon('calendar');
+
+const GROUPS = {
+  enrollment: { label:'Enrollment', color:'#FFC100', bg:'rgba(255,193,0,0.12)' },
+  partnership:{ label:'Partnership & Workforce', color:'#FF7400', bg:'rgba(255,116,0,0.12)' },
+  funding:    { label:'Funding', color:'#B18CFF', bg:'rgba(177,140,255,0.12)' },
+  awareness:  { label:'Awareness', color:'#7EA39D', bg:'rgba(126,163,157,0.16)' }
+};
+
+const STAGES = ['awareness','consideration','conversion'];
+
+const PERSONAS = [
+  {
+    id:'yolanda', group:'enrollment', icon:'message',
+    name:'Yolanda Reyes', role:'Adult ESOL &amp; Conversation-Course Learner', demo:'Ages 18–45',
+    quote:"I want to speak up at work without worrying I'll say the wrong thing.",
+    intro:"Yolanda is two learners in one persona. On one side, adult ESOL students, job seekers, newcomers, and heritage speakers building everyday and workplace English. On the other, English speakers taking Spanish, Arabic, or Mandarin for their career or their own curiosity. Many juggle inconsistent-hours jobs or family responsibilities around class time.",
+    goals:["Workplace confidence and career advancement","Everyday communication","Personal or cultural enrichment (Conversation-course track)"],
+    barriers:["Believes she's too old to learn a language","Inconsistent work schedule","Doesn't realize MCP courses are free","Residency verification and CBFRC membership steps feel like friction before class even starts","Fear of judgment as a beginner"],
+    today:"Studies alone with free YouTube videos or apps, asks bilingual coworkers for help, or puts it off entirely because she assumes classes cost money or need a schedule she doesn't have.",
+    search:["how to learn English as an adult","free English classes near me","how long does it take to learn a language","English for job interviews","is it hard to learn Spanish as an adult"],
+    channels:["Instagram (Reels + Stories)","TikTok","YouTube","LinkedIn (career framing)"],
+    pillar:"Free, practical education. This solves a real, everyday problem, not an abstract one.",
+    ctas:[{stage:'Awareness → Conversion', text:'Reserve your spot in [course]'}],
+    funnelStages:['awareness','conversion']
+  },
+  {
+    id:'carmen', group:'enrollment', icon:'smile',
+    name:'Carmen Ibarra', role:'Parent &amp; Caregiver', demo:'Kids &amp; teens, ages 5–18',
+    quote:"I want doors open for my kid that weren't open for me.",
+    intro:"Carmen registers her kids into everything from Let's Learn Spanish for her 7-year-old to the Youth Club for her 15-year-old. She's the same decision-maker at every age. ReDefiners doesn't let minors self-register, so the message has to shift by age group, not the audience.",
+    goals:["Academic enrichment and school readiness for younger kids","Classroom confidence and U.S. school navigation for teens (English for School Success)","Maintaining heritage language into the teen years (Spanish/Arabic/Chinese Youth Club)","Raising bilingual kids at any age"],
+    barriers:["Skeptical a program will actually help her child","Schedule conflicts","Confusing enrollment, residency, and CBFRC-membership requirements","Unsure which program fits her child's age","May not realize ReDefiners serves kids past elementary school, since most visible content skews younger"],
+    today:"Relies on school flyers (including Peachjar), word of mouth from other parents, and Facebook parent groups rather than searching for herself.",
+    search:["benefits of raising a bilingual child","best age to learn a second language","how to help my child with reading","free after-school programs Hillsborough County","after school programs for teens Hillsborough County","language classes for teenagers"],
+    channels:["Facebook (primary)","Instagram (younger parents)","YouTube (class-preview video)","Peachjar flyers","CBFRC / Boys & Girls Club front-desk materials"],
+    pillar:"Real people. Real stories. Real impact. Parent testimonials and footage of kids actually engaged outperform program descriptions, at any age.",
+    ctas:[{stage:'Awareness/Consideration → Conversion', text:'See if your child qualifies for [course]'}],
+    funnelStages:['awareness','consideration','conversion'],
+    extraNote:"Global Explorers sub-track runs on school rosters, not parent registration. For that program, Carmen's role is pure awareness: recognize and trust it when her child brings it home, or advocate for bringing it to her own school. No enrollment ask belongs in that content."
+  },
+  {
+    id:'devon', group:'partnership', icon:'book',
+    name:'Devon Marsh', role:'Community Partner &amp; Advocate (After-School Coordinator)', demo:'Institutional decision-maker',
+    quote:"Before I recommend you to my principal, my director, or my own network, I need something better than a flyer.",
+    intro:"Devon coordinates after-school programming at a partner school and gets asked to vouch for outside programs constantly. This persona folds together everyone making that same call with no transaction attached: schools, Boys & Girls Clubs and CBFRC sites, other nonprofits and businesses, and individuals who just want to volunteer or spread the word.",
+    goals:["Be seen as a trusted local connector, personally or organizationally","Support the mission visibly through hosting, referring, or volunteering","For school staff specifically, credible ELL/bilingual-education resources to vouch for internally"],
+    barriers:["Limited time to vet a new relationship","Needs evidence-based framing, not marketing language, especially to justify it up his own chain of approval","No ready-made referral kit, one-pager, or elevator pitch to share","Institutional decisions usually need sign-off from someone above him","Individuals wanting to volunteer are unsure about time commitment, qualifications, or background-check steps"],
+    today:"For the partnership side, this isn't search-driven. It moves through the outreach team's own relationship pathway: prospect, conversation, meeting, partnership. For the advocacy side, it's passive: people refer based on personal impression or browse general volunteer-matching sites.",
+    search:["supporting ELL students in the classroom","second language acquisition research","how to partner with a nonprofit for language education","after-school cultural enrichment programs","volunteer to teach English near me","how to become an ESL tutor","volunteer opportunities Tampa nonprofits"],
+    channels:["LinkedIn","Direct email","Downloadable one-pager (institutional side)","Facebook + Instagram (individual/shareable side)","In-person relationship-building (outreach team meetings and site visits)"],
+    pillar:"Multilingualism expands opportunity, backed by evidence, for a real partnership decision. Community & recognition, no ask, for the pure-advocacy side.",
+    ctas:[
+      {stage:'Consideration → Conversion (partnership-pipeline mode)', text:'Request a partnership conversation / Download the educator resource guide'},
+      {stage:'Awareness only (pure-advocacy mode)', text:'Share this with someone who needs it', muted:true}
+    ],
+    funnelStages:['consideration','conversion'],
+    extraNote:"The single biggest content gap here is a simple, forwardable “spread the word” asset. Both modes run as a continuous relationship with no natural end date, which is exactly why this persona has no dedicated Campaign Brief the way MCP, Summer STEAM, or Contracted Services do."
+  },
+  {
+    id:'priya', group:'partnership', icon:'briefcase',
+    name:'Priya Anand', role:'Employer &amp; Workforce Training Buyer (HR Director)', demo:'B2B buyer, Hospitality vertical',
+    quote:"We're losing bookings and sales because we can't talk to half our customers.",
+    intro:"Priya runs training for a hotel group and is one of three buyer roles behind Contracted Services. Community Relations Managers chase CSR credit, and small business owners just want a vendor they trust. Priya wants ROI, not a hosting favor. This is the one persona here with a real revenue line behind it.",
+    goals:["Employee development without pulling staff off the floor","Measurable productivity gains","Training that solves a real service gap, not a compliance checkbox"],
+    barriers:["Cost and disruption of pulling staff from guest service for training","Needs proof this beats a generic corporate language-training vendor"],
+    today:"Benchmarks against generic corporate language-training vendors, or does nothing and keeps relying on informal bilingual staff.",
+    search:["workplace language training for employees","Spanish for healthcare workers course","cultural competency training for staff","corporate language training programs Tampa"],
+    channels:["Local chambers of commerce and business associations","Networking events (Rotary, small business expos)","LinkedIn groups for HR, workforce development, hospitality, and healthcare"],
+    pillar:"ROI and operational framing for HR/training buyers. Community & recognition framing (closer to the donor pillar) for CSR-driven buyers. Peer/local-trust framing for small business owners.",
+    buyerRoles:[
+      {role:'HR Directors / Training Managers', cares:'Employee development, productivity, training cost and disruption', angle:"ROI and operational: training that doesn't pull staff off the floor"},
+      {role:'Community Relations Managers', cares:'CSR positioning', angle:'Community & recognition, closer to the donor pillar than a sales pitch'},
+      {role:'Small Business Owners', cares:'Trust, relevance to their own customer base', angle:'Peer/local-trust, not corporate-vendor'}
+    ],
+    industryPains:[
+      {industry:'Hospitality', pain:'Lost revenue from language barriers with multilingual guests. Training costs and productivity concerns about pulling staff from guest service. Needs stronger community relationships and visibility to compete for guests.'},
+      {industry:'Retail', pain:'Lost sales and customer opportunities with multilingual shoppers. Training costs and productivity concerns about pulling staff off the floor. Needs community engagement and local visibility to grow the customer base.'},
+      {industry:'Healthcare', pain:'Reduced ability to serve, retain, and grow a diverse patient population. Training costs and productivity concerns about disrupting patient care. Needs community relationships and visibility to reach underserved populations and build trust.'}
+    ],
+    ctas:[{stage:'Awareness → Conversion', text:'Request a workforce training quote'}],
+    funnelStages:['awareness','conversion'],
+    dataGapFlag:"Property Management & Landscaping and Food Service & Manufacturing are named target industries with no defined pain points yet. Hold off on content for those two verticals until that gap in the brief gets filled. Guessing isn't a substitute for the data.",
+    geoNote:"Primary markets: Hillsborough, Pinellas, Pasco, Polk, and Orange Counties. In-person delivery is Hillsborough County only. Outside Hillsborough, lead with the virtual or hybrid option instead of implying in-person is available everywhere."
+  },
+  {
+    id:'walter', group:'funding', icon:'heart',
+    name:'Walter Ostrowski', role:'Individual Donor', demo:'Community member, individual giving',
+    quote:"I don't need a spreadsheet. I need to know this actually changed someone's life.",
+    intro:"Walter gives personally, not on behalf of an institution. He's a professional, a retiree, or just someone philanthropically minded who wants his giving to feel connected to a real outcome, not a methodology section.",
+    goals:["Support a program with visible, personal impact","Feel connected to the mission","Align his giving with his own values"],
+    barriers:["Limited understanding of program outcomes","Competing nonprofit causes for his attention","Wants an emotional, specific story more than a data case"],
+    today:"Gives based on relationship and story, follows the organization on social media, and often needs to attend an event before he gives.",
+    search:["ReDefiners outcomes (branded)","language education nonprofit Tampa donate","nonprofit annual report multilingual education"],
+    channels:["Facebook","LinkedIn","YouTube impact videos","Email / donor newsletter"],
+    pillar:"Real people. Real stories. Real impact. A story-led case, not a data-led one.",
+    ctas:[{stage:'Consideration → Conversion', text:"Give today / Read [student]'s story"}],
+    funnelStages:['consideration','conversion']
+  },
+  {
+    id:'renata', group:'funding', icon:'trending',
+    name:'Renata Voss', role:'Institutional &amp; Grant Funder', demo:'Program officer, philanthropic professional',
+    quote:"I have to defend this line item to my own board. Show me the number, not the adjective.",
+    intro:"Renata reviews grants for organizations like the Children's Board of Hillsborough County, Lutheran Services Florida, AmeriCorps, and Volunteer Florida. She needs quantifiable, audit-ready data, not narrative alone, because she has to defend the funding decision internally.",
+    goals:["Evidence of measurable outcomes","Alignment with funding priorities: educational equity, workforce readiness","Transparency","Confidence in ReDefiners' long-term stability"],
+    barriers:["Needs audit-ready data, not just a good story","Competing grant applicants for the same funding","Needs confidence ReDefiners can report at grant-compliance level"],
+    today:"Reviews annual and impact reports, requests site visits, and tracks results against her own board's stated priorities.",
+    search:["grant funding for adult literacy programs","nonprofit outcomes reporting language education","measuring impact of language education nonprofits"],
+    channels:["Direct reporting: impact reports, funder-facing decks","LinkedIn","In-person site visits"],
+    pillar:"Per the Brand Style Guide's voice calibration, warmth tightens into transparency and methodology here. Strategic decisions get framed as deliberate, data-informed choices.",
+    ctas:[{stage:'Consideration → Conversion', text:'Request the current impact report / Schedule a site visit'}],
+    funnelStages:['consideration','conversion'],
+    complianceFlag:"Renata is the direct audience for the “Know What Funds Us” property-tax civic-education campaign, since the Children's Board, ReDefiners' largest funder, is tied to the November ballot measure. Anything aimed at her on that topic has to stay nonpartisan and transparency-only, and needs Executive Director sign-off before it goes out."
+  },
+  {
+    id:'jamal', group:'awareness', icon:'users',
+    name:'Jamal Coleman', role:'Priority Community Neighbor', demo:"Hillsborough County resident, priority area",
+    quote:"I've seen the ReDefiners table at the farmers market a few times. What do they actually do?",
+    intro:"Jamal lives in a priority area (Tampa, Brandon, Town 'n' Country, Riverview, Temple Terrace, or Wesley Chapel) with no current reason to enroll, donate, or partner. Awareness content used to borrow the Adult Learner and Parent personas as a stand-in for people like him. That's an imperfect fit for someone meeting ReDefiners for the first time with nothing to act on yet, which is exactly why this persona exists.",
+    goals:[],
+    goalsNote:"No defined goals. He hasn't identified a need yet. That's the whole point of this persona.",
+    barriers:["Has likely never heard of ReDefiners","No immediate personal reason to engage","Scrolls past anything that reads like a generic nonprofit ask","Any enrollment or donation CTA aimed at him feels like spam, because he isn't that persona yet"],
+    today:"Encounters ReDefiners through passive social scrolling, the outreach team's in-person tabling at community events, a Peachjar flyer sent home with a neighbor's kid, or incidental exposure through property-tax-measure news coverage.",
+    search:[],
+    channels:["Instagram/Facebook local-reach content","In-person presence at events and partner sites"],
+    pillar:"Humanize the Brand. No ask, just recognition and trust.",
+    ctas:[{stage:'Awareness only', text:'Follow us / See what we do', muted:true}],
+    funnelStages:['awareness'],
+    extraNote:"Success here is reach and impressions in priority ZIP codes, not clicks. No conversion ask belongs in this content at all."
+  }
+];
+
+function chip(text){ return '<span class="chip">'+text+'</span>'; }
+
+function funnelTrack(activeStages){
+  let html = '<div class="funnel-track">';
+  STAGES.forEach((s,i)=>{
+    const on = activeStages.includes(s);
+    html += '<div class="funnel-step" style="'+(on?'background:#FFC100;box-shadow:0 0 0 3px rgba(255,193,0,0.18);':'')+'"></div>';
+    if(i<STAGES.length-1){
+      const lineOn = on && activeStages.includes(STAGES[i+1]);
+      html += '<div class="funnel-line" style="'+(lineOn?'background:#FFC100;opacity:.7;':'')+'"></div>';
+    }
+  });
+  html += '</div><div class="funnel-labels"><span>Awareness</span><span>Consideration</span><span>Conversion</span></div>';
+  return html;
+}
+
+function renderCards(){
+  const grid = document.getElementById('personaGrid');
+  grid.innerHTML = PERSONAS.map(p=>{
+    const g = GROUPS[p.group];
+    return '<div class="persona-card" data-group="'+p.group+'" onclick="openModal(\''+p.id+'\')">'
+      + '<div class="persona-top">'
+        + '<div class="avatar-tile" style="background:linear-gradient(145deg,'+g.color+',#00131A);">'+svgIcon(p.icon)+'</div>'
+        + '<div class="persona-id">'
+          + '<h4>'+p.name+'</h4>'
+          + '<div class="role">'+p.role+'</div>'
+          + '<div class="demo">'+p.demo+'</div>'
+          + '<div class="group-pill" style="background:'+g.bg+';color:'+g.color+';margin-top:8px;">'+g.label+'</div>'
+        + '</div>'
+      + '</div>'
+      + '<div class="persona-quote">“'+p.quote+'”</div>'
+      + funnelTrack(p.funnelStages)
+      + '<button class="view-btn">View full profile '+svgIcon('arrow')+'</button>'
+    + '</div>';
+  }).join('');
+}
+
+function renderRefTable(){
+  const body = document.getElementById('refTableBody');
+  body.innerHTML = PERSONAS.map(p=>{
+    const g = GROUPS[p.group];
+    const primaryCta = p.ctas[0];
+    return '<tr>'
+      + '<td><div class="p-name"><span class="mini-badge" style="background:'+g.color+';">'+svgIcon(p.icon)+'</span>'+p.name+'</div></td>'
+      + '<td><span class="group-pill" style="background:'+g.bg+';color:'+g.color+';">'+g.label+'</span></td>'
+      + '<td>'+p.channels.slice(0,2).join(', ')+'</td>'
+      + '<td>'+p.pillar.split('.')[0]+'.</td>'
+      + '<td>'+primaryCta.stage.replace(' (partnership-pipeline mode)','').replace(' (pure-advocacy mode)','')+'</td>'
+      + '<td>'+primaryCta.text+'</td>'
+    + '</tr>';
+  }).join('');
+}
+
+function listSection(icon, label, items){
+  if(!items || !items.length) return '';
+  return '<div class="modal-section"><h5>'+svgIcon(icon)+label+'</h5><ul>'+items.map(i=>'<li>'+i+'</li>').join('')+'</ul></div>';
+}
+
+function openModal(id){
+  const p = PERSONAS.find(x=>x.id===id);
+  const g = GROUPS[p.group];
+  let html = '<button class="modal-close" onclick="closeModal()">'+svgIcon('x')+'</button>';
+  html += '<div class="modal-head">'
+    + '<div class="avatar-tile" style="background:linear-gradient(145deg,'+g.color+',#00131A);">'+svgIcon(p.icon)+'</div>'
+    + '<div><h3>'+p.name+'</h3><div class="role">'+p.role+'</div><div class="demo">'+p.demo+'</div>'
+    + '<div class="group-pill" style="background:'+g.bg+';color:'+g.color+';margin-top:8px;">'+g.label+'</div></div>'
+  + '</div>';
+  html += '<div class="modal-quote">'+svgIcon('quote')+'<span>'+p.quote+'</span></div>';
+  html += '<p class="modal-intro">'+p.intro+'</p>';
+
+  if(p.goals && p.goals.length){
+    html += listSection('target','Goals', p.goals);
+  } else if(p.goalsNote){
+    html += '<div class="modal-section"><h5>'+svgIcon('target')+'Goals</h5><p>'+p.goalsNote+'</p></div>';
+  }
+  html += listSection('alert','Barriers', p.barriers);
+  html += '<div class="modal-section"><h5>'+svgIcon('compass')+'How they solve this today</h5><p>'+p.today+'</p></div>';
+
+  if(p.search && p.search.length){
+    html += '<div class="modal-section"><h5>'+svgIcon('search')+'What they search</h5><div class="chip-row">'+p.search.map(chip).join('')+'</div></div>';
+  }
+  html += '<div class="modal-section"><h5>'+svgIcon('megaphone')+'Channels that convert them</h5><div class="chip-row">'+p.channels.map(chip).join('')+'</div></div>';
+  html += '<div class="modal-section"><h5>'+svgIcon('bulb')+'Messaging pillar</h5><p>'+p.pillar+'</p></div>';
+
+  if(p.buyerRoles){
+    html += '<div class="modal-section"><h5>'+svgIcon('users')+'Three buyer roles, three angles</h5>'
+      + '<table class="buyer-table"><thead><tr><th>Buyer role</th><th>Cares about</th><th>Messaging angle</th></tr></thead><tbody>'
+      + p.buyerRoles.map(b=>'<tr><td><b>'+b.role+'</b></td><td>'+b.cares+'</td><td>'+b.angle+'</td></tr>').join('')
+      + '</tbody></table></div>';
+  }
+  if(p.industryPains){
+    html += '<div class="modal-section"><h5>'+svgIcon('briefcase')+'Pain points by industry</h5><ul>'
+      + p.industryPains.map(ip=>'<li><b style="color:#eef6f3;">'+ip.industry+':</b> '+ip.pain+'</li>').join('')
+      + '</ul></div>';
+  }
+  if(p.geoNote){
+    html += '<div class="callout"><b>Geographic scope.</b> '+p.geoNote+'</div>';
+  }
+  if(p.dataGapFlag){
+    html += '<div class="callout red"><b>Data gap.</b> '+p.dataGapFlag+'</div>';
+  }
+  if(p.complianceFlag){
+    html += '<div class="callout red"><b>Compliance flag.</b> '+p.complianceFlag+'</div>';
+  }
+  if(p.extraNote){
+    html += '<div class="callout"><b>Note.</b> '+p.extraNote+'</div>';
+  }
+
+  html += '<div class="modal-section"><h5>'+svgIcon('arrow')+'Funnel role &amp; CTA</h5>'
+    + p.ctas.map(c=>'<div class="cta-row"><div><span class="stage-lbl">'+c.stage+'</span><span class="cta-text">'+c.text+'</span></div>'
+      + '<span class="cta-btn'+(c.muted?' muted':'')+'">'+(c.muted?'No conversion ask':'CTA')+'</span></div>').join('')
+  + '</div>';
+
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('modalOverlay').addEventListener('click', e=>{
+  if(e.target.id === 'modalOverlay') closeModal();
+});
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape') closeModal();
+});
+
+document.getElementById('filterRow').addEventListener('click', e=>{
+  const btn = e.target.closest('.filter-tag');
+  if(!btn) return;
+  document.querySelectorAll('.filter-tag').forEach(b=>{ b.classList.remove('active'); b.style.background=''; b.style.color=''; });
+  btn.classList.add('active');
+  const group = btn.dataset.group;
+  const g = GROUPS[group];
+  btn.style.background = g ? g.color : '#FFC100';
+  btn.style.color = '#00131A';
+  document.querySelectorAll('.persona-card').forEach(card=>{
+    card.style.display = (group==='all' || card.dataset.group===group) ? '' : 'none';
+  });
+});
+
+renderCards();
+renderRefTable();
+</script>
+</body>
+</html>
