@@ -74,7 +74,8 @@
   }
   .persona-card:hover { background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1); transform:translateY(-3px); }
   .persona-top { display:flex; gap:14px; align-items:flex-start; }
-  .avatar-tile { width:58px; height:58px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:24px; color:#00131A; }
+  .avatar-tile { width:58px; height:58px; border-radius:50%; flex-shrink:0; overflow:hidden; position:relative; border:2px solid rgba(255,255,255,0.14); box-shadow:0 4px 10px rgba(0,0,0,0.4); }
+  .avatar-tile svg { width:100%; height:100%; display:block; }
   .persona-id h4 { font-size:16px; font-weight:700; color:#eef6f3; margin-bottom:2px; }
   .persona-id .role { font-size:11.5px; color:#a2c2bb; font-weight:500; line-height:1.4; }
   .persona-id .demo { font-size:11px; color:#7a9d97; margin-top:3px; }
@@ -143,7 +144,7 @@
   .modal-close { position:absolute; top:18px; right:18px; background:rgba(255,255,255,0.06); border:none; color:#eef6f3; width:32px; height:32px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; }
   .modal-close:hover { background:rgba(255,255,255,0.12); }
   .modal-head { display:flex; gap:16px; align-items:flex-start; padding-right:40px; }
-  .modal-head .avatar-tile { width:64px; height:64px; font-size:27px; border-radius:16px; }
+  .modal-head .avatar-tile { width:72px; height:72px; }
   .modal-head h3 { font-size:20px; font-weight:700; color:#f7f4ea; }
   .modal-head .role { font-size:13px; color:#a2c2bb; margin-top:2px; }
   .modal-head .demo { font-size:11.5px; color:#7a9d97; margin-top:3px; }
@@ -255,6 +256,52 @@ const ICONS = {
 function svgIcon(name, filled){
   const body = ICONS[name] || '';
   return '<svg class="ico'+(filled?' filled':'')+'" viewBox="0 0 24 24">'+body+'</svg>';
+}
+
+/* ---- illustrated flat-vector avatars, one per persona (not photos) ---- */
+const SHOULDERS = 'M6 64C6 47 17 37 32 37C47 37 58 47 58 64Z';
+const HEAD = '<circle cx="32" cy="27" r="13" fill="SKIN"/>';
+const GLASSES = '<rect x="20" y="26" width="9" height="6" rx="2" fill="none" stroke="STROKE" stroke-width="1.6"/><rect x="35" y="26" width="9" height="6" rx="2" fill="none" stroke="STROKE" stroke-width="1.6"/><line x1="29" y1="29" x2="35" y2="29" stroke="STROKE" stroke-width="1.6"/>';
+
+const AVATARS = {
+  yolanda:
+    '<path d="'+SHOULDERS+'" fill="#2e5f63"/>'
+    + HEAD.replace('SKIN','#c68858')
+    + '<ellipse cx="32" cy="19" rx="15" ry="12" fill="#2b1c14"/>',
+  carmen:
+    '<path d="'+SHOULDERS+'" fill="#a45a4f"/>'
+    + HEAD.replace('SKIN','#d9a066')
+    + '<ellipse cx="32" cy="19" rx="15" ry="11" fill="#3a2418"/>'
+    + '<circle cx="32" cy="8" r="5" fill="#3a2418"/>',
+  devon:
+    '<path d="'+SHOULDERS+'" fill="#22384a"/>'
+    + HEAD.replace('SKIN','#8d5a3b')
+    + '<ellipse cx="32" cy="18" rx="13" ry="8" fill="#141414"/>'
+    + GLASSES.replace(/STROKE/g,'#141414'),
+  priya:
+    '<path d="'+SHOULDERS+'" fill="#2b2b33"/>'
+    + HEAD.replace('SKIN','#c48a5d')
+    + '<ellipse cx="32" cy="18" rx="12.5" ry="8" fill="#14100d"/>'
+    + '<ellipse cx="32" cy="36" rx="5" ry="4" fill="#14100d"/>',
+  walter:
+    '<path d="'+SHOULDERS+'" fill="#4c5d4a"/>'
+    + HEAD.replace('SKIN','#e3b79a')
+    + '<ellipse cx="21" cy="24" rx="3.5" ry="6" fill="#c9c9c9"/><ellipse cx="43" cy="24" rx="3.5" ry="6" fill="#c9c9c9"/>'
+    + '<rect x="27" y="33" width="10" height="3" rx="1.5" fill="#c9c9c9"/>',
+  renata:
+    '<path d="'+SHOULDERS+'" fill="#2a3b52"/>'
+    + HEAD.replace('SKIN','#efc9a6')
+    + '<ellipse cx="32" cy="19" rx="14.5" ry="11" fill="#5a3a24"/>'
+    + GLASSES.replace(/STROKE/g,'#3a2b1c'),
+  jamal:
+    '<path d="'+SHOULDERS+'" fill="#454b52"/>'
+    + HEAD.replace('SKIN','#7a4a30')
+    + '<ellipse cx="32" cy="18" rx="13" ry="8" fill="#17110d"/>'
+    + '<ellipse cx="32" cy="37" rx="8" ry="5" fill="#17110d" opacity="0.6"/>'
+};
+
+function avatarSvg(id){
+  return '<svg viewBox="0 0 64 64">'+(AVATARS[id]||'')+'</svg>';
 }
 document.querySelectorAll('[data-icon]').forEach(el=>{ el.innerHTML = svgIcon(el.dataset.icon); });
 document.getElementById('icoCalendar').innerHTML = svgIcon('calendar');
@@ -411,7 +458,7 @@ function renderCards(){
     const g = GROUPS[p.group];
     return '<div class="persona-card" data-group="'+p.group+'" onclick="openModal(\''+p.id+'\')">'
       + '<div class="persona-top">'
-        + '<div class="avatar-tile" style="background:linear-gradient(145deg,'+g.color+',#00131A);">'+svgIcon(p.icon)+'</div>'
+        + '<div class="avatar-tile" style="background:linear-gradient(145deg,'+g.color+',#00131A);border-color:'+g.color+'55;">'+avatarSvg(p.id)+'</div>'
         + '<div class="persona-id">'
           + '<h4>'+p.name+'</h4>'
           + '<div class="role">'+p.role+'</div>'
@@ -452,7 +499,7 @@ function openModal(id){
   const g = GROUPS[p.group];
   let html = '<button class="modal-close" onclick="closeModal()">'+svgIcon('x')+'</button>';
   html += '<div class="modal-head">'
-    + '<div class="avatar-tile" style="background:linear-gradient(145deg,'+g.color+',#00131A);">'+svgIcon(p.icon)+'</div>'
+    + '<div class="avatar-tile" style="background:linear-gradient(145deg,'+g.color+',#00131A);border-color:'+g.color+'55;">'+avatarSvg(p.id)+'</div>'
     + '<div><h3>'+p.name+'</h3><div class="role">'+p.role+'</div><div class="demo">'+p.demo+'</div>'
     + '<div class="group-pill" style="background:'+g.bg+';color:'+g.color+';margin-top:8px;">'+g.label+'</div></div>'
   + '</div>';
