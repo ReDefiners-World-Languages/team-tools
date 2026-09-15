@@ -193,10 +193,12 @@
   .cs-visual { background:#FAF5E6; border-radius:10px; padding:22px; min-height:96px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
   .cs-logo-main { font-weight:800; font-size:19px; color:#00303F; text-align:center; line-height:1.1; }
   .cs-logo-tag { font-weight:700; font-size:8px; letter-spacing:2px; color:#00303F; opacity:.75; text-align:center; margin-top:3px; }
-  .cs-real-logo { max-height:46px; max-width:70%; object-fit:contain; }
+  .cs-real-logo { max-height:46px; max-width:60%; object-fit:contain; }
   .cs-example.bad .cs-visual { gap:0; }
   .cs-cta-btn { background:#FF7400; color:#00131A; font-weight:800; font-size:10.5px; letter-spacing:.02em;
-    padding:9px 16px; border-radius:60px; box-shadow:0 4px 10px rgba(255,116,0,0.4); white-space:nowrap; margin-left:-18px; z-index:2; }
+    padding:9px 16px; border-radius:60px; box-shadow:0 4px 10px rgba(255,116,0,0.4); white-space:nowrap; z-index:2; }
+  .cs-example.good .cs-cta-btn { margin-left:28px; }
+  .cs-example.bad .cs-cta-btn { margin-left:-18px; }
   .cs-example p.exp { font-size:12px; color:#a2c2bb; margin-top:10px; }
 
   /* Framework box */
@@ -311,7 +313,7 @@
   <!-- SECTION 2: COLOR -->
   <div class="section-label"><div class="num">2</div><h3>Color Palette</h3></div>
   <div class="callout">
-    <b>Usage rule:</b> accent colors should stay under 50% of any composition. Always pair Amber or Orange with Navy or White so the contrast holds up and stays WCAG 2.2 AA compliant.
+    <b>Usage rule:</b> accent colors should stay under 50% of any composition. Always pair Amber or Orange fills with Navy text or icons on top. Never use white text on these colors, and never use these colors as text on a white background &mdash; they pass WCAG 2.2 AA against Navy (8.6:1 and 5.2:1) but fail against White (1.6:1 and 2.7:1).
   </div>
 
   <div class="subhead"><i class="fas fa-anchor"></i>Primary Colors &mdash; Anchor Identity</div>
@@ -348,36 +350,22 @@
         <span class="swatch-usage">Subtle backgrounds, data viz, soft accents</span>
       </div>
     </div>
-    <div class="swatch-card">
-      <div class="swatch-chip" style="background:#DBB64D;"></div>
-      <div>
-        <span class="swatch-name">Warm Gold<span class="badge legacy">Reserved</span><span class="swatch-hex">#DBB64D</span></span>
-        <span class="swatch-usage">Reserve for premium or legacy contexts only. Not for digital campaigns.</span>
-      </div>
-    </div>
-    <div class="swatch-card">
-      <div class="swatch-chip" style="background:#7A9D96;"></div>
-      <div>
-        <span class="swatch-name">Sky Blue<span class="badge legacy">Reserved</span><span class="swatch-hex">#7A9D96</span></span>
-        <span class="swatch-usage">Use sparingly for muted accents only. Low digital visibility.</span>
-      </div>
-    </div>
   </div>
 
   <div class="subhead"><i class="fas fa-bolt"></i>High-Impact Accents &mdash; Social &amp; Campaigns</div>
   <div class="swatch-grid">
     <div class="swatch-card">
-      <div class="swatch-chip" style="background:#FFC100;"></div>
-      <div>
-        <span class="swatch-name">Vibrant Amber<span class="swatch-hex">#FFC100</span></span>
-        <span class="swatch-usage">CTAs, social highlights, event promotions, youth campaigns</span>
-      </div>
-    </div>
-    <div class="swatch-card">
       <div class="swatch-chip" style="background:#FF7400;"></div>
       <div>
         <span class="swatch-name">Energetic Orange<span class="swatch-hex">#FF7400</span></span>
-        <span class="swatch-usage">Urgent announcements, program launches, engagement drivers</span>
+        <span class="swatch-usage">Primary action color: CTAs, buttons, urgent announcements, program launches. Pair with Navy text or icons, never white.</span>
+      </div>
+    </div>
+    <div class="swatch-card">
+      <div class="swatch-chip" style="background:#FFC100;"></div>
+      <div>
+        <span class="swatch-name">Vibrant Amber<span class="swatch-hex">#FFC100</span></span>
+        <span class="swatch-usage">Secondary highlight only: badges, underlines, decorative accents. Not used on clickable elements or buttons.</span>
       </div>
     </div>
   </div>
@@ -522,6 +510,10 @@
     <span class="logo-note">Use for milestone campaigns and commemorative materials only. Retire after December 2026.</span>
   </div>
 
+  <div class="callout mint" style="margin-top:14px;">
+    <b>Legacy &amp; Special Use:</b> Warm Gold (#DBB64D) and Sky Blue (#7A9D96) are retired from the main palette. Reserve both for anniversary and legacy contexts only, the same treatment as the 10th Anniversary logo above, and never bring them into a current digital campaign.
+  </div>
+
   <!-- CLEAR SPACE RULE -->
   <div class="subhead"><i class="fas fa-ruler-combined"></i>Clear Space Rule: Visual Guide</div>
   <p class="body-text" style="margin-bottom:8px;">Maintain empty space equal to the height of the capital <strong>"W"</strong> in <em>"World Languages"</em> around all sides of the logo. We call that height <strong>X</strong> for the rest of this section.</p>
@@ -601,9 +593,10 @@
     <div class="cs-example good">
       <span class="cs-tag good"><i class="fas fa-check-circle"></i>Correct</span>
       <div class="cs-visual">
-        <img class="cs-real-logo" src="https://redefinerswl.org/hubfs/Brand%20Kit/OfficialLogo(navy).png" alt="ReDefiners logo with open clear space" onerror="this.outerHTML='<div class=&quot;cs-logo&quot;><div class=&quot;cs-logo-main&quot;>ReDefiners</div><div class=&quot;cs-logo-tag&quot;>WORLD LANGUAGES</div></div>'">
+        <img class="cs-real-logo" src="https://redefinerswl.org/hubfs/Brand%20Kit/OfficialLogo(navy).png" alt="ReDefiners logo with a CTA button placed a full clear space away" onerror="this.outerHTML='<div class=&quot;cs-logo&quot;><div class=&quot;cs-logo-main&quot;>ReDefiners</div><div class=&quot;cs-logo-tag&quot;>WORLD LANGUAGES</div></div>'">
+        <span class="cs-cta-btn">ENROLL TODAY</span>
       </div>
-      <p class="exp">The clear space stays open on every side. Nothing touches it.</p>
+      <p class="exp">The CTA button sits a full clear space away. The logo has room to breathe.</p>
     </div>
     <div class="cs-example bad">
       <span class="cs-tag bad"><i class="fas fa-times-circle"></i>Incorrect</span>
@@ -652,7 +645,7 @@
     <p><b>Attention:</b> bold headline in Montserrat Black with a Vibrant Amber accent<br>
     <b>Interest:</b> a quick benefit-driven subhead and a diverse student visual<br>
     <b>Desire:</b> social proof, a testimonial, an enrollment stat, a partner logo<br>
-    <b>Action:</b> a clear CTA button in Energetic Orange: "Reserve Your Spot"<br>
+    <b>Action:</b> a clear CTA button in Energetic Orange with Navy text: "Reserve Your Spot"<br>
     <b>+ Follow-up:</b> "Share your journey #ReDefinersWL" for user-generated content</p>
   </div>
 
@@ -660,14 +653,14 @@
   <div class="section-label"><div class="num">6</div><h3>Digital-First Applications</h3></div>
 
   <div class="subhead"><i class="fas fa-mobile-alt"></i>Social Media Template Strategy</div>
-  <p class="body-text" style="margin-bottom:10px;">Social gets the boldest treatment in our system. Amber and Orange show up as full backgrounds here, not just highlights, since a feed rewards something that stops the scroll. Email and web stay calmer by comparison, with those same colors doing quieter work as buttons and accents instead.</p>
+  <p class="body-text" style="margin-bottom:10px;">Social still gets the boldest treatment in our system, but the two accent colors don't share a job here. Orange carries the bold, full backgrounds, since it's our primary action color. Amber stays in its lane as a decorative accent, never the dominant color and never anything clickable. Email and web stay calmer by comparison, using Orange only for buttons and small highlights.</p>
   <table class="breakdown-table">
     <tr><th>Platform</th><th>Visual Strategy</th><th>Color Priority</th></tr>
-    <tr><td><strong>IG Reels / TikTok</strong></td><td>Vertical video, quick cuts, student highlights</td><td>Amber background, Navy text and logo</td></tr>
-    <tr><td><strong>Instagram Feed</strong></td><td>Carousel stories, before/after journeys</td><td>Orange background blocks, White text, Navy CTA button</td></tr>
-    <tr><td><strong>Facebook</strong></td><td>Community events, parent testimonials</td><td>Cream background with an Amber accent block behind every headline</td></tr>
+    <tr><td><strong>IG Reels / TikTok</strong></td><td>Vertical video, quick cuts, student highlights</td><td>Orange background, Navy text and logo, Amber accent line</td></tr>
+    <tr><td><strong>Instagram Feed</strong></td><td>Carousel stories, before/after journeys</td><td>Orange background blocks, Navy text, Navy CTA button</td></tr>
+    <tr><td><strong>Facebook</strong></td><td>Community events, parent testimonials</td><td>Cream background, Navy text, Amber accent block behind headlines</td></tr>
     <tr><td><strong>LinkedIn</strong></td><td>Impact stats, partner spotlights</td><td>Navy background, White text, Amber stat highlights</td></tr>
-    <tr><td><strong>YouTube Shorts</strong></td><td>15-second success clips, teacher intros</td><td>Amber-to-Orange gradient background</td></tr>
+    <tr><td><strong>YouTube Shorts</strong></td><td>15-second success clips, teacher intros</td><td>Orange background, Amber accent line transition</td></tr>
   </table>
 
   <div class="subhead"><i class="fas fa-laptop-code"></i>Email &amp; Web UI Guidelines</div>
