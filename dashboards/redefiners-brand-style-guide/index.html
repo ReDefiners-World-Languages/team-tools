@@ -156,6 +156,10 @@
   .logo-preview img { max-width:100%; max-height:56px; object-fit:contain; }
   .logo-label { font-size:13px; font-weight:700; color:#eef6f3; display:block; margin-bottom:2px; }
   .logo-note { font-size:11px; color:#7a9d97; display:block; line-height:1.4; }
+  .logo-contrast-check { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:0 0 20px; }
+  .logo-card.bad { border-color:rgba(255,107,107,0.3); }
+  .logo-card.good { border-color:rgba(63,224,165,0.25); }
+  .logo-card .cs-tag { margin-bottom:10px; }
 
   /* Brand kit access */
   .brand-kit-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:14px 0 6px; }
@@ -189,9 +193,10 @@
   .cs-visual { background:#FAF5E6; border-radius:10px; padding:22px; min-height:96px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
   .cs-logo-main { font-weight:800; font-size:19px; color:#00303F; text-align:center; line-height:1.1; }
   .cs-logo-tag { font-weight:700; font-size:8px; letter-spacing:2px; color:#00303F; opacity:.75; text-align:center; margin-top:3px; }
-  .cs-example.bad .cs-visual { align-items:flex-end; justify-content:flex-end; }
-  .cs-example.bad .cs-logo { text-align:right; }
-  .cs-crowd { position:absolute; top:10px; left:10px; right:54px; font-weight:800; font-size:12px; color:#FF7400; line-height:1.3; }
+  .cs-real-logo { max-height:46px; max-width:70%; object-fit:contain; }
+  .cs-example.bad .cs-visual { gap:0; }
+  .cs-cta-btn { background:#FF7400; color:#00131A; font-weight:800; font-size:10.5px; letter-spacing:.02em;
+    padding:9px 16px; border-radius:60px; box-shadow:0 4px 10px rgba(255,116,0,0.4); white-space:nowrap; margin-left:-18px; z-index:2; }
   .cs-example p.exp { font-size:12px; color:#a2c2bb; margin-top:10px; }
 
   /* Framework box */
@@ -210,7 +215,7 @@
 
   @media (max-width:1000px) {
     .metric-grid { grid-template-columns:repeat(2,1fr); }
-    .channel-grid, .channel-grid.two, .brand-kit-grid, .clearspace-examples { grid-template-columns:1fr; }
+    .channel-grid, .channel-grid.two, .brand-kit-grid, .clearspace-examples, .logo-contrast-check { grid-template-columns:1fr; }
     .logo-grid { grid-template-columns:repeat(2,1fr); }
     .cs-steps { grid-template-columns:1fr; }
     .dashboard { padding:24px 20px; }
@@ -250,7 +255,7 @@
   </div>
 
   <div class="callout">
-    <b>What's new in FY26-27:</b> the Clear Space Rule finally has a real measuring diagram instead of a rough dashed box. We also added the two actual places to grab brand assets, since the old brand-kit link stopped working. Everything else carried over unchanged. This guide gets refreshed at the start of every fiscal year, so treat the version tag in the footer as the source of truth for how current it is.
+    <b>What's new in FY26-27:</b> the Clear Space Rule now comes with an actual measuring diagram instead of a rough dashed box, and this edition adds the two current places to download brand assets. Everything else carries over unchanged. Check the version tag in the footer to confirm you're working from the current edition.
   </div>
 
   <div class="metric-grid">
@@ -264,7 +269,7 @@
     </div>
     <div class="metric-card">
       <div class="metric-header"><span class="metric-label">Accent Color Cap</span><i class="fas fa-palette"></i></div>
-      <div class="metric-value">&le;20%</div>
+      <div class="metric-value">&le; 50%</div>
     </div>
     <div class="metric-card">
       <div class="metric-header"><span class="metric-label">Accessibility Standard</span><i class="fas fa-universal-access"></i></div>
@@ -306,7 +311,7 @@
   <!-- SECTION 2: COLOR -->
   <div class="section-label"><div class="num">2</div><h3>Color Palette</h3></div>
   <div class="callout">
-    <b>Usage rule:</b> accent colors should stay under 20% of any composition. Always pair Amber or Orange with Navy or White so the contrast holds up and stays WCAG 2.2 AA compliant.
+    <b>Usage rule:</b> accent colors should stay under 50% of any composition. Always pair Amber or Orange with Navy or White so the contrast holds up and stays WCAG 2.2 AA compliant.
   </div>
 
   <div class="subhead"><i class="fas fa-anchor"></i>Primary Colors &mdash; Anchor Identity</div>
@@ -431,6 +436,7 @@
   </div>
 
   <div class="subhead"><i class="fas fa-image"></i>Primary Official Logos</div>
+  <p class="body-text" style="margin-bottom:10px;">Use the Primary Official Logo everywhere you have room for it: headers, print materials, email, presentations, event signage, social posts. It should be what people see the vast majority of the time, because the full lockup, tagline included, is what actually builds recognition. Reach for a symbol only when the situation on the right calls for it.</p>
   <div class="logo-grid">
     <div class="logo-card">
       <div class="logo-preview on-light">
@@ -447,7 +453,7 @@
       <span class="logo-note">Use on navy or dark backgrounds only</span>
     </div>
     <div class="logo-card">
-      <div class="logo-preview on-light">
+      <div class="logo-preview on-navy">
         <img src="https://redefinerswl.org/hubfs/Brand%20Kit/OfficialLogo(gold).png" alt="ReDefiners Official Logo - Gold" onerror="this.outerHTML='<span style=&quot;color:#DBB64D;font-weight:900;font-size:15px;&quot;>ReDefiners</span>'">
       </div>
       <span class="logo-label">Official Logo &mdash; Gold <span class="badge">Limited Use</span></span>
@@ -455,7 +461,27 @@
     </div>
   </div>
 
+  <div class="logo-contrast-check">
+    <div class="logo-card bad">
+      <span class="cs-tag bad"><i class="fas fa-times-circle"></i>Incorrect</span>
+      <div class="logo-preview on-light">
+        <img src="https://redefinerswl.org/hubfs/Brand%20Kit/OfficialLogo(white).png" alt="ReDefiners White Logo shown incorrectly on a light background" onerror="this.outerHTML='<span style=&quot;color:#FAF5E6;font-weight:900;font-size:15px;&quot;>ReDefiners</span>'">
+      </div>
+      <span class="logo-label">White Logo on a Light Background</span>
+      <span class="logo-note">Not enough contrast to read. The White logo is for navy or dark backgrounds only.</span>
+    </div>
+    <div class="logo-card good">
+      <span class="cs-tag good"><i class="fas fa-check-circle"></i>Correct</span>
+      <div class="logo-preview on-light">
+        <img src="https://redefinerswl.org/hubfs/Brand%20Kit/OfficialLogo(navy).png" alt="ReDefiners Navy Logo shown correctly on a light background" onerror="this.outerHTML='<span style=&quot;color:#00303F;font-weight:900;font-size:15px;&quot;>ReDefiners</span>'">
+      </div>
+      <span class="logo-label">Navy Logo on a Light Background</span>
+      <span class="logo-note">Full contrast, easy to read at any size.</span>
+    </div>
+  </div>
+
   <div class="subhead"><i class="fas fa-shapes"></i>Logo Symbols &mdash; Secondary Use Only</div>
+  <p class="body-text" style="margin-bottom:10px;">Reach for a symbol only when there's no room for the full logo: favicons, social profile photos, app icons, or a small watermark in a corner. At that size the tagline stops being legible anyway, so the symbol carries the mark on its own. Never swap a symbol in for the full logo just because it looks cleaner.</p>
   <div class="logo-grid four">
     <div class="logo-card">
       <div class="logo-preview on-light">
@@ -535,9 +561,12 @@
 
           <!-- logo bounding box -->
           <rect x="490" y="165" width="300" height="90" rx="6" fill="none" stroke="rgba(0,48,63,0.3)" stroke-width="1"/>
-          <text x="640" y="205" font-family="Montserrat, sans-serif" font-weight="800" font-size="34" fill="#00303F" text-anchor="middle">ReDefiners</text>
-          <text x="640" y="228" font-family="Montserrat, sans-serif" font-weight="700" font-size="12" fill="#00303F" text-anchor="middle" style="letter-spacing:3px;" opacity="0.8">WORLD LANGUAGES</text>
-          <rect x="605" y="236" width="70" height="3" rx="1.5" fill="#FFC100"/>
+          <g id="csStepImgFallback" style="display:none;">
+            <text x="640" y="205" font-family="Montserrat, sans-serif" font-weight="800" font-size="34" fill="#00303F" text-anchor="middle">ReDefiners</text>
+            <text x="640" y="228" font-family="Montserrat, sans-serif" font-weight="700" font-size="12" fill="#00303F" text-anchor="middle" style="letter-spacing:3px;" opacity="0.8">WORLD LANGUAGES</text>
+            <rect x="605" y="236" width="70" height="3" rx="1.5" fill="#FFC100"/>
+          </g>
+          <image x="500" y="172" width="280" height="76" href="https://redefinerswl.org/hubfs/Brand%20Kit/OfficialLogo(navy).png" preserveAspectRatio="xMidYMid meet" onerror="this.style.display='none'; document.getElementById('csStepImgFallback').style.display='block';"/>
 
           <!-- top measurement -->
           <line x1="640" y1="55" x2="640" y2="165" stroke="#00303F" stroke-width="1.5" stroke-dasharray="3 3"/>
@@ -572,23 +601,17 @@
     <div class="cs-example good">
       <span class="cs-tag good"><i class="fas fa-check-circle"></i>Correct</span>
       <div class="cs-visual">
-        <div class="cs-logo">
-          <div class="cs-logo-main">ReDefiners</div>
-          <div class="cs-logo-tag">WORLD LANGUAGES</div>
-        </div>
+        <img class="cs-real-logo" src="https://redefinerswl.org/hubfs/Brand%20Kit/OfficialLogo(navy).png" alt="ReDefiners logo with open clear space" onerror="this.outerHTML='<div class=&quot;cs-logo&quot;><div class=&quot;cs-logo-main&quot;>ReDefiners</div><div class=&quot;cs-logo-tag&quot;>WORLD LANGUAGES</div></div>'">
       </div>
-      <p class="exp">The clear space stays empty on every side. Nothing touches it.</p>
+      <p class="exp">The clear space stays open on every side. Nothing touches it.</p>
     </div>
     <div class="cs-example bad">
       <span class="cs-tag bad"><i class="fas fa-times-circle"></i>Incorrect</span>
       <div class="cs-visual">
-        <div class="cs-crowd">ENROLL TODAY</div>
-        <div class="cs-logo">
-          <div class="cs-logo-main">ReDefiners</div>
-          <div class="cs-logo-tag">WORLD LANGUAGES</div>
-        </div>
+        <img class="cs-real-logo" src="https://redefinerswl.org/hubfs/Brand%20Kit/OfficialLogo(navy).png" alt="ReDefiners logo with a CTA button crowding its clear space" onerror="this.outerHTML='<div class=&quot;cs-logo&quot;><div class=&quot;cs-logo-main&quot;>ReDefiners</div><div class=&quot;cs-logo-tag&quot;>WORLD LANGUAGES</div></div>'">
+        <span class="cs-cta-btn">ENROLL TODAY</span>
       </div>
-      <p class="exp">Headline copy crowds into the clear space zone.</p>
+      <p class="exp">The CTA button crowds right up against the logo, well inside the clear space zone.</p>
     </div>
   </div>
 
@@ -637,13 +660,14 @@
   <div class="section-label"><div class="num">6</div><h3>Digital-First Applications</h3></div>
 
   <div class="subhead"><i class="fas fa-mobile-alt"></i>Social Media Template Strategy</div>
+  <p class="body-text" style="margin-bottom:10px;">Social gets the boldest treatment in our system. Amber and Orange show up as full backgrounds here, not just highlights, since a feed rewards something that stops the scroll. Email and web stay calmer by comparison, with those same colors doing quieter work as buttons and accents instead.</p>
   <table class="breakdown-table">
     <tr><th>Platform</th><th>Visual Strategy</th><th>Color Priority</th></tr>
-    <tr><td><strong>IG Reels / TikTok</strong></td><td>Vertical video, quick cuts, student highlights</td><td>Navy background, Amber accents</td></tr>
-    <tr><td><strong>Instagram Feed</strong></td><td>Carousel stories, before/after journeys</td><td>White background, Orange CTA buttons</td></tr>
-    <tr><td><strong>Facebook</strong></td><td>Community events, parent testimonials</td><td>Soft Cream background, Navy text</td></tr>
-    <tr><td><strong>LinkedIn</strong></td><td>Impact stats, partner spotlights</td><td>Navy background, White text, Mist accents</td></tr>
-    <tr><td><strong>YouTube Shorts</strong></td><td>15-second success clips, teacher intros</td><td>Navy to Amber transitions</td></tr>
+    <tr><td><strong>IG Reels / TikTok</strong></td><td>Vertical video, quick cuts, student highlights</td><td>Amber background, Navy text and logo</td></tr>
+    <tr><td><strong>Instagram Feed</strong></td><td>Carousel stories, before/after journeys</td><td>Orange background blocks, White text, Navy CTA button</td></tr>
+    <tr><td><strong>Facebook</strong></td><td>Community events, parent testimonials</td><td>Cream background with an Amber accent block behind every headline</td></tr>
+    <tr><td><strong>LinkedIn</strong></td><td>Impact stats, partner spotlights</td><td>Navy background, White text, Amber stat highlights</td></tr>
+    <tr><td><strong>YouTube Shorts</strong></td><td>15-second success clips, teacher intros</td><td>Amber-to-Orange gradient background</td></tr>
   </table>
 
   <div class="subhead"><i class="fas fa-laptop-code"></i>Email &amp; Web UI Guidelines</div>
@@ -652,13 +676,6 @@
     <li><i class="fas fa-check"></i><strong>Secondary buttons:</strong> Navy outline, white fill</li>
     <li><i class="fas fa-check"></i><strong>Hover states:</strong> darken accent colors by 10%, never lighten</li>
     <li><i class="fas fa-check"></i><strong>Loading and transitions:</strong> a subtle Amber pulse at 30% opacity</li>
-  </ul>
-
-  <div class="subhead"><i class="fas fa-video"></i>Motion &amp; Video Branding</div>
-  <ul class="list-check">
-    <li><i class="fas fa-check"></i><strong>Intro bumper:</strong> a 3-second animation where the logo symbol expands with an Amber accent line</li>
-    <li><i class="fas fa-check"></i><strong>Lower-thirds:</strong> Montserrat SemiBold on a semi-transparent Navy bar</li>
-    <li><i class="fas fa-check"></i><strong>End screen:</strong> "Join the Movement" in Montserrat Black, with a QR code in an Orange frame</li>
   </ul>
 
   <div class="callout">
@@ -690,7 +707,7 @@
   </table>
 
   <div class="callout mint" style="margin-top:20px;">
-    <b>Final note:</b> this guide balances what makes ReDefiners ReDefiners with what actually gets used day to day. Lead with real student stories, use the bold colors on purpose, and design for accessibility every time.
+    <b>Final note:</b> this guide balances what makes ReDefiners who we are with what actually gets used day to day. Lead with real student stories, use the bold colors on purpose, and design for accessibility every time.
   </div>
 
   <!-- UPDATE THIS EVERY FISCAL YEAR: bump the version tag and the "prepared" date below at each renewal -->
