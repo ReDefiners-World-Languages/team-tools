@@ -93,7 +93,7 @@
   .subhead { font-weight:700; font-size:15.5px; color:#d9ecE6; margin:26px 0 12px; display:flex; align-items:center; gap:9px; }
   .subhead i { color:#FFC100; font-size:14px; }
 
-  p.body-text { font-family:'PT Serif', serif; font-size:14.5px; color:#c9ddd8; line-height:1.7; margin-bottom:14px; max-width:820px; }
+  p.body-text { font-family:'PT Serif', serif; font-size:14.5px; color:#c9ddd8; line-height:1.7; margin-bottom:14px; }
 
   /* Generic content cards */
   .card { background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
@@ -123,6 +123,7 @@
 
   /* Color swatches */
   .swatch-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:8px; }
+  .swatch-grid.four { grid-template-columns:repeat(4,1fr); }
   .swatch-card { display:flex; gap:14px; align-items:flex-start; background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04);
     border-radius:12px; padding:14px 16px; }
   .swatch-chip { width:46px; height:46px; border-radius:10px; flex-shrink:0; box-shadow:inset 0 0 0 1px rgba(255,255,255,0.12); }
@@ -224,9 +225,10 @@
     .hero { flex-direction:column; align-items:flex-start; }
     .hero-goal { text-align:left; }
     .swatch-grid { grid-template-columns:1fr; }
+    .swatch-grid.four { grid-template-columns:repeat(2,1fr); }
   }
   @media (max-width:580px) {
-    .metric-grid, .logo-grid, .logo-grid.four { grid-template-columns:1fr; }
+    .metric-grid, .logo-grid, .logo-grid.four, .swatch-grid.four { grid-template-columns:1fr; }
     .top-bar { flex-direction:column; align-items:start; }
   }
 </style>
@@ -312,48 +314,25 @@
 
   <!-- SECTION 2: COLOR -->
   <div class="section-label"><div class="num">2</div><h3>Color Palette</h3></div>
-  <p class="body-text">Navy anchors both ramps below. It's never a step within either one, it's the constant text, logo, and header color that sits on top of every neutral background and pairs with every accent color.</p>
 
-  <div class="card" style="padding:22px 24px 18px;">
-    <svg viewBox="0 0 700 246" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagram: Navy anchors both the Neutral Ramp, from White to Ocean Mist, and the Accent Ramp, from Amber to Ember">
-      <defs>
-        <linearGradient id="navyGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#0a4a5c"/><stop offset="1" stop-color="#00303F"/>
-        </linearGradient>
-        <linearGradient id="neutralGrad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#DFF0EE"/>
-        </linearGradient>
-        <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stop-color="#FFC100"/><stop offset="1" stop-color="#FF4D00"/>
-        </linearGradient>
-        <marker id="anchorArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M0,0 L10,5 L0,10 z" fill="#7EA39D"/>
-        </marker>
-      </defs>
-
-      <line x1="350" y1="88" x2="180" y2="172" stroke="#7EA39D" stroke-width="2" stroke-linecap="round" marker-end="url(#anchorArrow)"/>
-      <line x1="350" y1="88" x2="520" y2="172" stroke="#7EA39D" stroke-width="2" stroke-linecap="round" marker-end="url(#anchorArrow)"/>
-
-      <rect x="215" y="16" width="270" height="72" rx="12" fill="url(#navyGrad)"/>
-      <text x="350" y="48" font-family="Montserrat, sans-serif" font-weight="800" font-size="20" fill="#ffffff" text-anchor="middle">Navy</text>
-      <text x="350" y="70" font-family="Montserrat, sans-serif" font-weight="600" font-size="11.5" fill="#DFF0EE" text-anchor="middle" opacity="0.9">#00303F &middot; Text, logo, headers</text>
-
-      <rect x="40" y="178" width="270" height="66" rx="12" fill="url(#neutralGrad)" stroke="rgba(0,48,63,0.15)"/>
-      <text x="175" y="207" font-family="Montserrat, sans-serif" font-weight="800" font-size="16" fill="#00303F" text-anchor="middle">Neutral Ramp</text>
-      <text x="175" y="227" font-family="Montserrat, sans-serif" font-weight="600" font-size="11" fill="#00303F" text-anchor="middle" opacity="0.75">White to Ocean Mist</text>
-
-      <rect x="390" y="178" width="270" height="66" rx="12" fill="url(#accentGrad)"/>
-      <text x="525" y="207" font-family="Montserrat, sans-serif" font-weight="800" font-size="16" fill="#00303F" text-anchor="middle">Accent Ramp</text>
-      <text x="525" y="227" font-family="Montserrat, sans-serif" font-weight="600" font-size="11" fill="#00303F" text-anchor="middle" opacity="0.75">Amber to Ember</text>
-    </svg>
+  <div class="subhead"><i class="fas fa-anchor"></i>Anchor Identity</div>
+  <div class="swatch-grid">
+    <div class="swatch-card">
+      <div class="swatch-chip" style="background:#00303F;"></div>
+      <div>
+        <span class="swatch-name">ReDefiners Navy<span class="swatch-hex">#00303F</span></span>
+        <span class="swatch-usage">Primary backgrounds, logos, headers, professional materials</span>
+      </div>
+    </div>
   </div>
+  <p class="body-text" style="margin-top:10px;">Navy anchors both ramps below. It's never a step within either one, it's the constant text, logo, and header color that sits on top of every neutral background and pairs with every accent color.</p>
 
   <div class="callout">
     <b>Usage rule:</b> Amber, Marigold, Orange, and Ember combined should stay under 50% of any composition, not 50% each. Always pair an accent fill with Navy text or icons on top. Never use white text on these colors, and never use these colors as text on a white background &mdash; Amber and Orange pass WCAG 2.2 AA against Navy (8.6:1 and 5.2:1) but fail against White (1.6:1 and 2.7:1), and Ember only clears the large-text/UI threshold, never normal body text.
   </div>
 
   <div class="subhead"><i class="fas fa-snowflake"></i>Neutral Ramp &mdash; Backgrounds</div>
-  <div class="swatch-grid">
+  <div class="swatch-grid four">
     <div class="swatch-card">
       <div class="swatch-chip" style="background:#FFFFFF;"></div>
       <div>
@@ -386,7 +365,7 @@
   <p class="body-text" style="margin-top:10px;">White, Ice White, Cloud White, and Ocean Mist form one neutral ramp, lightest to closest-to-mist, in that order. Reach for whichever step sits closest to the mood you need instead of guessing between them. Soft Cream (#FAF5E6) still has a place for print materials and warm secondary backgrounds, but it sits outside this core ramp, so use it deliberately rather than as a default.</p>
 
   <div class="subhead"><i class="fas fa-bolt"></i>Accent Ramp &mdash; Social &amp; Campaigns</div>
-  <div class="swatch-grid">
+  <div class="swatch-grid four">
     <div class="swatch-card">
       <div class="swatch-chip" style="background:#FFC100;"></div>
       <div>
@@ -412,7 +391,7 @@
       <div class="swatch-chip" style="background:#FF4D00;"></div>
       <div>
         <span class="swatch-name">Ember<span class="swatch-hex">#FF4D00</span></span>
-        <span class="swatch-usage">Pressed/active button states, urgent alert fills, dark gradient stops. Graphic and UI use only, never body text: it only clears WCAG 2.2 AA against Navy or White at large text/UI size (4.2:1 and 3.3:1), not the 4.5:1 normal text needs.</span>
+        <span class="swatch-usage">Pressed/active button states, urgent alert fills, dark gradient stops.</span>
       </div>
     </div>
   </div>
