@@ -312,32 +312,53 @@
 
   <!-- SECTION 2: COLOR -->
   <div class="section-label"><div class="num">2</div><h3>Color Palette</h3></div>
-  <p class="body-text">Navy isn't a step in either color ramp below. It's the anchor that sits on top of both: the text, logo, and header color you'll see against every neutral background and paired with every accent color. Think of Navy as the constant, and the two ramps as what changes around it.</p>
+  <p class="body-text">Navy anchors both ramps below. It's never a step within either one, it's the constant text, logo, and header color that sits on top of every neutral background and pairs with every accent color.</p>
+
+  <div class="card" style="padding:22px 24px 18px;">
+    <svg viewBox="0 0 700 246" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Diagram: Navy anchors both the Neutral Ramp, from White to Ocean Mist, and the Accent Ramp, from Amber to Ember">
+      <defs>
+        <linearGradient id="navyGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#0a4a5c"/><stop offset="1" stop-color="#00303F"/>
+        </linearGradient>
+        <linearGradient id="neutralGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#DFF0EE"/>
+        </linearGradient>
+        <linearGradient id="accentGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#FFC100"/><stop offset="1" stop-color="#FF4D00"/>
+        </linearGradient>
+        <marker id="anchorArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="#7EA39D"/>
+        </marker>
+      </defs>
+
+      <line x1="350" y1="88" x2="180" y2="172" stroke="#7EA39D" stroke-width="2" stroke-linecap="round" marker-end="url(#anchorArrow)"/>
+      <line x1="350" y1="88" x2="520" y2="172" stroke="#7EA39D" stroke-width="2" stroke-linecap="round" marker-end="url(#anchorArrow)"/>
+
+      <rect x="215" y="16" width="270" height="72" rx="12" fill="url(#navyGrad)"/>
+      <text x="350" y="48" font-family="Montserrat, sans-serif" font-weight="800" font-size="20" fill="#ffffff" text-anchor="middle">Navy</text>
+      <text x="350" y="70" font-family="Montserrat, sans-serif" font-weight="600" font-size="11.5" fill="#DFF0EE" text-anchor="middle" opacity="0.9">#00303F &middot; Text, logo, headers</text>
+
+      <rect x="40" y="178" width="270" height="66" rx="12" fill="url(#neutralGrad)" stroke="rgba(0,48,63,0.15)"/>
+      <text x="175" y="207" font-family="Montserrat, sans-serif" font-weight="800" font-size="16" fill="#00303F" text-anchor="middle">Neutral Ramp</text>
+      <text x="175" y="227" font-family="Montserrat, sans-serif" font-weight="600" font-size="11" fill="#00303F" text-anchor="middle" opacity="0.75">White to Ocean Mist</text>
+
+      <rect x="390" y="178" width="270" height="66" rx="12" fill="url(#accentGrad)"/>
+      <text x="525" y="207" font-family="Montserrat, sans-serif" font-weight="800" font-size="16" fill="#00303F" text-anchor="middle">Accent Ramp</text>
+      <text x="525" y="227" font-family="Montserrat, sans-serif" font-weight="600" font-size="11" fill="#00303F" text-anchor="middle" opacity="0.75">Amber to Ember</text>
+    </svg>
+  </div>
+
   <div class="callout">
     <b>Usage rule:</b> Amber, Marigold, Orange, and Ember combined should stay under 50% of any composition, not 50% each. Always pair an accent fill with Navy text or icons on top. Never use white text on these colors, and never use these colors as text on a white background &mdash; Amber and Orange pass WCAG 2.2 AA against Navy (8.6:1 and 5.2:1) but fail against White (1.6:1 and 2.7:1), and Ember only clears the large-text/UI threshold, never normal body text.
   </div>
 
-  <div class="subhead"><i class="fas fa-anchor"></i>Primary Colors &mdash; Anchor Identity</div>
+  <div class="subhead"><i class="fas fa-snowflake"></i>Neutral Ramp &mdash; Backgrounds</div>
   <div class="swatch-grid">
-    <div class="swatch-card">
-      <div class="swatch-chip" style="background:#00303F;"></div>
-      <div>
-        <span class="swatch-name">ReDefiners Navy<span class="swatch-hex">#00303F</span></span>
-        <span class="swatch-usage">Primary backgrounds, logos, headers, professional materials</span>
-      </div>
-    </div>
     <div class="swatch-card">
       <div class="swatch-chip" style="background:#FFFFFF;"></div>
       <div>
-        <span class="swatch-name">Clean White<span class="swatch-hex">#FFFFFF</span></span>
+        <span class="swatch-name">White<span class="swatch-hex">#FFFFFF</span></span>
         <span class="swatch-usage">Primary text, negative space, digital UI backgrounds</span>
-      </div>
-    </div>
-    <div class="swatch-card">
-      <div class="swatch-chip" style="background:#FAF5E6;"></div>
-      <div>
-        <span class="swatch-name">Soft Cream<span class="swatch-hex">#FAF5E6</span></span>
-        <span class="swatch-usage">Secondary backgrounds, print materials, warm accents</span>
       </div>
     </div>
     <div class="swatch-card">
@@ -354,11 +375,6 @@
         <span class="swatch-usage">Gradient stops, soft section transitions</span>
       </div>
     </div>
-  </div>
-  <p class="body-text" style="margin-top:10px;">White, Ice White, Cloud White, and Ocean Mist form one neutral ramp, lightest to closest-to-mist, in that order. Reach for whichever step sits closest to the mood you need instead of guessing between them.</p>
-
-  <div class="subhead"><i class="fas fa-water"></i>Secondary Palette &mdash; Supporting Voice</div>
-  <div class="swatch-grid">
     <div class="swatch-card">
       <div class="swatch-chip" style="background:#DFF0EE;"></div>
       <div>
@@ -367,8 +383,9 @@
       </div>
     </div>
   </div>
+  <p class="body-text" style="margin-top:10px;">White, Ice White, Cloud White, and Ocean Mist form one neutral ramp, lightest to closest-to-mist, in that order. Reach for whichever step sits closest to the mood you need instead of guessing between them. Soft Cream (#FAF5E6) still has a place for print materials and warm secondary backgrounds, but it sits outside this core ramp, so use it deliberately rather than as a default.</p>
 
-  <div class="subhead"><i class="fas fa-bolt"></i>High-Impact Accents &mdash; Social &amp; Campaigns</div>
+  <div class="subhead"><i class="fas fa-bolt"></i>Accent Ramp &mdash; Social &amp; Campaigns</div>
   <div class="swatch-grid">
     <div class="swatch-card">
       <div class="swatch-chip" style="background:#FFC100;"></div>
