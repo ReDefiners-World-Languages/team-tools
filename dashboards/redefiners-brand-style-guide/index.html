@@ -211,15 +211,14 @@
   .cs-tag { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; padding:4px 12px; border-radius:60px; margin-bottom:12px; }
   .cs-tag.good { background:rgba(63,224,165,0.1); color:#3FE0A5; }
   .cs-tag.bad { background:rgba(255,107,107,0.1); color:#FF6B6B; }
-  .cs-visual { background:#FAF5E6; border-radius:10px; padding:22px; min-height:96px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+  .cs-visual { background:#FAF5E6; border-radius:10px; padding:22px; min-height:96px; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; position:relative; overflow:hidden; }
   .cs-logo-main { font-weight:800; font-size:19px; color:#00303F; text-align:center; line-height:1.1; }
   .cs-logo-tag { font-weight:700; font-size:8px; letter-spacing:2px; color:#00303F; opacity:.75; text-align:center; margin-top:3px; }
   .cs-real-logo { max-height:46px; max-width:60%; object-fit:contain; }
-  .cs-example.bad .cs-visual { gap:0; }
+  .cs-example.good .cs-visual { gap:28px; }
+  .cs-example.bad .cs-visual { gap:1px; }
   .cs-cta-btn { background:#FF7400; color:#00131A; font-weight:800; font-size:10.5px; letter-spacing:.02em;
     padding:9px 16px; border-radius:6px; box-shadow:0 4px 10px rgba(255,116,0,0.4); white-space:nowrap; z-index:2; }
-  .cs-example.good .cs-cta-btn { margin-left:28px; }
-  .cs-example.bad .cs-cta-btn { margin-left:1px; }
   .cs-example p.exp { font-size:12px; color:#a2c2bb; margin-top:10px; }
 
   /* Framework box */
@@ -336,7 +335,6 @@
   <!-- SECTION 2: COLOR -->
   <div class="section-label"><div class="num">2</div><h3>Color Palette</h3></div>
 
-  <div class="subhead"><i class="fas fa-layer-group"></i></div>
   <p class="body-text">Every color we use comes from two families: Navy and Amber. Navy carries our steady, trustworthy side &mdash; text, logos, headers, the cool backgrounds around them. Amber carries our energy &mdash; the warmth of a milestone hit, a classroom win, a student showing up. Each family runs light to dark below, so any two pieces from the same family will always look like they belong together.</p>
 
   <div class="subhead"><i class="fas fa-snowflake"></i>Navy Family &mdash; Cool</div>
