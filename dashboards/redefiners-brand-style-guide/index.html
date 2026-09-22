@@ -134,6 +134,34 @@
     padding:2px 8px; border-radius:60px; text-transform:uppercase; }
   .badge.legacy { background:rgba(255,255,255,0.1); color:#a2c2bb; }
 
+  /* Tonal ramp strips */
+  .ramp-strip { display:flex; border-radius:10px; overflow:hidden;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1); margin-bottom:6px; }
+  .ramp-strip .seg { flex:1; height:44px; position:relative; }
+  .ramp-strip .seg.legacy {
+    background-image: repeating-linear-gradient(135deg,
+      rgba(0,19,26,0.35) 0 6px, transparent 6px 12px);
+    filter: saturate(0.55) brightness(0.9);
+  }
+  .ramp-ticks { display:flex; margin-bottom:22px; }
+  .ramp-ticks span { flex:1; text-align:center; font-family:monospace;
+    font-size:10px; color:#7a9d97; padding-top:5px; }
+  .ramp-ticks span.legacy-tick { color:#5c7570; font-style:italic; }
+
+  .swatch-card { min-height:128px; }
+  .swatch-card.legacy { background:rgba(255,255,255,0.015);
+    border:1px dashed rgba(255,255,255,0.14); }
+  .swatch-text { display:flex; flex-direction:column; height:100%; }
+  .swatch-chip.legacy-chip {
+    opacity:.4;
+    filter: saturate(0.5) brightness(0.85);
+    background-image: repeating-linear-gradient(135deg,
+      rgba(0,19,26,0.4) 0 5px, transparent 5px 10px);
+  }
+  .swatch-card.legacy .swatch-usage { color:#8aa19c; }
+  .badge.legacy { display:inline-flex; align-items:center; gap:4px; }
+  .badge.legacy i { font-size:8px; }
+
   /* Typography preview */
   .typo-preview { background:rgba(255,255,255,0.02); padding:20px 22px; border-left:3px solid #FFC100; border-radius:0 12px 12px 0; margin:14px 0; }
   .typo-preview span { display:block; margin-bottom:8px; color:#f0f6f3; }
@@ -230,6 +258,7 @@
   @media (max-width:580px) {
     .metric-grid, .logo-grid, .logo-grid.four, .swatch-grid.four { grid-template-columns:1fr; }
     .top-bar { flex-direction:column; align-items:start; }
+    .ramp-ticks span { font-size:9px; }
   }
 </style>
 </head>
@@ -315,87 +344,140 @@
   <!-- SECTION 2: COLOR -->
   <div class="section-label"><div class="num">2</div><h3>Color Palette</h3></div>
 
-  <div class="subhead"><i class="fas fa-anchor"></i>Anchor Identity</div>
+  <div class="subhead"><i class="fas fa-layer-group"></i></div>
+  <p class="body-text">Every color we use comes from two families: Navy and Amber. Navy carries our steady, trustworthy side &mdash; text, logos, headers, the cool backgrounds around them. Amber carries our energy &mdash; the warmth of a milestone hit, a classroom win, a student showing up. Each family runs light to dark below, so any two pieces from the same family will always look like they belong together.</p>
+
+  <div class="subhead"><i class="fas fa-snowflake"></i>Navy Family &mdash; Cool</div>
+  <div class="ramp-strip">
+    <div class="seg" style="background:#00303F;"></div>
+    <div class="seg legacy" style="background:#7A9D96;"></div>
+    <div class="seg" style="background:#DFF0EE;"></div>
+    <div class="seg" style="background:#F5FBFF;"></div>
+    <div class="seg" style="background:#FAFCFF;"></div>
+    <div class="seg" style="background:#FFFFFF;"></div>
+  </div>
+  <div class="ramp-ticks">
+    <span>10</span>
+    <span class="legacy-tick">58</span>
+    <span>90</span>
+    <span>97</span>
+    <span>99</span>
+    <span>100</span>
+  </div>
   <div class="swatch-grid">
     <div class="swatch-card">
       <div class="swatch-chip" style="background:#00303F;"></div>
-      <div>
-        <span class="swatch-name">ReDefiners Navy<span class="swatch-hex">#00303F</span></span>
-        <span class="swatch-usage">Primary backgrounds, logos, headers, professional materials</span>
+      <div class="swatch-text">
+        <span class="swatch-name">Navy<span class="swatch-hex">#00303F</span></span>
+        <span class="swatch-usage">Our text, our logo, our headers. Use it as often as the piece needs.</span>
       </div>
     </div>
-  </div>
-  <p class="body-text" style="margin-top:10px;">Navy anchors both ramps below. It's never a step within either one, it's the constant text, logo, and header color that sits on top of every neutral background and pairs with every accent color.</p>
-
-  <div class="callout">
-    <b>Usage rule:</b> Amber, Marigold, Orange, and Ember combined should stay under 50% of any composition, not 50% each. Always pair an accent fill with Navy text or icons on top. Never use white text on these colors, and never use these colors as text on a white background &mdash; Amber and Orange pass WCAG 2.2 AA against Navy (8.6:1 and 5.2:1) but fail against White (1.6:1 and 2.7:1), and Ember only clears the large-text/UI threshold, never normal body text.
-  </div>
-
-  <div class="subhead"><i class="fas fa-snowflake"></i>Neutral Ramp &mdash; Backgrounds</div>
-  <div class="swatch-grid four">
-    <div class="swatch-card">
-      <div class="swatch-chip" style="background:#FFFFFF;"></div>
-      <div>
-        <span class="swatch-name">White<span class="swatch-hex">#FFFFFF</span></span>
-        <span class="swatch-usage">Primary text, negative space, digital UI backgrounds</span>
-      </div>
-    </div>
-    <div class="swatch-card">
-      <div class="swatch-chip" style="background:#FAFCFF;"></div>
-      <div>
-        <span class="swatch-name">Ice White<span class="swatch-hex">#FAFCFF</span></span>
-        <span class="swatch-usage">Default page and body background</span>
-      </div>
-    </div>
-    <div class="swatch-card">
-      <div class="swatch-chip" style="background:#F5FBFF;"></div>
-      <div>
-        <span class="swatch-name">Cloud White<span class="swatch-hex">#F5FBFF</span></span>
-        <span class="swatch-usage">Gradient stops, soft section transitions</span>
+    <div class="swatch-card legacy">
+      <div class="swatch-chip legacy-chip" style="background:#7A9D96;"></div>
+      <div class="swatch-text">
+        <span class="swatch-name">Sky Blue <span class="badge legacy"><i class="fas fa-box-archive"></i>Legacy</span><span class="swatch-hex">#7A9D96</span></span>
+        <span class="swatch-usage">Retired. Reserve for anniversary materials only &mdash; see Section 4.</span>
       </div>
     </div>
     <div class="swatch-card">
       <div class="swatch-chip" style="background:#DFF0EE;"></div>
-      <div>
+      <div class="swatch-text">
         <span class="swatch-name">Ocean Mist<span class="swatch-hex">#DFF0EE</span></span>
-        <span class="swatch-usage">Subtle backgrounds, data viz, soft accents</span>
+        <span class="swatch-usage">Subtle backgrounds, data viz, soft accents.</span>
+      </div>
+    </div>
+    <div class="swatch-card">
+      <div class="swatch-chip" style="background:#F5FBFF;"></div>
+      <div class="swatch-text">
+        <span class="swatch-name">Cloud White<span class="swatch-hex">#F5FBFF</span></span>
+        <span class="swatch-usage">Gradient stops, soft section transitions.</span>
+      </div>
+    </div>
+    <div class="swatch-card">
+      <div class="swatch-chip" style="background:#FAFCFF;"></div>
+      <div class="swatch-text">
+        <span class="swatch-name">Ice White<span class="swatch-hex">#FAFCFF</span></span>
+        <span class="swatch-usage">Our default page and body background.</span>
+      </div>
+    </div>
+    <div class="swatch-card">
+      <div class="swatch-chip" style="background:#FFFFFF;"></div>
+      <div class="swatch-text">
+        <span class="swatch-name">White<span class="swatch-hex">#FFFFFF</span></span>
+        <span class="swatch-usage">Text on Navy, negative space, digital UI backgrounds.</span>
       </div>
     </div>
   </div>
-  <p class="body-text" style="margin-top:10px;">White, Ice White, Cloud White, and Ocean Mist form one neutral ramp, lightest to closest-to-mist, in that order. Reach for whichever step sits closest to the mood you need instead of guessing between them. Soft Cream (#FAF5E6) still has a place for print materials and warm secondary backgrounds, but it sits outside this core ramp, so use it deliberately rather than as a default.</p>
 
-  <div class="subhead"><i class="fas fa-bolt"></i>Accent Ramp &mdash; Social &amp; Campaigns</div>
-  <div class="swatch-grid four">
+  <div class="subhead"><i class="fas fa-bolt"></i>Amber Family &mdash; Warm</div>
+  <div class="ramp-strip">
+    <div class="seg" style="background:#FF4D00;"></div>
+    <div class="seg" style="background:#FF7400;"></div>
+    <div class="seg" style="background:#FF9A00;"></div>
+    <div class="seg legacy" style="background:#DBB64D;"></div>
+    <div class="seg" style="background:#FFC100;"></div>
+    <div class="seg" style="background:#FAF5E6;"></div>
+  </div>
+  <div class="ramp-ticks">
+    <span>40</span>
+    <span>55</span>
+    <span>65</span>
+    <span class="legacy-tick">70</span>
+    <span>75</span>
+    <span>95</span>
+  </div>
+  <div class="swatch-grid">
     <div class="swatch-card">
-      <div class="swatch-chip" style="background:#FFC100;"></div>
-      <div>
-        <span class="swatch-name">Vibrant Amber<span class="swatch-hex">#FFC100</span></span>
-        <span class="swatch-usage">Secondary highlight only: badges, underlines, decorative accents. Not used on clickable elements or buttons.</span>
-      </div>
-    </div>
-    <div class="swatch-card">
-      <div class="swatch-chip" style="background:#FF9A00;"></div>
-      <div>
-        <span class="swatch-name">Marigold<span class="swatch-hex">#FF9A00</span></span>
-        <span class="swatch-usage">Hover states, secondary CTAs</span>
+      <div class="swatch-chip" style="background:#FF4D00;"></div>
+      <div class="swatch-text">
+        <span class="swatch-name">Ember<span class="swatch-hex">#FF4D00</span></span>
+        <span class="swatch-usage">Pressed states, urgent alerts, dark gradient stops.</span>
       </div>
     </div>
     <div class="swatch-card">
       <div class="swatch-chip" style="background:#FF7400;"></div>
-      <div>
-        <span class="swatch-name">Energetic Orange<span class="swatch-hex">#FF7400</span></span>
-        <span class="swatch-usage">Primary action color: CTAs, buttons, urgent announcements, program launches. Pair with Navy text or icons, never white.</span>
+      <div class="swatch-text">
+        <span class="swatch-name">Orange<span class="swatch-hex">#FF7400</span></span>
+        <span class="swatch-usage">Our primary action color: CTAs, buttons, launches. Navy text or icons only.</span>
       </div>
     </div>
     <div class="swatch-card">
-      <div class="swatch-chip" style="background:#FF4D00;"></div>
-      <div>
-        <span class="swatch-name">Ember<span class="swatch-hex">#FF4D00</span></span>
-        <span class="swatch-usage">Pressed/active button states, urgent alert fills, dark gradient stops.</span>
+      <div class="swatch-chip" style="background:#FF9A00;"></div>
+      <div class="swatch-text">
+        <span class="swatch-name">Marigold<span class="swatch-hex">#FF9A00</span></span>
+        <span class="swatch-usage">Hover states, secondary CTAs.</span>
+      </div>
+    </div>
+    <div class="swatch-card legacy">
+      <div class="swatch-chip legacy-chip" style="background:#DBB64D;"></div>
+      <div class="swatch-text">
+        <span class="swatch-name">Warm Gold <span class="badge legacy"><i class="fas fa-box-archive"></i>Legacy</span><span class="swatch-hex">#DBB64D</span></span>
+        <span class="swatch-usage">Retired. Reserve for anniversary materials only &mdash; see Section 4.</span>
+      </div>
+    </div>
+    <div class="swatch-card">
+      <div class="swatch-chip" style="background:#FFC100;"></div>
+      <div class="swatch-text">
+        <span class="swatch-name">Amber<span class="swatch-hex">#FFC100</span></span>
+        <span class="swatch-usage">Our most-used color &mdash; badges, highlights, stat call-outs. Not on clickable elements.</span>
+      </div>
+    </div>
+    <div class="swatch-card">
+      <div class="swatch-chip" style="background:#FAF5E6;"></div>
+      <div class="swatch-text">
+        <span class="swatch-name">Soft Cream<span class="swatch-hex">#FAF5E6</span></span>
+        <span class="swatch-usage">Same job as Ocean Mist, warmer &mdash; summer, youth, and children's programming.</span>
       </div>
     </div>
   </div>
-  <p class="body-text" style="margin-top:10px;">Amber, Marigold, Orange, and Ember form one accent ramp, lightest to darkest, in that order. Reach for whichever step sits closest to the moment you're designing for instead of guessing between them.</p>
+
+  <div class="callout mint">
+    <b>What capped means:</b> Marigold, Orange, and Ember are action colors &mdash; they belong to specific moments (a button, a hover, an urgent alert), so together they should never cover more than half of what someone's looking at. Navy and Amber don't have that limit. They're our identity, not a state, so use them as often as the piece calls for.
+  </div>
+
+  <div class="callout">
+    <b>Pairing rule:</b> Always put Navy text or icons on top of Marigold, Orange, Ember, or Amber. Never white text on these four, and never use them as text color on a white background. Amber and Orange pass WCAG 2.2 AA against Navy (8.6:1 and 5.2:1) but fail against White (1.6:1 and 2.7:1); Ember only clears the large-text/UI threshold.
+  </div>
 
   <!-- SECTION 3: TYPOGRAPHY -->
   <div class="section-label"><div class="num">3</div><h3>Typography System</h3></div>
@@ -680,7 +762,7 @@
   <div class="section-label"><div class="num">6</div><h3>Digital-First Applications</h3></div>
 
   <div class="subhead"><i class="fas fa-mobile-alt"></i>Social Media Template Strategy</div>
-  <p class="body-text" style="margin-bottom:10px;">Social still gets the boldest treatment in our system, but the two accent colors don't share a job here. Orange carries the bold, full backgrounds, since it's our primary action color. Amber stays in its lane as a decorative accent, never the dominant color and never anything clickable. Email and web stay calmer by comparison, using Orange only for buttons and small highlights.</p>
+  <p class="body-text" style="margin-bottom:10px;">Social still gets the boldest treatment in our system, but the two accent colors don't share a job here. Amber carries broad, frequent brand presence as our light anchor &mdash; highlight blocks, stat call-outs, accent lines &mdash; but stays out of clickable elements; Orange still owns bold, full-bleed backgrounds and CTAs. Email and web stay calmer by comparison, using Orange only for buttons and small highlights.</p>
   <table class="breakdown-table">
     <tr><th>Platform</th><th>Visual Strategy</th><th>Color Priority</th></tr>
     <tr><td><strong>IG Reels / TikTok</strong></td><td>Vertical video, quick cuts, student highlights</td><td>Orange background, Navy text and logo, Amber accent line</td></tr>
