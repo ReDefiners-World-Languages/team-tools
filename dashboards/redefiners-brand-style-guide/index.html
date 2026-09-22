@@ -200,6 +200,9 @@
   .cs-step-tag { display:inline-flex; align-self:flex-start; align-items:center; gap:7px; background:rgba(255,193,0,0.1); color:#FFC100;
     font-size:11px; font-weight:800; letter-spacing:.03em; padding:5px 12px; border-radius:60px; margin-bottom:12px; }
   .cs-svg-wrap { flex:1; display:flex; align-items:center; }
+  .cs-cream-frame { background:#FAF5E6; border:1px solid rgba(0,48,63,0.15); border-radius:14px; width:100%;
+    aspect-ratio:952/412; box-sizing:border-box; display:flex; align-items:center; justify-content:center; overflow:hidden; padding:4%; }
+  .cs-cream-frame img { width:100%; height:100%; object-fit:contain; display:block; }
   .cs-panel p.cap { font-size:12.5px; color:#a2c2bb; line-height:1.6; margin-top:12px; }
   .cs-panel p.cap b { color:#eef6f3; }
 
@@ -214,9 +217,9 @@
   .cs-real-logo { max-height:46px; max-width:60%; object-fit:contain; }
   .cs-example.bad .cs-visual { gap:0; }
   .cs-cta-btn { background:#FF7400; color:#00131A; font-weight:800; font-size:10.5px; letter-spacing:.02em;
-    padding:9px 16px; border-radius:60px; box-shadow:0 4px 10px rgba(255,116,0,0.4); white-space:nowrap; z-index:2; }
+    padding:9px 16px; border-radius:6px; box-shadow:0 4px 10px rgba(255,116,0,0.4); white-space:nowrap; z-index:2; }
   .cs-example.good .cs-cta-btn { margin-left:28px; }
-  .cs-example.bad .cs-cta-btn { margin-left:-18px; }
+  .cs-example.bad .cs-cta-btn { margin-left:1px; }
   .cs-example p.exp { font-size:12px; color:#a2c2bb; margin-top:10px; }
 
   /* Framework box */
@@ -587,7 +590,7 @@
       <div class="logo-preview on-light">
         <img src="https://redefinerswl.org/hubfs/Brand%20Kit/ReDefiners%20Symbol%20Logo%20(SeaFoam).png" alt="ReDefiners Symbol - Seafoam" onerror="this.outerHTML='<i class=&quot;fas fa-globe&quot; style=&quot;color:#7A9D96;font-size:28px;&quot;></i>'">
       </div>
-      <span class="logo-label">Symbol &mdash; Seafoam</span>
+      <span class="logo-label">Symbol &mdash; Seafoam <span class="badge">Limited</span></span>
       <span class="logo-note">Light accent applications only</span>
     </div>
     <div class="logo-card">
@@ -622,68 +625,24 @@
       <div class="cs-svg-wrap">
         <svg viewBox="0 0 300 300" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A capital W with a measuring bracket showing its cap height equals one unit, X">
           <rect x="4" y="4" width="292" height="292" rx="14" fill="#FAF5E6" stroke="rgba(0,48,63,0.15)"/>
-          <text x="120" y="230" font-family="Montserrat, sans-serif" font-weight="800" font-size="150" fill="#00303F" text-anchor="middle">W</text>
-          <line x1="205" y1="120" x2="205" y2="230" stroke="#00303F" stroke-width="2"/>
-          <line x1="196" y1="120" x2="214" y2="120" stroke="#00303F" stroke-width="2"/>
-          <line x1="196" y1="230" x2="214" y2="230" stroke="#00303F" stroke-width="2"/>
-          <text x="222" y="180" font-family="Montserrat, sans-serif" font-weight="800" font-size="22" fill="#FF7400">X</text>
+          <text x="125" y="203" font-family="Montserrat, sans-serif" font-weight="800" font-size="150" fill="#00303F" text-anchor="middle">W</text>
+          <line x1="232" y1="97" x2="232" y2="203" stroke="#00303F" stroke-width="2"/>
+          <line x1="223" y1="97" x2="241" y2="97" stroke="#00303F" stroke-width="2"/>
+          <line x1="223" y1="203" x2="241" y2="203" stroke="#00303F" stroke-width="2"/>
+          <text x="249" y="158" font-family="Montserrat, sans-serif" font-weight="800" font-size="22" fill="#FF7400">X</text>
         </svg>
       </div>
-      <p class="cap">Take the capital <b>W</b> from &ldquo;World Languages&rdquo; in the logo's tagline. Its cap height is your unit, <b>X</b>.</p>
+      <p class="cap">Take the capital <b>W</b> from &ldquo;World Languages&rdquo; in the logo's tagline. Its cap height is your unit.</p>
     </div>
 
     <div class="cs-panel">
       <span class="cs-step-tag"><i class="fas fa-expand"></i>Step 2</span>
       <div class="cs-svg-wrap">
-        <svg viewBox="0 0 960 420" width="100%" height="auto" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The ReDefiners logo lockup with a dashed clear space boundary offset on all four sides by one unit X, hatched to show the zone must stay empty">
-          <defs>
-            <pattern id="clearHatch" width="10" height="10" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-              <line x1="0" y1="0" x2="0" y2="10" stroke="#FF7400" stroke-width="1" opacity="0.35"/>
-            </pattern>
-          </defs>
-          <rect x="4" y="4" width="952" height="412" rx="14" fill="#FAF5E6" stroke="rgba(0,48,63,0.15)"/>
-
-          <!-- hatched keep-clear ring (evenodd: outer clear-zone minus inner logo box) -->
-          <path d="M380,55 H900 V365 H380 Z M490,165 H790 V255 H490 Z" fill="url(#clearHatch)" fill-rule="evenodd" opacity="0.7"/>
-
-          <!-- dashed clear-space boundary -->
-          <rect x="380" y="55" width="520" height="310" rx="10" fill="none" stroke="#FF7400" stroke-width="2" stroke-dasharray="8 6"/>
-
-          <!-- logo bounding box -->
-          <rect x="490" y="165" width="300" height="90" rx="6" fill="none" stroke="rgba(0,48,63,0.3)" stroke-width="1"/>
-          <g id="csStepImgFallback" style="display:none;">
-            <text x="640" y="205" font-family="Montserrat, sans-serif" font-weight="800" font-size="34" fill="#00303F" text-anchor="middle">ReDefiners</text>
-            <text x="640" y="228" font-family="Montserrat, sans-serif" font-weight="700" font-size="12" fill="#00303F" text-anchor="middle" style="letter-spacing:3px;" opacity="0.8">WORLD LANGUAGES</text>
-            <rect x="605" y="236" width="70" height="3" rx="1.5" fill="#FFC100"/>
-          </g>
-          <image x="500" y="172" width="280" height="76" href="https://redefinerswl.org/hubfs/Brand%20Kit/OfficialLogo(navy).png" preserveAspectRatio="xMidYMid meet" onerror="this.style.display='none'; document.getElementById('csStepImgFallback').style.display='block';"/>
-
-          <!-- top measurement -->
-          <line x1="640" y1="55" x2="640" y2="165" stroke="#00303F" stroke-width="1.5" stroke-dasharray="3 3"/>
-          <line x1="631" y1="55" x2="649" y2="55" stroke="#00303F" stroke-width="1.5"/>
-          <line x1="631" y1="165" x2="649" y2="165" stroke="#00303F" stroke-width="1.5"/>
-          <text x="655" y="114" font-family="Montserrat, sans-serif" font-weight="800" font-size="18" fill="#FF7400">X</text>
-
-          <!-- bottom measurement -->
-          <line x1="640" y1="255" x2="640" y2="365" stroke="#00303F" stroke-width="1.5" stroke-dasharray="3 3"/>
-          <line x1="631" y1="255" x2="649" y2="255" stroke="#00303F" stroke-width="1.5"/>
-          <line x1="631" y1="365" x2="649" y2="365" stroke="#00303F" stroke-width="1.5"/>
-          <text x="655" y="314" font-family="Montserrat, sans-serif" font-weight="800" font-size="18" fill="#FF7400">X</text>
-
-          <!-- left measurement -->
-          <line x1="380" y1="210" x2="490" y2="210" stroke="#00303F" stroke-width="1.5" stroke-dasharray="3 3"/>
-          <line x1="380" y1="201" x2="380" y2="219" stroke="#00303F" stroke-width="1.5"/>
-          <line x1="490" y1="201" x2="490" y2="219" stroke="#00303F" stroke-width="1.5"/>
-          <text x="420" y="196" font-family="Montserrat, sans-serif" font-weight="800" font-size="18" fill="#FF7400" text-anchor="middle">X</text>
-
-          <!-- right measurement -->
-          <line x1="790" y1="210" x2="900" y2="210" stroke="#00303F" stroke-width="1.5" stroke-dasharray="3 3"/>
-          <line x1="790" y1="201" x2="790" y2="219" stroke="#00303F" stroke-width="1.5"/>
-          <line x1="900" y1="201" x2="900" y2="219" stroke="#00303F" stroke-width="1.5"/>
-          <text x="845" y="196" font-family="Montserrat, sans-serif" font-weight="800" font-size="18" fill="#FF7400" text-anchor="middle">X</text>
-        </svg>
+        <div class="cs-cream-frame">
+          <img src="https://redefinerswl.org/hubfs/Brand%20Kit/Hatched%20Zone%202026%20ReDefiners%20Official%20Logo.png" alt="The ReDefiners logo lockup with a dashed clear space boundary offset on all four sides by one W unit, hatched to show the zone must stay empty" onerror="this.outerHTML='<span style=&quot;color:#00303F;font-weight:900;font-size:14px;&quot;>ReDefiners &middot; Clear Space Diagram</span>'">
+        </div>
       </div>
-      <p class="cap">Use that same <b>X</b> as the minimum gap on all four sides of the full logo lockup. The hatched zone stays empty: no text, no photo, no other logo.</p>
+      <p class="cap">Use that same <b>W</b> as the minimum gap on all four sides of the full logo lockup. The hatched zone stays empty: no text, no photo, no other logo.</p>
     </div>
   </div>
 
