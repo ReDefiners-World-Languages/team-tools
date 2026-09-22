@@ -138,11 +138,6 @@
   .ramp-strip { display:flex; border-radius:10px; overflow:hidden;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1); margin-bottom:6px; }
   .ramp-strip .seg { flex:1; height:44px; position:relative; }
-  .ramp-strip .seg.legacy {
-    background-image: repeating-linear-gradient(135deg,
-      rgba(0,19,26,0.35) 0 6px, transparent 6px 12px);
-    filter: saturate(0.55) brightness(0.9);
-  }
   .ramp-ticks { display:flex; margin-bottom:22px; }
   .ramp-ticks span { flex:1; text-align:center; font-family:monospace;
     font-size:10px; color:#7a9d97; padding-top:5px; }
@@ -152,12 +147,6 @@
   .swatch-card.legacy { background:rgba(255,255,255,0.015);
     border:1px dashed rgba(255,255,255,0.14); }
   .swatch-text { display:flex; flex-direction:column; height:100%; }
-  .swatch-chip.legacy-chip {
-    opacity:.4;
-    filter: saturate(0.5) brightness(0.85);
-    background-image: repeating-linear-gradient(135deg,
-      rgba(0,19,26,0.4) 0 5px, transparent 5px 10px);
-  }
   .swatch-card.legacy .swatch-usage { color:#8aa19c; }
   .badge.legacy { display:inline-flex; align-items:center; gap:4px; }
   .badge.legacy i { font-size:8px; }
@@ -350,7 +339,7 @@
   <div class="subhead"><i class="fas fa-snowflake"></i>Navy Family &mdash; Cool</div>
   <div class="ramp-strip">
     <div class="seg" style="background:#00303F;"></div>
-    <div class="seg legacy" style="background:#7A9D96;"></div>
+    <div class="seg" style="background:#7A9D96;"></div>
     <div class="seg" style="background:#DFF0EE;"></div>
     <div class="seg" style="background:#F5FBFF;"></div>
     <div class="seg" style="background:#FAFCFF;"></div>
@@ -373,7 +362,7 @@
       </div>
     </div>
     <div class="swatch-card legacy">
-      <div class="swatch-chip legacy-chip" style="background:#7A9D96;"></div>
+      <div class="swatch-chip" style="background:#7A9D96;"></div>
       <div class="swatch-text">
         <span class="swatch-name">Sky Blue <span class="badge legacy"><i class="fas fa-box-archive"></i>Legacy</span><span class="swatch-hex">#7A9D96</span></span>
         <span class="swatch-usage">Retired. Reserve for anniversary materials only &mdash; see Section 4.</span>
@@ -414,7 +403,7 @@
     <div class="seg" style="background:#FF4D00;"></div>
     <div class="seg" style="background:#FF7400;"></div>
     <div class="seg" style="background:#FF9A00;"></div>
-    <div class="seg legacy" style="background:#DBB64D;"></div>
+    <div class="seg" style="background:#DBB64D;"></div>
     <div class="seg" style="background:#FFC100;"></div>
     <div class="seg" style="background:#FAF5E6;"></div>
   </div>
@@ -449,7 +438,7 @@
       </div>
     </div>
     <div class="swatch-card legacy">
-      <div class="swatch-chip legacy-chip" style="background:#DBB64D;"></div>
+      <div class="swatch-chip" style="background:#DBB64D;"></div>
       <div class="swatch-text">
         <span class="swatch-name">Warm Gold <span class="badge legacy"><i class="fas fa-box-archive"></i>Legacy</span><span class="swatch-hex">#DBB64D</span></span>
         <span class="swatch-usage">Retired. Reserve for anniversary materials only &mdash; see Section 4.</span>
