@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """Turn raw tabs from Marketing_Unified_Database_Backend into dashboards/marketing-funnel-performance/data.json.
 
-Usage: transform.py RAW_DIR OUT_JSON [--previous PREVIOUS_JSON]
+Usage: transform.py RAW_DIR OUT_JSON [--previous PREVIOUS_JSON] [--mcp-tab TAB_NAME]
+
+--mcp-tab picks which sheet tab feeds the Enrollments view (default MCP_Enrollment_Data). Use MCP_Enrollment_Data_SF once the
+Salesforce tab is complete; the shrink check below refuses it while it has fewer rows than the tab it replaces.
 
 RAW_DIR holds one <tab name>.json per tab: the sheet's values as a list of rows, header row first.
 This file is public, so the output only carries the fields the dashboard draws. Never add personal data:
@@ -196,10 +199,11 @@ def drop_partial_ga_week(tabs):
     return last
 
 
-def build(raw_dir):
+def build(raw_dir, mcp_tab='MCP_Enrollment_Data'):
     tabs = {}
     for name, fn in BUILDERS.items():
-        with open(os.path.join(raw_dir, name + '.json')) as f:
+        source = mcp_tab if name == 'MCP_Enrollment_Data' else name
+        with open(os.path.join(raw_dir, source + '.json')) as f:
             rows = json.load(f)
         if not rows or len(rows) < 2:
             raise ValueError(f'{name}: no data rows')
@@ -212,6 +216,7 @@ def build(raw_dir):
     return {
         'generatedAt': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
         'source': 'Marketing_Unified_Database_Backend (Google Sheet), synced by tools/marketing-data-sync',
+        'mcpTab': mcp_tab,
         'granularity': 'week',
         'partialWeekDropped': partial,
         'rawGaLatest': raw_ga_latest,
@@ -250,7 +255,8 @@ def main(argv):
         if os.path.exists(p):
             with open(p) as f:
                 previous = json.load(f)
-    new = build(raw_dir)
+    mcp_tab = argv[argv.index('--mcp-tab') + 1] if '--mcp-tab' in argv else 'MCP_Enrollment_Data'
+    new = build(raw_dir, mcp_tab)
     problems = check(new, previous)
     if problems:
         print('REFUSING to write data.json:\n - ' + '\n - '.join(problems))
