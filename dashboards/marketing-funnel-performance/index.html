@@ -105,6 +105,7 @@
     font-weight:700; color:var(--navy); font-size:13px; cursor:pointer; transition:background .15s; }
   .apply-btn:hover { background:var(--marigold); }
   .apply-btn.applied { background:var(--mint); }
+  .freshness { margin-left:auto; font-size:12px; color:var(--ink-3); }
   .range-error { color:#ffb27a; font-size:12.5px; }
 
   .filter-select-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px 22px; margin-bottom:20px; }
@@ -181,7 +182,7 @@
 
   .breakdown-table { width:100%; border-collapse:collapse; font-size:13px; }
   .breakdown-table th { text-align:left; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.05em;
-    color:var(--ink-3); padding-bottom:10px; border-bottom:1px solid var(--line-2); white-space:nowrap; }
+    color:var(--ink-3); padding:0 14px 10px 0; border-bottom:1px solid var(--line-2); white-space:nowrap; }
   .breakdown-table td { padding:12px 14px 12px 0; border-bottom:1px solid var(--line); color:var(--ink); vertical-align:middle; }
   .breakdown-table tr:last-child td { border-bottom:none; }
   .breakdown-table tbody tr:hover { background:rgba(255,255,255,0.03); }
@@ -338,6 +339,7 @@
       <button id="applyCustom" class="apply-btn" type="button">Apply</button>
       <span class="range-error" id="rangeError" role="alert"></span>
     </div>
+    <span class="freshness" id="tabFreshness"></span>
   </div>
 
   <div class="filter-select-row" id="selectRow">
@@ -356,7 +358,7 @@
       <div class="chart-card">
         <div class="card-title"><h3><i class="fas fa-filter" aria-hidden="true"></i>Funnel: from visit to enrollment</h3><span class="meta" id="funnelRangeLabel"></span></div>
         <div class="funnel" id="funnel"></div>
-        <p class="card-note">The first three steps come from Google Analytics. Enrollments come from the class roster, so the last step shows direction, not a strict share of the steps above it.</p>
+        <p class="card-note">All three steps come from Google Analytics. Class enrollments are on the Enrollments tab, because the class roster has no enrollment dates to filter by.</p>
       </div>
       <div class="platform-card">
         <div class="card-title"><h3><i class="fas fa-lightbulb" aria-hidden="true"></i>What stands out</h3><span class="meta" id="hlRangeLabel"></span></div>
@@ -365,23 +367,23 @@
     </div>
 
     <div class="metric-grid">
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Total users</span><i class="fas fa-users" aria-hidden="true"></i></div><div class="metric-value" id="ovTotalUsers">--</div><p class="metric-sub">Daily users added up, so repeat visitors count each day</p></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Active users</span><i class="fas fa-user-check" aria-hidden="true"></i></div><div class="metric-value" id="ovActiveUsers">--</div><p class="metric-sub">Users who engaged, added up by day</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Total users</span><i class="fas fa-users" aria-hidden="true"></i></div><div class="metric-value" id="ovTotalUsers">--</div><p class="metric-sub">Added up by <span data-gran>day</span>, so repeat visitors count each time</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Active users</span><i class="fas fa-user-check" aria-hidden="true"></i></div><div class="metric-value" id="ovActiveUsers">--</div><p class="metric-sub">Users who engaged, added up by <span data-gran>day</span></p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Sessions</span><i class="fas fa-route blue" aria-hidden="true"></i></div><div class="metric-value" id="ovSessions">--</div><p class="metric-sub">All traffic sources</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Engagement rate</span><i class="fas fa-chart-bar" aria-hidden="true"></i></div><div class="metric-value" id="ovEngagement">--</div><p class="metric-sub">Weighted by sessions</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Key events</span><i class="fas fa-bullseye purple" aria-hidden="true"></i></div><div class="metric-value" id="ovKeyEvents">--</div><p class="metric-sub">Enrollment submits, sign-ups and other goals</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Paid spend</span><i class="fas fa-money-bill-wave orange" aria-hidden="true"></i></div><div class="metric-value" id="ovSpend">--</div><p class="metric-sub">Meta Ads and Google Ads</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Emails delivered</span><i class="fas fa-envelope pink" aria-hidden="true"></i></div><div class="metric-value" id="ovEmailDelivered">--</div><p class="metric-sub">Automated and one-off sends</p></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Enrollments</span><i class="fas fa-graduation-cap" aria-hidden="true"></i></div><div class="metric-value" id="ovEnrollments">--</div><p class="metric-sub">MCP enrollments dated in this range</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Email open rate</span><i class="fas fa-envelope-open" aria-hidden="true"></i></div><div class="metric-value" id="ovOpenRate">--</div><p class="metric-sub">Opens ÷ delivered. The sheet's opens can exceed delivered, so this can pass 100%</p></div>
     </div>
 
     <div class="row-duo even">
       <div class="chart-card">
-        <div class="card-title"><h3><i class="fas fa-chart-line" aria-hidden="true"></i>Active users per day</h3><span class="meta" id="ovTrendRangeLabel"></span></div>
+        <div class="card-title"><h3><i class="fas fa-chart-line" aria-hidden="true"></i>Active users per <span data-gran>day</span></h3><span class="meta" id="ovTrendRangeLabel"></span></div>
         <div class="chart-box" style="height:240px;"><canvas id="ovUsersChart"></canvas><div class="chart-empty"></div></div>
       </div>
       <div class="chart-card">
-        <div class="card-title"><h3><i class="fas fa-bullseye" aria-hidden="true"></i>Key events per day</h3></div>
+        <div class="card-title"><h3><i class="fas fa-bullseye" aria-hidden="true"></i>Key events per <span data-gran>day</span></h3></div>
         <div class="chart-box" style="height:240px;"><canvas id="ovEventsChart"></canvas><div class="chart-empty"></div></div>
       </div>
     </div>
@@ -422,6 +424,7 @@
         <thead><tr><th>Page path / screen name</th><th>Views</th><th>Views per user</th><th>Avg engagement time</th></tr></thead>
         <tbody id="contentTableBody"></tbody>
       </table></div>
+      <p class="card-note" id="contentNote"></p>
     </div>
   </div>
 
@@ -448,7 +451,7 @@
     <div class="metric-grid">
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Spend</span><i class="fas fa-dollar-sign orange" aria-hidden="true"></i></div><div class="metric-value" id="paidSpend">--</div><p class="metric-sub">Total in USD</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Impressions</span><i class="fas fa-eye" aria-hidden="true"></i></div><div class="metric-value" id="paidImpressions">--</div><p class="metric-sub">Times an ad was shown</p></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Reach</span><i class="fas fa-satellite-dish blue" aria-hidden="true"></i></div><div class="metric-value" id="paidReach">--</div><p class="metric-sub">Daily reach added up across campaigns</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Reach</span><i class="fas fa-satellite-dish blue" aria-hidden="true"></i></div><div class="metric-value" id="paidReach">--</div><p class="metric-sub">Reach added up by <span data-gran>day</span> across campaigns</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Link clicks</span><i class="fas fa-arrow-pointer" aria-hidden="true"></i></div><div class="metric-value" id="paidClicks">--</div><p class="metric-sub">Clicks through to the site</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Leads</span><i class="fas fa-user-plus purple" aria-hidden="true"></i></div><div class="metric-value" id="paidLeads">--</div><p class="metric-sub">Form completions from ads</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Click-through rate</span><i class="fas fa-percent" aria-hidden="true"></i></div><div class="metric-value" id="paidCtr">--</div><p class="metric-sub">Link clicks ÷ impressions</p></div>
@@ -480,7 +483,7 @@
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Delivered</span><i class="fas fa-paper-plane" aria-hidden="true"></i></div><div class="metric-value" id="emDelivered">--</div><p class="metric-sub">Emails that reached an inbox</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Opens</span><i class="fas fa-envelope-open blue" aria-hidden="true"></i></div><div class="metric-value" id="emOpens">--</div><p class="metric-sub">Bots excluded</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Clicks</span><i class="fas fa-arrow-pointer purple" aria-hidden="true"></i></div><div class="metric-value" id="emClicks">--</div><p class="metric-sub">Bots excluded</p></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Open rate</span><i class="fas fa-percent" aria-hidden="true"></i></div><div class="metric-value" id="emOpenRate">--</div><p class="metric-sub">Opens ÷ delivered</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Open rate</span><i class="fas fa-percent" aria-hidden="true"></i></div><div class="metric-value" id="emOpenRate">--</div><p class="metric-sub">Opens ÷ delivered. Can pass 100%: the sheet's opens can exceed delivered</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Click-to-open rate</span><i class="fas fa-bullseye orange" aria-hidden="true"></i></div><div class="metric-value" id="emCtor">--</div><p class="metric-sub">Clicks ÷ opens</p></div>
     </div>
     <div class="metric-grid">
@@ -506,14 +509,14 @@
   <!-- OUTREACH -->
   <div class="tab-section" id="tab-outreach" role="tabpanel" aria-labelledby="tabbtn-outreach">
     <div class="metric-grid five">
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Outreach activities</span><i class="fas fa-map-marker-alt" aria-hidden="true"></i></div><div class="metric-value" id="ouActivities">--</div><p class="metric-sub">Visits, tables and events logged</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Flyers distributed</span><i class="fas fa-note-sticky" aria-hidden="true"></i></div><div class="metric-value" id="ouFlyers">--</div><p class="metric-sub">Handed out in person</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Meaningful conversations</span><i class="fas fa-comments blue" aria-hidden="true"></i></div><div class="metric-value" id="ouConversations">--</div><p class="metric-sub">Real two-way exchanges</p></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Appealed opportunities</span><i class="fas fa-handshake purple" aria-hidden="true"></i></div><div class="metric-value" id="ouAppealed">--</div><p class="metric-sub">Conversations that turned into interest</p></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Engagement efficiency</span><i class="fas fa-gauge-high orange" aria-hidden="true"></i></div><div class="metric-value" id="ouEfficiency">--</div><p class="metric-sub">Conversations ÷ flyers</p></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Opportunity conversion</span><i class="fas fa-percent" aria-hidden="true"></i></div><div class="metric-value" id="ouConversion">--</div><p class="metric-sub">Appealed ÷ conversations</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Conversations per flyer</span><i class="fas fa-gauge-high orange" aria-hidden="true"></i></div><div class="metric-value" id="ouEfficiency">--</div><p class="metric-sub">Conversations ÷ flyers</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Conversations per activity</span><i class="fas fa-percent" aria-hidden="true"></i></div><div class="metric-value" id="ouPerActivity">--</div><p class="metric-sub">Conversations ÷ activities</p></div>
     </div>
     <div class="chart-card">
-      <div class="card-title"><h3><i class="fas fa-chart-column" aria-hidden="true"></i>Meaningful conversations by location and experience type</h3></div>
+      <div class="card-title"><h3><i class="fas fa-chart-column" aria-hidden="true"></i>Meaningful conversations by location and experience type</h3><span class="meta">Top 8 locations and 4 experience types</span></div>
       <div class="chart-box" style="height:340px;"><canvas id="outreachBarChart"></canvas><div class="chart-empty"></div></div>
     </div>
   </div>
@@ -547,7 +550,6 @@
 
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
 /* =========================================================================================
    PART 0 — CORE UTILITIES
@@ -593,7 +595,7 @@ const COURSE_TAXONOMY = [
   { category: 'Workshops for Adults', groups: ['Arabic Workshop for Adults','Chinese Workshop for Adults','Spanish Workshop for Adults'] },
   { category: 'Professionals', groups: ['Arabic for Professionals','Chinese for Professionals','Spanish for Professionals'] },
   { category: 'English for School Success', groups: ['English for School Success'] },
-  { category: 'Youth Clubs', groups: ['Spanish Youth Club','Arabic Youth Club','Chinese Youth Club'] }
+  { category: 'Youth Clubs', groups: ['Spanish Youth Club','English Youth Club','Arabic Youth Club','Chinese Youth Club'] }
 ];
 // Flat list of every recognized mid-level group, longest-first, for greedy regex-style matching.
 const ALL_GROUPS = COURSE_TAXONOMY.flatMap(c => c.groups.map(g => ({ group: g, category: c.category })))
@@ -611,7 +613,7 @@ function categorizeCourse(rawCourseName){
    PART 2 — KEY EVENTS CONFIGURATION ENGINE  (Tab: GA4_Isolated_Conversions)
    ========================================================================================= */
 const DASHBOARD_CONFIG = {
-  primaryKeyEvents: ['program_enrollment_submit', 'newsletter_signup'],
+  primaryKeyEvents: ['program_enrollment_submit', 'newsletter_signup', 'mcp_registration_complete', 'form_submit_allgoals'],
   parseAllDynamicKeyEvents: true
 };
 
@@ -883,153 +885,69 @@ const TAB_KEYS = ['GA4_Executive_Overview','GA4_Traffic_Acquisition','GA4_Page_E
 // overwritten tab-by-tab if/when the Phase 2 live sheet fetch succeeds.
 const DATA = {};
 TAB_KEYS.forEach(k => DATA[k] = MOCK[k]);
-
 /* =========================================================================================
-   PART 4 — PHASE 2: LIVE GOOGLE SHEETS INTEGRATION (safe, credential-free, public repo)
-   =========================================================================================
-   This dashboard is served from a public GitHub Pages site, so no API key or OAuth token is
-   ever embedded here. Instead, wire it to Marketing_Unified_Database_Backend.xlsx by:
-     1. In Google Sheets: File > Share > Publish to web > publish each of the 9 tabs
-        individually (this exposes only read-only CSV snapshots, nothing else).
-     2. Copy the "https://docs.google.com/spreadsheets/d/e/<long-id>/pub" base URL and each
-        tab's gid, then fill in CONFIG.sheetPublishedBase and CONFIG.sheetGids below.
-     3. Reload the page. Until configured, the dashboard safely renders Phase 1 mock data
-        and shows the notice banner above.
+   PART 4B — LIVE DATA (data.json, written by tools/marketing-data-sync) AND DATA STATUS
+   The sync reads Marketing_Unified_Database_Backend, strips it to the fields drawn here, and commits data.json
+   next to this page. No Google credentials or sheet links live in this file.
    ========================================================================================= */
-const CONFIG = {
-  sheetPublishedBase: null, // e.g. 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT.../pub'
-  sheetGids: {
-    GA4_Executive_Overview: null,
-    GA4_Traffic_Acquisition: null,
-    GA4_Page_Engagement: null,
-    GA4_Isolated_Conversions: null,
-    'Paid Media': null,
-    Email_Marketing_Data: null,
-    Digital_Ads_and_Email_Outreach: null,
-    In_Person_Outreach_Log: null,
-    MCP_Enrollment_Data: null
-  },
-  fetchTimeoutMs: 8000
-};
+const CONFIG = { dataUrl: 'data.json', fetchTimeoutMs: 10000 };
+const LIVE_KEYS = ['GA4_Executive_Overview','GA4_Traffic_Acquisition','GA4_Page_Engagement','GA4_Isolated_Conversions',
+  'Paid Media','Email_Marketing_Data','In_Person_Outreach_Log','MCP_Enrollment_Data'];
+let liveMeta = null;       // the parsed data.json, when it loaded
+let GRAN = 'day';          // sample data is daily; the live sheet is weekly
+let ANCHOR = NOW;          // "today" for the range buttons: the end of the newest week in the data
 
-function cleanRow(row){
-  const out = {};
-  Object.keys(row).forEach(k => { out[k] = row[k] === undefined ? '' : row[k]; });
-  return out;
+function expandTable(t){
+  return t.rows.map(r => { const o = {}; t.cols.forEach((c, i) => o[c] = r[i]); return o; });
 }
 
-async function fetchSheetTabCSV(tabKey){
-  const gid = CONFIG.sheetGids[tabKey];
-  if (!CONFIG.sheetPublishedBase || !gid) return null;
-  const url = `${CONFIG.sheetPublishedBase}?gid=${encodeURIComponent(gid)}&single=true&output=csv`;
+async function loadLiveData(){
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), CONFIG.fetchTimeoutMs);
   try {
-    const res = await fetch(url, { signal: controller.signal, credentials: 'omit', mode: 'cors' });
+    const res = await fetch(CONFIG.dataUrl, { signal: controller.signal, cache: 'no-cache' });
     clearTimeout(timer);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
-    if (!parsed.data || !parsed.data.length) return null;
-    return parsed.data.map(cleanRow);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const payload = await res.json();
+    LIVE_KEYS.forEach(k => { if (!payload.tabs || !payload.tabs[k]) throw new Error('data.json is missing ' + k); });
+    LIVE_KEYS.forEach(k => { DATA[k] = expandTable(payload.tabs[k]); });
+    DATA.Digital_Ads_and_Email_Outreach = [];   // not drawn, and it must not keep sample rows next to live ones
+    GRAN = payload.granularity || 'day';
+    const anchor = parseDay(payload.anchorDate);
+    if (anchor) ANCHOR = anchor;
+    liveMeta = payload;
   } catch (err) {
     clearTimeout(timer);
-    console.warn(`[MarketingDashboard] Live fetch failed for "${tabKey}" — falling back to mock data.`, err);
-    return null;
+    console.warn('[MarketingDashboard] data.json not available, showing sample data.', err);
   }
-}
-
-// Maps a raw live CSV row (arbitrary header names from the sheet) onto the same
-// shape the mock generators produce, so downstream render code never has to care
-// whether it's looking at mock or live data. Header lookups are case/space tolerant.
-function mapLiveRow(tabKey, raw){
-  const g = (row, ...keys) => {
-    for (const k of keys) {
-      const hit = Object.keys(row).find(rk => rk.trim().toLowerCase() === k.toLowerCase());
-      if (hit !== undefined) return row[hit];
-    }
-    return '';
-  };
-  switch (tabKey) {
-    case 'GA4_Executive_Overview':
-      return { date: str(g(raw,'Date')), totalUsers: num(g(raw,'Total Users')), activeUsers: num(g(raw,'Active Users')),
-        sessions: num(g(raw,'Sessions')), engagementRate: num(g(raw,'Engagement Rate')), keyEvents: num(g(raw,'Key Events')),
-        reach: num(g(raw,'Reach')) };
-    case 'GA4_Traffic_Acquisition':
-      return { date: str(g(raw,'Date')), defaultChannelGrouping: str(g(raw,'Default Channel Grouping')),
-        sourceMedium: str(g(raw,'Source / Medium','Source/Medium')), campaign: str(g(raw,'Campaign')),
-        utmContent: str(g(raw,'utm_content')), sessions: num(g(raw,'Sessions')),
-        engagedSessions: num(g(raw,'Engaged Sessions')), activeUsers: num(g(raw,'Active Users')) };
-    case 'GA4_Page_Engagement':
-      return { date: str(g(raw,'Date')), pagePath: str(g(raw,'Page Path / Screen Name','Page Path')),
-        views: num(g(raw,'Views')), viewsPerUser: num(g(raw,'Views per User')),
-        avgEngagementTimeSec: num(g(raw,'Avg Engagement Time')) };
-    case 'GA4_Isolated_Conversions':
-      return { date: str(g(raw,'Date')), pagePath: str(g(raw,'Page Path')), eventName: str(g(raw,'Event Name')),
-        eventCount: num(g(raw,'Event Count')), sessionsOnPage: num(g(raw,'Sessions on Page')) };
-    case 'Paid Media':
-      return { date: str(g(raw,'Date')), platform: str(g(raw,'Platform')), campaign: str(g(raw,'Campaign')),
-        campaignObjective: str(g(raw,'Campaign Objective')), spend: num(g(raw,'Spend')),
-        impressions: num(g(raw,'Impressions')), reach: num(g(raw,'Reach')), linkClicks: num(g(raw,'Link Clicks')),
-        leads: num(g(raw,'Leads')) };
-    case 'Email_Marketing_Data':
-      return { date: str(g(raw,'Date')), emailName: str(g(raw,'Email Name')), campaignCRM: str(g(raw,'Campaign (CRM)','Campaign')),
-        emailType: str(g(raw,'Email Type')).toUpperCase(), subscription: str(g(raw,'Subscription')),
-        delivered: num(g(raw,'Delivered')), opens: num(g(raw,'Opens')), clicks: num(g(raw,'Clicks')),
-        hardBounces: num(g(raw,'Hard Bounces')), softBounces: num(g(raw,'Soft Bounces')),
-        unsubscribes: num(g(raw,'Unsubscribes')), spamReports: num(g(raw,'Spam Reports')) };
-    case 'Digital_Ads_and_Email_Outreach':
-      return { date: str(g(raw,'Date')), digitalImpressions: num(g(raw,'Digital Impressions')),
-        digitalClicks: num(g(raw,'Digital Clicks')), emailTouchpoints: num(g(raw,'Email Touchpoints')) };
-    case 'In_Person_Outreach_Log':
-      return { date: str(g(raw,'Date')), locationOfOutreachActivity: str(g(raw,'Location of Outreach Activity')),
-        typeOfExperience: str(g(raw,'Type of Experience')), flyersDistributed: num(g(raw,'Flyers Distributed')),
-        meaningfulConversations: num(g(raw,'Meaningful Conversations')), appealedOpportunities: num(g(raw,'Appealed Opportunities')) };
-    case 'MCP_Enrollment_Data': {
-      const rawCourse = str(g(raw,'Class: Course','Class:Course'));
-      const cat = categorizeCourse(rawCourse);
-      return { enrollmentDate: str(g(raw,'Enrollment Date','Date')), status: str(g(raw,'Status')),
-        classCourse: rawCourse, classProgramCohort: str(g(raw,'Class: Program Cohort')),
-        className: str(g(raw,'Class: Class Name')), classInstructor: str(g(raw,'Class: Instructor')),
-        location: str(g(raw,'Location')), highLevelCategory: cat.category, midLevelGroup: cat.group };
-    }
-    default: return raw;
-  }
-}
-/* =========================================================================================
-   PART 4B — DATA STATUS (live vs. sample)
-   ========================================================================================= */
-const liveTabs = new Set();
-let loadedAt = null;
-
-async function loadLiveDataIfConfigured(){
-  const anyConfigured = CONFIG.sheetPublishedBase && Object.values(CONFIG.sheetGids).some(Boolean);
-  if (!anyConfigured) { paintDataStatus(); return; }
-  await Promise.all(TAB_KEYS.map(async (key) => {
-    const rows = await fetchSheetTabCSV(key);
-    if (rows && rows.length) { DATA[key] = rows.map(r => mapLiveRow(key, r)); liveTabs.add(key); }
-  }));
-  loadedAt = new Date();
-  paintDataStatus();
-  buildFilterOptions();
-  renderActiveTab();
 }
 
 function paintDataStatus(){
-  const mode = liveTabs.size === 0 ? 'mock' : (liveTabs.size === TAB_KEYS.length ? 'live' : 'partial');
+  const live = !!liveMeta;
   const pill = el('dataStatus');
-  pill.classList.toggle('live', mode === 'live');
-  el('dataStatusText').textContent = mode === 'live' ? 'Live data' : (mode === 'partial' ? 'Partly live data' : 'Sample data');
+  pill.classList.toggle('live', live);
+  el('dataStatusText').textContent = live ? 'Live data' : 'Sample data';
   const banner = el('fallbackNotice');
-  if (mode === 'live') { banner.style.display = 'none'; }
+  if (live) banner.style.display = 'none';
   else {
-    el('fallbackNoticeText').textContent = mode === 'mock'
-      ? 'You are looking at sample data. The live Google Sheets sync is not connected yet, so none of these numbers are real. See CONFIG in the page source to connect Marketing_Unified_Database_Backend.xlsx.'
-      : 'Some tabs could not be reached from the live sheet. Those tabs show sample data; the rest are live.';
+    el('fallbackNoticeText').textContent = 'You are looking at sample data. data.json could not be loaded, so none of these numbers are real.';
     banner.style.display = 'flex';
   }
-  const f = d => d.toLocaleString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
-  el('lastUpdatedLabel').textContent = mode === 'mock' ? 'Sample data, generated when the page loaded.' : `Live data loaded ${f(loadedAt || NOW)}. Refreshes on page load.`;
+  const f = d => d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  el('todayLabel').textContent = live ? `Data through ${f(ANCHOR)}` : f(NOW);
+  const synced = live && liveMeta.generatedAt ? new Date(liveMeta.generatedAt).toLocaleString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'}) : null;
+  el('lastUpdatedLabel').textContent = live ? `Live data from the Marketing Unified Database, synced ${synced}. Weekly figures are dated by week start.${liveMeta.partialWeekDropped ? ` The newest Google Analytics week (starting ${parseDay(liveMeta.partialWeekDropped).toLocaleDateString('en-US', {month:'short', day:'numeric'})}) looks incomplete and is left out.` : ''}` : 'Sample data, generated when the page loaded.';
+  document.querySelectorAll('[data-gran]').forEach(n => { n.textContent = GRAN === 'week' ? 'week' : 'day'; });
+}
+
+const FRESH_KEY = { overview:'GA4_Executive_Overview', traffic:'GA4_Traffic_Acquisition', content:'GA4_Page_Engagement', conversions:'GA4_Isolated_Conversions',
+  paid:'Paid Media', email:'Email_Marketing_Data', outreach:'In_Person_Outreach_Log' };
+function paintFreshness(){
+  const node = el('tabFreshness');
+  const key = FRESH_KEY[state.activeTab];
+  if (!liveMeta || !key || !liveMeta.latest || !liveMeta.latest[key]) { node.textContent = ''; return; }
+  const d = parseDay(liveMeta.latest[key]);
+  node.textContent = 'Newest data in this tab: ' + d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
 }
 
 /* =========================================================================================
@@ -1044,8 +962,8 @@ const state = {
 const startOfDay = d => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
 function applyPresetRange(days){
   state.rangeDays = days;
-  state.rangeEnd = startOfDay(NOW);
-  state.rangeStart = startOfDay(new Date(NOW.getTime() - (days - 1) * DAY));
+  state.rangeEnd = startOfDay(ANCHOR);
+  state.rangeStart = startOfDay(new Date(ANCHOR.getTime() - (days - 1) * DAY));
 }
 applyPresetRange(30);
 
@@ -1112,7 +1030,7 @@ function setDelta(id, cur, prev, o = {}){
 }
 function paint(list){
   list.forEach(m => {
-    el(m.id).textContent = m.fmt(m.cur);
+    el(m.id).textContent = (m.cur === null || m.cur === undefined) ? '--' : m.fmt(m.cur);
     setDelta(m.id, m.cur, m.prev, m);
   });
 }
@@ -1150,7 +1068,7 @@ function buildFilterOptions(){
 }
 // Pulls every distinct FYxx-xx token actually present in Class: Program Cohort.
 function fiscalYearsInData(){
-  return uniq(DATA.MCP_Enrollment_Data.map(r => { const m = str(r.classProgramCohort).match(/FY\d{2}-\d{2}/i); return m ? m[0].toUpperCase() : null; }));
+  return uniq(DATA.MCP_Enrollment_Data.map(fyOf).filter(v => /^FY\d{2}-\d{2}$/.test(v)));
 }
 
 // Each filter only appears on the tabs it actually changes.
@@ -1271,6 +1189,8 @@ const baseScales = (horizontal) => horizontal
   : { x: { grid:{ display:false }, border:{ color:gridColor } }, y: { grid:{ color:gridColor }, border:{ display:false }, beginAtZero:true } };
 const barStyle = { borderRadius:4, borderSkipped:false, maxBarThickness:28 };
 const fmtTick = v => v >= 1000 ? (v / 1000) + 'k' : v;
+const clip = (s, n = 30) => { s = String(s); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+const clippedLabels = (scales) => { scales.y.ticks = { ...(scales.y.ticks || {}), callback(v) { return clip(this.getLabelForValue(v)); } }; return scales; };
 
 function lineChart(id, rows, key, label, color){
   makeChart(id, {
@@ -1292,19 +1212,17 @@ function ovAgg(inFn){
   const engaged = ga.reduce((a, r) => a + num(r.sessions) * num(r.engagementRate) * (asFraction ? 1 : 0.01), 0);
   const paid = DATA['Paid Media'].filter(r => inFn(r.date) && (state.platform === 'all' || r.platform === state.platform));
   const em = DATA.Email_Marketing_Data.filter(r => inFn(r.date) && (state.emailType === 'all' || r.emailType === state.emailType));
-  const enr = DATA.MCP_Enrollment_Data.filter(r => inFn(r.enrollmentDate));
   return { rows: ga, n: ga.length, users: sum(ga,'totalUsers'), active: sum(ga,'activeUsers'), sessions, engaged,
     engRate: rate(engaged, sessions, 100), keyEvents: sum(ga,'keyEvents'),
-    spend: sum(paid,'spend'), hasPaid: paid.length > 0, delivered: sum(em,'delivered'), hasEmail: em.length > 0,
-    enrollments: enr.length, hasEnr: enr.length > 0 };
+    spend: sum(paid,'spend'), hasPaid: paid.length > 0, delivered: sum(em,'delivered'), hasEmail: em.length > 0, enoughEmail: em.length >= 3,
+    openRate: rate(sum(em,'opens'), sum(em,'delivered'), 100) };
 }
 
 function renderFunnel(a){
   const stages = [
     { label:'Sessions', sub:'All sources', v:a.sessions },
     { label:'Engaged sessions', sub:'Sessions × engagement rate', v:a.engaged },
-    { label:'Key events', sub:'Enrollment submits and sign-ups', v:a.keyEvents },
-    { label:'Enrollments', sub:'MCP class roster', v:a.enrollments }
+    { label:'Key events', sub:'Form submits and sign-ups', v:a.keyEvents }
   ];
   const box = el('funnel');
   if (!a.n || a.sessions <= 0) { box.innerHTML = `<div class="empty-state"><p class="big">No traffic data in this range.</p><p class="small">Try widening your date filter.</p></div>`; return; }
@@ -1351,9 +1269,9 @@ function renderOverview(){
     { id:'ovSessions', cur:a.sessions, prev:P && P.sessions, fmt:fmtInt },
     { id:'ovEngagement', cur:a.engRate, prev:P && P.engRate, fmt:v => fmtRate(v), kind:'rate' },
     { id:'ovKeyEvents', cur:a.keyEvents, prev:P && P.keyEvents, fmt:fmtInt },
-    { id:'ovSpend', cur:a.spend, prev:P && P.hasPaid ? P.spend : null, fmt:fmtUSD, good:'neutral' },
-    { id:'ovEmailDelivered', cur:a.delivered, prev:P && P.hasEmail ? P.delivered : null, fmt:fmtInt, good:'neutral' },
-    { id:'ovEnrollments', cur:a.enrollments, prev:cmp && cmp.hasEnr ? cmp.enrollments : null, fmt:fmtInt }
+    { id:'ovSpend', cur:a.hasPaid ? a.spend : null, prev:P && P.hasPaid ? P.spend : null, fmt:fmtUSD, good:'neutral' },
+    { id:'ovEmailDelivered', cur:a.hasEmail ? a.delivered : null, prev:P && P.enoughEmail && a.enoughEmail ? P.delivered : null, fmt:fmtInt, good:'neutral' },
+    { id:'ovOpenRate', cur:a.openRate, prev:P && P.enoughEmail && a.enoughEmail ? P.openRate : null, fmt:v => fmtRate(v), kind:'rate' }
   ]);
   el('ovTrendRangeLabel').textContent = rangeLabel();
   el('funnelRangeLabel').textContent = rangeLabel();
@@ -1381,7 +1299,7 @@ function renderTraffic(){
   makeChart('trafficBar', {
     type: 'bar',
     data: { labels: entries.map(e => e[0]), datasets: [{ label:'Sessions', data: entries.map(e => e[1]), backgroundColor: C.amber, ...barStyle }] },
-    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, scales: baseScales(true), plugins:{ legend:{ display:false } } }
+    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, scales: clippedLabels(baseScales(true)), plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ title: items => items[0].label } } } }
   });
 
   el('trafficChannelBody').innerHTML = entries.map(([ch, s]) =>
@@ -1412,9 +1330,10 @@ function renderContent(){
   makeChart('contentBarChart', {
     type: 'bar',
     data: { labels: top.map(p => p.path), datasets: [{ label:'Views', data: top.map(p => p.views), backgroundColor: C.amber, ...barStyle }] },
-    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, scales: baseScales(true), plugins:{ legend:{ display:false } } }
+    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, scales: clippedLabels(baseScales(true)), plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ title: items => items[0].label } } } }
   });
-  el('contentTableBody').innerHTML = entries.map(p =>
+  el('contentNote').textContent = entries.length > 200 ? `Showing the top 200 of ${fmtInt(entries.length)} pages by views.` : '';
+  el('contentTableBody').innerHTML = entries.slice(0, 200).map(p =>
     `<tr><td>${esc(p.path)}</td><td>${fmtInt(p.views)}</td><td>${p.vpu.toFixed(2)}</td><td>${fmtDuration(p.time)}</td></tr>`
   ).join('') || `<tr><td colspan="4" class="muted">No data in this range.</td></tr>`;
 }
@@ -1439,7 +1358,7 @@ function renderConversions(){
   makeChart('conversionsBarChart', {
     type: 'bar',
     data: { labels: top.map(s => s[0]), datasets: [{ label:'Key events', data: top.map(s => s[1]), backgroundColor: C.amber, ...barStyle }] },
-    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, scales: baseScales(true), plugins:{ legend:{ display:false } } }
+    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, scales: clippedLabels(baseScales(true)), plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ title: items => items[0].label } } } }
   });
 
   el('conversionsTableBody').innerHTML = rows.slice(0, 200).map(r =>
@@ -1475,7 +1394,7 @@ function renderPaid(){
     { id:'paidCtr', cur:a.ctr, prev:P && P.ctr, fmt:v => fmtRate(v, 2), kind:'rate' },
     { id:'paidCpc', cur:a.cpc, prev:P && P.cpc, fmt:v => fmtMoney(v), good:'down' },
     { id:'paidCpm', cur:a.cpm, prev:P && P.cpm, fmt:v => fmtMoney(v), good:'neutral' }
-  ]);
+  ].map(m => a.n ? m : { ...m, cur:null }));
 
   const byCampaign = {};
   rows.forEach(r => {
@@ -1487,7 +1406,7 @@ function renderPaid(){
   const hbar = (id, label, key, color) => makeChart(id, {
     type: 'bar',
     data: { labels: top8.map(c => c[0]), datasets: [{ label, data: top8.map(c => c[1][key]), backgroundColor: color, ...barStyle }] },
-    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, scales: baseScales(true), plugins:{ legend:{ display:false } } }
+    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, scales: clippedLabels(baseScales(true)), plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ title: items => items[0].label } } } }
   });
   hbar('paidSpendChart', 'Spend (USD)', 'spend', C.orange);
   hbar('paidClicksChart', 'Link clicks', 'clicks', C.sky);
@@ -1527,7 +1446,7 @@ function renderEmail(){
     { id:'emSoftBounce', cur:a.soft, prev:P && P.soft, fmt:fmtInt, good:'down' },
     { id:'emUnsub', cur:a.unsub, prev:P && P.unsub, fmt:fmtInt, good:'down' },
     { id:'emSpam', cur:a.spam, prev:P && P.spam, fmt:fmtInt, good:'down' }
-  ]);
+  ].map(m => a.n ? m : { ...m, cur:null }));
 
   const auto = emailAgg(rows.filter(r => r.emailType === 'AUTOMATED')), reg = emailAgg(rows.filter(r => r.emailType === 'REGULAR'));
   makeChart('emCompareChart', {
@@ -1543,9 +1462,9 @@ function renderEmail(){
   });
 
   el('emTableBody').innerHTML = rows.slice(0, 200).map(r =>
-    `<tr><td>${esc(r.emailName)}</td><td>${esc(r.campaignCRM)}</td><td><span class="badge ${r.emailType === 'AUTOMATED' ? 'green' : 'gold'}">${esc(r.emailType)}</span></td><td>${fmtInt(r.delivered)}</td><td>${fmtInt(r.opens)}</td><td>${fmtInt(r.clicks)}</td></tr>`
+    `<tr><td>${esc(r.emailName)}</td><td>${esc(r.campaignCRM)}</td><td><span class="badge ${r.emailType === 'AUTOMATED' ? 'green' : 'gold'}">${r.emailType === 'AUTOMATED' ? 'AUTOMATED' : 'ONE-OFF'}</span></td><td>${fmtInt(r.delivered)}</td><td>${fmtInt(r.opens)}</td><td>${fmtInt(r.clicks)}</td></tr>`
   ).join('') || `<tr><td colspan="6" class="muted">No emails match these filters.</td></tr>`;
-  el('emailNote').textContent = rows.length > 200 ? `Showing the first 200 of ${fmtInt(rows.length)} rows.` : '';
+  el('emailNote').textContent = 'Dates are when each email was created; the sheet has no send date.' + (rows.length > 200 ? ` Showing the first 200 of ${fmtInt(rows.length)} rows.` : '');
 }
 
 /* =========================================================================================
@@ -1553,23 +1472,35 @@ function renderEmail(){
    ========================================================================================= */
 function renderOutreach(){
   const rows = DATA.In_Person_Outreach_Log.filter(r => inRange(r.date) && (state.location === 'all' || r.locationOfOutreachActivity === state.location));
-  const flyers = sum(rows,'flyersDistributed'), conv = sum(rows,'meaningfulConversations'), appealed = sum(rows,'appealedOpportunities');
-  el('ouFlyers').textContent = fmtInt(flyers);
-  el('ouConversations').textContent = fmtInt(conv);
-  el('ouAppealed').textContent = fmtInt(appealed);
-  el('ouEfficiency').textContent = fmtRate(rate(conv, flyers, 100));
-  el('ouConversion').textContent = fmtRate(rate(appealed, conv, 100));
+  const flyers = sum(rows,'flyersDistributed'), conv = sum(rows,'meaningfulConversations');
+  const none = rows.length === 0;
+  el('ouActivities').textContent = none ? '--' : fmtInt(rows.length);
+  el('ouFlyers').textContent = none ? '--' : fmtInt(flyers);
+  el('ouConversations').textContent = none ? '--' : fmtInt(conv);
+  el('ouEfficiency').textContent = rate(conv, flyers) === null ? '--' : rate(conv, flyers).toFixed(2);
+  el('ouPerActivity').textContent = rate(conv, rows.length) === null ? '--' : rate(conv, rows.length).toFixed(1);
 
+  const topN = (key, n, other) => {
+    const t = {}; rows.forEach(r => t[r[key]] = (t[r[key]] || 0) + num(r.meaningfulConversations));
+    const ranked = Object.entries(t).filter(([k]) => k !== other).sort((a, b) => b[1] - a[1]).map(e => e[0]).slice(0, n);
+    return ranked;
+  };
+  const locs = topN('locationOfOutreachActivity', 8, 'Other locations');
+  const types = topN('typeOfExperience', 4, 'Other types');
   const grouped = {};
-  rows.forEach(r => { const k = r.locationOfOutreachActivity; (grouped[k] = grouped[k] || {})[r.typeOfExperience] = ((grouped[k] || {})[r.typeOfExperience] || 0) + num(r.meaningfulConversations); });
-  const locs = Object.keys(grouped);
-  const types = uniq(rows.map(r => r.typeOfExperience));
-  const datasets = types.map((t, i) => ({ label:t, data: locs.map(l => grouped[l][t] || 0), backgroundColor: SERIES[i % SERIES.length], borderColor: C.surface, borderWidth: 2, borderRadius: 3 }));
+  rows.forEach(r => {
+    const l = locs.includes(r.locationOfOutreachActivity) ? r.locationOfOutreachActivity : 'All other locations';
+    const t = types.includes(r.typeOfExperience) ? r.typeOfExperience : 'Other types';
+    ((grouped[l] = grouped[l] || {})[t]) = (((grouped[l] || {})[t]) || 0) + num(r.meaningfulConversations);
+  });
+  const locLabels = Object.keys(grouped).sort((a, b) => (a === 'All other locations') - (b === 'All other locations'));
+  const typeLabels = [...types, ...(Object.values(grouped).some(g => g['Other types']) ? ['Other types'] : [])];
+  const datasets = typeLabels.map((t, i) => ({ label:t, data: locLabels.map(l => grouped[l][t] || 0), backgroundColor: t === 'Other types' ? 'rgba(223,240,238,0.35)' : SERIES[i % SERIES.length], borderColor: C.surface, borderWidth: 2, borderRadius: 3 }));
   makeChart('outreachBarChart', {
-    type: 'bar', data: { labels: locs, datasets },
+    type: 'bar', data: { labels: locLabels.map(l => clip(l, 22)), datasets },
     options: { responsive:true, maintainAspectRatio:false,
       scales: { x:{ stacked:true, grid:{ display:false }, border:{ color:gridColor } }, y:{ stacked:true, grid:{ color:gridColor }, border:{ display:false } } },
-      plugins: { legend: { position:'bottom', ...legendCfg() } } }
+      plugins: { legend: { position:'bottom', ...legendCfg() }, tooltip:{ callbacks:{ title: items => locLabels[items[0].dataIndex] } } } }
   });
 }
 
@@ -1578,7 +1509,7 @@ function renderOutreach(){
    ========================================================================================= */
 const SEG_COLORS = SERIES;
 function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
-function fyOf(row){ const m = str(row.classProgramCohort).match(/FY\d{2}-\d{2}/i); return m ? m[0].toUpperCase() : str(row.classProgramCohort); }
+function fyOf(row){ if (str(row.fiscalYear)) return str(row.fiscalYear).toUpperCase(); const m = str(row.classProgramCohort).match(/FY\d{2}-\d{2}/i); return m ? m[0].toUpperCase() : str(row.classProgramCohort); }
 function mcpRowsForFY(fy){ return DATA.MCP_Enrollment_Data.filter(r => fyOf(r) === fy).map(r => ({ ...r, ...categorizeCourse(r.classCourse) })); }
 function filteredMcp(){
   return DATA.MCP_Enrollment_Data.filter(r => state.fiscalYear === 'all' || fyOf(r) === state.fiscalYear).map(r => ({ ...r, ...categorizeCourse(r.classCourse) }));
@@ -1596,7 +1527,7 @@ function renderMcp(){
   el('mcpTotal').textContent = fmtInt(total);
   el('mcpTotalSub').textContent = state.fiscalYear === 'all' ? 'All fiscal years' : state.fiscalYear;
   el('mcpCompletion').textContent = fmtRate(rate(completed, total, 100));
-  el('mcpCompletionSub').textContent = total ? `${fmtInt(completed)} of ${fmtInt(total)} completed` : 'No enrollments in this filter';
+  el('mcpCompletionSub').textContent = total ? `${fmtInt(completed)} of ${fmtInt(total)} completed, including provisional` : 'No enrollments in this filter';
   renderMcpFyCompareChart();
   renderMcpCategoryGrid();
   renderTeacherBoard(rows);
@@ -1698,6 +1629,7 @@ const RENDERERS = { overview: renderOverview, traffic: renderTraffic, content: r
   paid: renderPaid, email: renderEmail, outreach: renderOutreach, mcp: renderMcp };
 
 function renderActiveTab(){
+  paintFreshness();
   el('footerRangeLabel').textContent = state.activeTab === 'mcp'
     ? `Showing ${state.fiscalYear === 'all' ? 'all fiscal years' : state.fiscalYear}`
     : `Showing ${rangeLabel()}`;
@@ -1770,10 +1702,12 @@ function syncBreakpoints(){
   [1200, 1100, 640].forEach(b => document.documentElement.classList.toggle('w' + b, w <= b));
 }
 
-function init(){
+async function init(){
   syncBreakpoints();
   window.addEventListener('resize', syncBreakpoints);
-  el('todayLabel').textContent = NOW.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  el('dataStatusText').textContent = 'Loading data';
+  await loadLiveData();
+  applyPresetRange(30);
   injectDeltaNodes();
   buildFilterOptions();
   wireFilters();
@@ -1782,7 +1716,6 @@ function init(){
   const tab = RENDERERS[fromHash] ? fromHash : 'overview';
   renderAll();
   selectTab(tab);
-  loadLiveDataIfConfigured();
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
