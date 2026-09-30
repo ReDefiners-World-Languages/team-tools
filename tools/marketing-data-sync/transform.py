@@ -160,9 +160,15 @@ def mcp(t):
         status = text(t.get(r, 'Status'))
         if status == 'Provisionally Completed':
             status = 'Completed'          # counted as completed; the dashboard says so
-        out.append([iso(t.get(r, 'Class: Created Date')), status, text(t.get(r, 'Class: Course')), text(t.get(r, 'Class: Program Cohort')),
-                    text(t.get(r, 'Class: Class Name')), text(t.get(r, 'Class: Instructor'))])
-    return table(['enrollmentDate', 'status', 'classCourse', 'classProgramCohort', 'className', 'classInstructor'], out)
+        cohort = text(t.get(r, 'Class: Program Cohort'))
+        if 'Class: Fiscal Year' in t.header:          # the Salesforce tab carries the fiscal year directly
+            fy = text(t.get(r, 'Class: Fiscal Year'))
+        else:                                         # the export does not, so read it off the cohort ("FY24-25 Q2")
+            m = re.search(r'FY\d{2}-\d{2}', cohort)
+            fy = m.group(0) if m else ''
+        out.append([iso(t.get(r, 'Class: Created Date')), status, text(t.get(r, 'Class: Course')), cohort,
+                    text(t.get(r, 'Class: Class Name')), text(t.get(r, 'Class: Instructor')), fy])
+    return table(['enrollmentDate', 'status', 'classCourse', 'classProgramCohort', 'className', 'classInstructor', 'fiscalYear'], out)
 
 
 BUILDERS = {

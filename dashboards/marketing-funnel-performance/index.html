@@ -1068,7 +1068,7 @@ function buildFilterOptions(){
 }
 // Pulls every distinct FYxx-xx token actually present in Class: Program Cohort.
 function fiscalYearsInData(){
-  return uniq(DATA.MCP_Enrollment_Data.map(r => { const m = str(r.classProgramCohort).match(/FY\d{2}-\d{2}/i); return m ? m[0].toUpperCase() : null; }));
+  return uniq(DATA.MCP_Enrollment_Data.map(fyOf).filter(v => /^FY\d{2}-\d{2}$/.test(v)));
 }
 
 // Each filter only appears on the tabs it actually changes.
@@ -1509,7 +1509,7 @@ function renderOutreach(){
    ========================================================================================= */
 const SEG_COLORS = SERIES;
 function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
-function fyOf(row){ const m = str(row.classProgramCohort).match(/FY\d{2}-\d{2}/i); return m ? m[0].toUpperCase() : str(row.classProgramCohort); }
+function fyOf(row){ if (str(row.fiscalYear)) return str(row.fiscalYear).toUpperCase(); const m = str(row.classProgramCohort).match(/FY\d{2}-\d{2}/i); return m ? m[0].toUpperCase() : str(row.classProgramCohort); }
 function mcpRowsForFY(fy){ return DATA.MCP_Enrollment_Data.filter(r => fyOf(r) === fy).map(r => ({ ...r, ...categorizeCourse(r.classCourse) })); }
 function filteredMcp(){
   return DATA.MCP_Enrollment_Data.filter(r => state.fiscalYear === 'all' || fyOf(r) === state.fiscalYear).map(r => ({ ...r, ...categorizeCourse(r.classCourse) }));
