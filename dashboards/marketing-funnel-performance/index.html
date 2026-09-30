@@ -7,264 +7,285 @@
 <title>ReDefiners · Marketing Funnel Performance Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&family=PT+Serif:ital@0;1&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body {
-    background:#00131A;
-    font-family:'Montserrat', sans-serif;
-    padding:24px;
-    min-height:100vh;
-    display:flex;
-    justify-content:center;
-    color:#eef6f3;
+  /* Tokens follow the FY26-27 Brand Style Guide. Navy text on Amber/Orange/Marigold/Ember, never white.
+     Amber is for highlights and data, never for clickable elements. Orange is the action color.
+     Sky Blue #7A9D96 and Warm Gold #DBB64D are retired and are not used here. */
+  :root {
+    --bg:#00131A; --navy:#00303F; --mist:#DFF0EE; --cloud:#F5FBFF; --cream:#FAF5E6;
+    --amber:#FFC100; --orange:#FF7400; --marigold:#FF9A00; --ember:#FF4D00;
+    --mint:#3FE0A5; --sky:#2FA8D0;
+    --ink:#F5FBFF; --ink-2:rgba(223,240,238,.82); --ink-3:rgba(223,240,238,.64);
+    --line:rgba(223,240,238,.10); --line-2:rgba(223,240,238,.18); --card:rgba(255,255,255,.03);
   }
-  .voice { font-family:'PT Serif', serif; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  ::selection { background:var(--amber); color:var(--navy); }
+  body {
+    background:var(--bg); font-family:'Montserrat', sans-serif; padding:24px; min-height:100vh;
+    display:flex; justify-content:center; color:var(--ink); line-height:1.5;
+    font-variant-numeric:tabular-nums;
+  }
+  :focus-visible { outline:2px solid var(--mist); outline-offset:3px; }
+  button, select, input { font-family:inherit; }
+  .table-scroll, .tabs { scrollbar-width:thin; scrollbar-color:rgba(223,240,238,.25) transparent; }
 
   .dashboard {
-    max-width:1520px;
-    width:100%;
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(18px) saturate(180%);
-    -webkit-backdrop-filter: blur(18px) saturate(180%);
-    border-radius:12px;
-    padding:32px 36px 40px;
-    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.06);
+    max-width:1520px; width:100%; background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(18px) saturate(180%); -webkit-backdrop-filter:blur(18px) saturate(180%);
+    border-radius:12px; padding:32px 36px 40px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.06);
   }
 
+  /* Top bar */
   .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:16px 12px; }
   .brand { display:flex; align-items:center; gap:16px; }
   .brand-logo { height:38px; width:auto; object-fit:contain; }
-  .brand h1 { font-weight:700; font-size:22px; letter-spacing:-0.3px;
-    background:linear-gradient(to right, #f7f4ea, #ffe9b0);
-    -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .brand h1 span { font-weight:inherit; font-size:inherit; letter-spacing:inherit;
-    background:inherit; -webkit-background-clip:inherit; background-clip:inherit;
-    color:inherit; opacity:.72; }
-
-  .top-actions { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
-  .date-badge {
-    background:rgba(255,255,255,0.04); padding:8px 18px 8px 16px; border-radius:60px;
-    font-size:13px; font-weight:450; color:#c9ddd8; border:1px solid rgba(255,255,255,0.05);
-    backdrop-filter:blur(4px); display:flex; align-items:center; gap:10px;
+  .brand h1 { font-weight:800; font-size:22px; letter-spacing:-0.3px; line-height:1.2;
+    background:linear-gradient(to right, #f7f4ea, #ffe9b0); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .brand h1 span { font-weight:inherit; font-size:inherit; letter-spacing:inherit; background:inherit;
+    -webkit-background-clip:inherit; background-clip:inherit; color:inherit; opacity:.75; }
+  .top-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .date-badge, .status-pill {
+    background:rgba(255,255,255,0.04); padding:8px 16px; border-radius:60px; font-size:13px; font-weight:500;
+    color:var(--ink-2); border:1px solid var(--line); display:flex; align-items:center; gap:10px;
   }
-  .date-badge i { color:#FFC100; font-size:13px; }
-
+  .date-badge i { color:var(--mist); font-size:13px; }
+  .status-pill .dot { width:8px; height:8px; border-radius:50%; background:var(--amber); flex-shrink:0; }
+  .status-pill.live .dot { background:var(--mint); box-shadow:0 0 10px rgba(63,224,165,.6); }
   .toolbar-btn {
-    background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); color:#dceeE9;
-    font-size:12px; font-weight:600; padding:8px 16px; border-radius:60px; cursor:pointer;
-    display:flex; align-items:center; gap:8px; transition:.15s;
+    background:rgba(255,255,255,0.04); border:1px solid var(--line-2); color:var(--ink);
+    font-size:13px; font-weight:600; padding:8px 16px; border-radius:60px; cursor:pointer;
+    display:flex; align-items:center; gap:8px; transition:background .15s;
   }
-  .toolbar-btn:hover { background:rgba(255,255,255,0.09); }
-  .toolbar-btn i { color:#FFC100; font-size:12px; }
+  .toolbar-btn:hover:not(:disabled) { background:rgba(255,255,255,0.10); }
+  .toolbar-btn:disabled { opacity:.4; cursor:not-allowed; }
+  .toolbar-btn i { color:var(--mist); font-size:13px; }
 
-  .tab-switcher { display:flex; align-items:center; flex-wrap:wrap; gap:6px; }
-  .tab-avatar {
-    width:42px; height:42px; border-radius:40px; background:linear-gradient(145deg,#0a4658,#062f3c);
-    display:flex; align-items:center; justify-content:center; font-weight:600; font-size:15px; color:#7EA39D;
-    border:2px solid rgba(255,255,255,0.08); box-shadow:0 6px 12px rgba(0,0,0,0.35);
-    cursor:pointer; transition:.2s ease; position:relative;
+  /* Navigation */
+  .tabs {
+    display:flex; gap:6px; overflow-x:auto; padding:8px 0 10px; margin-bottom:16px;
+    position:sticky; top:0; z-index:20; border-bottom:1px solid var(--line);
+    background:transparent; /* identical to the dashboard surface at rest */
   }
-  .tab-avatar:hover { transform:translateY(-2px); }
-  .tab-avatar.active { border-color:#FFC100; color:#FFC100; box-shadow:0 6px 16px -4px rgba(255,193,0,0.5); z-index:2; }
-  .tab-avatar .tab-name { position:absolute; top:50px; left:50%; transform:translateX(-50%); font-size:10px;
-    color:#7EA39D; white-space:nowrap; opacity:0; transition:.15s; pointer-events:none; z-index:5; }
-  .tab-avatar:hover .tab-name { opacity:1; }
+  .tabs.stuck { background:#0d1f25; box-shadow:0 10px 16px -12px rgba(0,0,0,.7); } /* solid only while pinned, so content doesn't show through */
+  .tab {
+    appearance:none; border:1px solid transparent; background:transparent; color:var(--ink-2);
+    font-size:13px; font-weight:600; padding:0 16px; min-height:44px; border-radius:60px;
+    display:flex; align-items:center; gap:8px; white-space:nowrap; cursor:pointer; transition:background .15s, color .15s;
+  }
+  .tab i { color:var(--mist); opacity:.75; width:15px; text-align:center; }
+  .tab:hover { background:rgba(255,255,255,.07); color:var(--ink); }
+  .tab[aria-selected="true"] { background:var(--mist); color:var(--navy); }
+  .tab[aria-selected="true"] i { color:var(--navy); opacity:1; }
 
-  .notice-banner { background:rgba(255,193,0,0.08); border:1px solid rgba(255,193,0,0.22); color:#FFC100;
-    padding:11px 18px; border-radius:12px; font-size:12.5px; font-weight:500; margin-bottom:16px;
-    display:flex; align-items:center; gap:10px; }
-  .notice-banner i { font-size:13px; }
-  .notice-banner.subtle { background:rgba(255,255,255,0.03); border-color:rgba(255,255,255,0.08); color:#a2c2bb; }
-  .notice-banner.danger { background:rgba(255,116,0,0.08); border-color:rgba(255,116,0,0.22); color:#ffb27a; }
+  /* Banner */
+  .notice-banner { background:rgba(255,193,0,0.08); border:1px solid rgba(255,193,0,0.25); color:var(--amber);
+    padding:12px 18px; border-radius:12px; font-size:13px; font-weight:500; margin-bottom:16px;
+    display:flex; align-items:flex-start; gap:10px; line-height:1.5; }
+  .notice-banner i { font-size:14px; margin-top:3px; }
+  .notice-banner.danger { background:rgba(255,116,0,0.08); border-color:rgba(255,116,0,0.25); color:#ffb27a; }
 
+  /* Filters */
   .filter-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:12px; }
   .filter-tag {
-    border:1px solid rgba(223,240,238,0.10); background:rgba(255,255,255,0.03);
-    color:#a8c2bc; font-size:13px; font-weight:500; padding:8px 18px; border-radius:60px;
-    cursor:pointer; transition:.15s ease;
+    border:1px solid var(--line-2); background:rgba(255,255,255,0.03); color:var(--ink-2);
+    font-size:13px; font-weight:500; padding:0 18px; min-height:38px; border-radius:60px; cursor:pointer; transition:background .15s;
   }
-  .filter-tag:hover { background:rgba(255,255,255,0.07); }
-  .filter-tag.active { background:#FFC100; color:#00303F; font-weight:700; border-color:transparent; }
+  .filter-tag:hover { background:rgba(255,255,255,0.08); }
+  .filter-tag.active { background:var(--orange); color:var(--navy); font-weight:700; border-color:transparent; }
+  .filter-tag.active:hover { background:var(--marigold); }
   .filter-tag i { margin-right:6px; }
-  .date-input { background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.08); color:#eef6f3;
-    font-size:12.5px; padding:8px 14px; border-radius:60px; outline:none; }
-  .apply-btn { background:linear-gradient(145deg,#ff8a2e,#FF7400); border:none; padding:9px 20px; border-radius:60px;
-    font-weight:600; color:#fff; font-size:12.5px; cursor:pointer; box-shadow:0 4px 16px rgba(255,116,0,0.3); }
+  #customRangeBox { display:none; align-items:center; gap:8px; flex-wrap:wrap; }
+  .date-input { background:rgba(0,0,0,0.3); border:1px solid var(--line-2); color:var(--ink); color-scheme:dark;
+    font-size:13px; padding:0 14px; min-height:38px; border-radius:60px; }
+  .apply-btn { background:var(--orange); border:none; padding:0 20px; min-height:38px; border-radius:60px;
+    font-weight:700; color:var(--navy); font-size:13px; cursor:pointer; transition:background .15s; }
+  .apply-btn:hover { background:var(--marigold); }
+  .apply-btn.applied { background:var(--mint); }
+  .range-error { color:#ffb27a; font-size:12.5px; }
 
-  .filter-select-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-bottom:20px; }
+  .filter-select-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px 22px; margin-bottom:20px; }
+  .fgroup { display:flex; align-items:center; gap:10px; }
+  .filter-select-label { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-3); }
   .tag-select {
-    background:rgba(255,255,255,0.03); border:1px solid rgba(223,240,238,0.10); color:#dceeE9;
-    font-size:12.5px; font-weight:500; padding:8px 34px 8px 16px; border-radius:60px; outline:none; cursor:pointer;
-    font-family:'Montserrat',sans-serif; appearance:none; -webkit-appearance:none; -moz-appearance:none;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%237a9d97' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-color:rgba(255,255,255,0.03); border:1px solid var(--line-2); color:var(--ink);
+    font-size:13px; font-weight:500; padding:0 34px 0 16px; min-height:38px; border-radius:60px; cursor:pointer;
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='7' viewBox='0 0 10 7'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23DFF0EE' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
     background-repeat:no-repeat; background-position:right 14px center; background-size:10px 7px;
   }
-  .tag-select option { background:#0a2530; color:#eef6f3; }
-  .filter-select-label { font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:#5c9d8f; margin-right:-4px; }
+  .tag-select option { background:#0a2530; color:var(--ink); }
 
+  /* Cards */
   .metric-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-bottom:24px; }
-  .metric-grid.cols-8 { grid-template-columns:repeat(4,1fr); }
-  .metric-card {
-    background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    border-radius:12px; padding:20px 20px 18px; border:1px solid rgba(255,255,255,0.04);
-    box-shadow:0 8px 18px -8px rgba(0,0,0,0.5); transition:all .2s ease;
+  .metric-grid.five { grid-template-columns:repeat(5,1fr); }
+  .metric-card, .chart-card, .platform-card, .category-card {
+    background:var(--card); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    border-radius:12px; border:1px solid rgba(255,255,255,0.05); box-shadow:0 8px 18px -8px rgba(0,0,0,0.5);
   }
-  .metric-card:hover { background:rgba(255,255,255,0.045); border-color:rgba(255,255,255,0.08); transform:translateY(-2px); }
-  .metric-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
-  .metric-header i { font-size:18px; color:#FFC100; opacity:.9; background:rgba(255,193,0,0.1); padding:9px; border-radius:14px; }
-  .metric-header i.blue { color:#5AC8FA; background:rgba(90,200,250,0.1); }
-  .metric-header i.purple { color:#B18CFF; background:rgba(177,140,255,0.1); }
-  .metric-header i.pink { color:#FF6B9D; background:rgba(255,107,157,0.1); }
-  .metric-header i.orange { color:#FF7400; background:rgba(255,116,0,0.1); }
-  .metric-label { font-size:13px; font-weight:500; color:#a2c2bb; letter-spacing:0.2px; }
-  .metric-value { font-size:28px; font-weight:700; letter-spacing:-0.5px; line-height:1.2;
-    background:linear-gradient(to bottom,#ffffff,#d9ecE6); -webkit-background-clip:text; background-clip:text; color:transparent; }
-  .metric-sub { font-size:11.5px; color:#7a9d97; margin-top:8px; }
-  .metric-change { font-size:12px; font-weight:500; margin-top:8px; display:inline-flex; align-items:center; gap:6px;
-    background:rgba(63,224,165,0.08); padding:3px 10px 3px 8px; border-radius:60px; color:#7fe0c0; border:1px solid rgba(63,224,165,0.08); }
-  .metric-change.down { background:rgba(255,116,0,0.1); color:#ffb27a; border-color:rgba(255,116,0,0.12); }
-  .metric-change.flat { background:rgba(255,255,255,0.05); color:#a2c2bb; border-color:rgba(255,255,255,0.06); }
+  .metric-card { padding:20px 20px 18px; transition:background .2s, border-color .2s; }
+  .metric-card:hover { background:rgba(255,255,255,0.05); border-color:var(--line-2); }
+  .metric-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:8px; }
+  .metric-header i { font-size:17px; width:38px; height:38px; display:flex; align-items:center; justify-content:center;
+    border-radius:12px; color:var(--amber); background:rgba(255,193,0,0.10); flex-shrink:0; }
+  .metric-header i.blue { color:var(--mist); background:rgba(223,240,238,0.10); }
+  .metric-header i.purple { color:var(--marigold); background:rgba(255,154,0,0.10); }
+  .metric-header i.pink { color:var(--cream); background:rgba(250,245,230,0.10); }
+  .metric-header i.orange { color:var(--orange); background:rgba(255,116,0,0.12); }
+  .metric-label { font-size:13px; font-weight:600; color:var(--ink-2); }
+  .metric-value { font-size:30px; font-weight:800; letter-spacing:-0.5px; line-height:1.2;
+    background:linear-gradient(to bottom,#ffffff,#d9ece6); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .metric-sub { font-size:12px; color:var(--ink-3); margin-top:8px; line-height:1.45; }
+  .metric-change { font-size:12px; font-weight:600; margin-top:8px; display:inline-flex; align-items:center; gap:6px;
+    padding:3px 10px 3px 8px; border-radius:60px; color:#7fe0c0; background:rgba(63,224,165,0.10); border:1px solid rgba(63,224,165,0.12); }
+  .metric-change.down { background:rgba(255,116,0,0.12); color:#ffb27a; border-color:rgba(255,116,0,0.16); }
+  .metric-change.flat, .metric-change.neutral { background:rgba(255,255,255,0.06); color:var(--ink-2); border-color:var(--line); }
 
   .row-duo { display:grid; grid-template-columns:1.2fr 0.8fr; gap:22px; margin-bottom:24px; }
-  .chart-card {
-    background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    border-radius:12px; padding:24px 24px 28px; border:1px solid rgba(255,255,255,0.04);
-    box-shadow:0 8px 18px -6px rgba(0,0,0,0.5);
-  }
+  .row-duo.even { grid-template-columns:1fr 1fr; }
+  .chart-card { padding:24px 24px 28px; }
+  .platform-card { padding:22px 24px 26px; }
   .card-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:8px; }
-  .card-title h3 { font-weight:600; font-size:16px; color:#d9ecE6; letter-spacing:-0.2px; }
-  .card-title h3 i { color:#FFC100; opacity:.7; font-size:15px; margin-right:10px; }
-  .card-title .meta { font-size:12px; color:#7a9d97; }
+  .card-title h3 { font-weight:700; font-size:16px; color:var(--ink); letter-spacing:-0.2px; }
+  .card-title h3 i { color:var(--mist); opacity:.7; font-size:15px; margin-right:10px; }
+  .card-title .meta { font-size:12px; color:var(--ink-3); }
+  .card-note { font-size:12px; color:var(--ink-3); margin-top:14px; line-height:1.5; }
+  .chart-box { position:relative; }
+  .chart-empty { position:absolute; inset:0; display:none; align-items:center; justify-content:center; text-align:center;
+    color:var(--ink-3); font-size:13px; padding:16px; }
 
-  .empty-state { text-align:center; padding:56px 10px; }
-  .empty-state p.big { color:#cfe4e0; font-size:14px; margin-bottom:6px; }
-  .empty-state p.small { color:#7a9d97; font-size:12px; }
+  /* Funnel */
+  .funnel { display:flex; flex-direction:column; gap:16px; }
+  .f-row { display:grid; grid-template-columns:170px 1fr; gap:16px; align-items:center; }
+  .f-label { font-size:13px; font-weight:700; color:var(--ink); line-height:1.3; }
+  .f-label small { display:block; font-weight:500; color:var(--ink-3); font-size:12px; margin-top:2px; }
+  .f-track { display:flex; align-items:center; flex-wrap:wrap; gap:2px 14px; min-width:0; }
+  .row-duo > *, .mcp-top-grid > *, .mcp-category-grid > *, .metric-grid > * { min-width:0; }
+  .f-bar { height:34px; border-radius:6px; background:var(--amber); min-width:6px; flex-shrink:0; transition:width .4s cubic-bezier(.16,1,.3,1); }
+  .f-val { font-size:18px; font-weight:800; white-space:nowrap; }
+  .f-step { font-size:12px; color:var(--ink-3); white-space:nowrap; }
 
-  .bottom-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-top:8px; margin-bottom:24px; }
-  .platform-card {
-    background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    border-radius:12px; padding:22px 24px 26px; border:1px solid rgba(255,255,255,0.04);
-  }
+  /* Highlights */
+  .hl { list-style:none; }
+  .hl li { display:flex; gap:12px; padding:13px 0; border-bottom:1px solid var(--line); font-size:14px; line-height:1.5; color:var(--ink); }
+  .hl li:last-child { border-bottom:none; padding-bottom:0; }
+  .hl li:first-child { padding-top:0; }
+  .hl i { color:var(--amber); margin-top:4px; font-size:12px; flex-shrink:0; }
 
-  .breakdown-table { width:100%; border-collapse:collapse; font-size:12.5px; }
-  .breakdown-table th { text-align:left; font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.05em;
-    color:#7a9d97; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.1); white-space:nowrap; }
-  .breakdown-table td { padding:12px 10px 12px 0; border-bottom:1px solid rgba(255,255,255,0.06); color:#dceeE9; vertical-align:middle; }
+  .empty-state { text-align:center; padding:48px 10px; grid-column:1 / -1; }
+  .empty-state p.big { color:var(--ink); font-size:14px; margin-bottom:6px; }
+  .empty-state p.small { color:var(--ink-3); font-size:12px; }
+
+  .breakdown-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .breakdown-table th { text-align:left; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.05em;
+    color:var(--ink-3); padding-bottom:10px; border-bottom:1px solid var(--line-2); white-space:nowrap; }
+  .breakdown-table td { padding:12px 14px 12px 0; border-bottom:1px solid var(--line); color:var(--ink); vertical-align:middle; }
   .breakdown-table tr:last-child td { border-bottom:none; }
-  .breakdown-table tbody tr:hover { background:rgba(255,255,255,0.02); }
-
+  .breakdown-table tbody tr:hover { background:rgba(255,255,255,0.03); }
+  .breakdown-table td.muted { text-align:center; color:var(--ink-3); }
   .table-scroll { overflow-x:auto; }
-  .search-bar { display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.08);
-    border-radius:60px; padding:8px 16px; margin-bottom:14px; max-width:360px; }
-  .search-bar i { color:#7a9d97; font-size:12px; }
-  .search-bar input { background:transparent; border:none; outline:none; color:#eef6f3; font-size:12.5px; width:100%; font-family:inherit; }
+  .search-bar { display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.25); border:1px solid var(--line-2);
+    border-radius:60px; padding:0 16px; min-height:40px; margin-bottom:14px; max-width:380px; }
+  .search-bar i { color:var(--ink-3); font-size:13px; }
+  .search-bar input { background:transparent; border:none; outline:none; color:var(--ink); font-size:13px; width:100%; }
+  .search-bar:focus-within { outline:2px solid var(--mist); outline-offset:3px; }
 
-  .badge { font-size:10px; font-weight:700; padding:3px 10px; border-radius:60px; letter-spacing:.03em; display:inline-block; }
-  .badge.gold { background:rgba(255,193,0,0.14); color:#FFC100; }
-  .badge.green { background:rgba(63,224,165,0.14); color:#3FE0A5; }
-  .badge.red { background:rgba(255,90,90,0.14); color:#FF7A7A; }
-  .badge.blue { background:rgba(90,200,250,0.14); color:#5AC8FA; }
-  .badge.purple { background:rgba(177,140,255,0.14); color:#B18CFF; }
-  .badge.grey { background:rgba(255,255,255,0.08); color:#a8c2bc; }
+  .badge { font-size:11px; font-weight:700; padding:3px 10px; border-radius:60px; letter-spacing:.03em; display:inline-block; }
+  .badge.gold { background:rgba(255,193,0,0.14); color:var(--amber); }
+  .badge.green { background:rgba(63,224,165,0.14); color:var(--mint); }
+  .badge.red { background:rgba(255,116,0,0.16); color:#ffb27a; }
+  .badge.blue { background:rgba(47,168,208,0.16); color:#7fd0ea; }
 
-  .kpi-mini-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:14px; margin-bottom:24px; }
-  .kpi-mini {
-    background:rgba(255,255,255,0.025); border:1px solid rgba(255,255,255,0.05); border-radius:12px; padding:16px 18px;
-  }
-  .kpi-mini .lbl { font-size:11.5px; color:#a2c2bb; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .kpi-mini .val { font-size:22px; font-weight:700; color:#eef6f3; margin-top:6px; }
-  .kpi-mini .sub { font-size:11px; color:#7a9d97; margin-top:4px; }
+  .kpi-mini-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:14px; margin-bottom:24px; }
+  .kpi-mini { background:var(--card); border:1px solid rgba(255,255,255,0.06); border-radius:12px; padding:16px 18px; }
+  .kpi-mini .lbl { font-size:12px; color:var(--ink-2); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .kpi-mini .val { font-size:24px; font-weight:800; color:var(--ink); margin-top:6px; }
+  .kpi-mini .sub { font-size:12px; color:var(--ink-3); margin-top:4px; }
 
-  .footer-row { margin-top:8px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:#3f6a63;
-    letter-spacing:0.3px; border-top:1px solid rgba(255,255,255,0.05); padding-top:18px; }
-  .glow-dot { display:inline-block; width:8px; height:8px; background:#3FE0A5; border-radius:20px; box-shadow:0 0 12px #3FE0A580; margin-right:6px; }
+  .footer-row { margin-top:8px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--ink-3);
+    border-top:1px solid var(--line); padding-top:18px; }
 
   .tab-section { display:none; }
   .tab-section.active { display:block; }
+  .progress-track { width:100%; height:8px; border-radius:6px; background:rgba(255,255,255,0.07); overflow:hidden; }
+  .progress-fill { height:100%; background:var(--amber); border-radius:6px; }
 
-  .progress-track { width:100%; height:10px; border-radius:8px; background:rgba(255,255,255,0.05); overflow:hidden; }
-  .progress-fill { height:100%; background:linear-gradient(90deg,#FFC100,#FF7400); border-radius:8px; }
-
-  /* MCP enrollment tab — top summary row */
+  /* Enrollments tab */
   .mcp-top-grid { display:grid; grid-template-columns:1fr 1fr 1.7fr; gap:18px; margin-bottom:24px; align-items:stretch; }
   .mcp-top-grid .metric-card { display:flex; flex-direction:column; justify-content:center; }
   .mcp-fy-compare-card { display:flex; flex-direction:column; justify-content:center; padding:18px 20px 16px; }
-
-  /* MCP enrollment tab — category cards */
   .mcp-category-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; margin-bottom:24px; }
   .category-block { display:flex; flex-direction:column; gap:16px; }
-  .category-card {
-    background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    border-radius:12px; padding:20px 20px 16px; border:1px solid rgba(255,255,255,0.04);
-    box-shadow:0 8px 18px -6px rgba(0,0,0,0.5); overflow:visible;
-    display:flex; flex-direction:column; min-height:300px;
-  }
-  .category-card .cat-title { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:4px; gap:8px; }
-  .category-card .cat-title h4 { font-size:14px; font-weight:700; color:#e6f3ef; letter-spacing:-0.1px; padding-top:2px; }
-  .category-card .cat-title .cat-title-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
-  .category-card .cat-title .cat-total { font-size:20px; font-weight:800; color:#FFC100; }
-  .category-card .cat-sub { font-size:11px; color:#7a9d97; margin-bottom:12px; }
+  .category-card { padding:20px 20px 16px; display:flex; flex-direction:column; min-height:300px; }
+  .cat-title { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:4px; gap:8px; }
+  .cat-title h4 { font-size:14px; font-weight:700; color:var(--ink); padding-top:2px; }
+  .cat-title-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .cat-total { font-size:22px; font-weight:800; color:var(--amber); }
+  .cat-sub { font-size:12px; color:var(--ink-3); margin-bottom:12px; }
   .cat-chart-wrap { flex:1; display:flex; flex-direction:column; justify-content:center; }
   .cat-bar-chart { position:relative; height:92px; margin-bottom:14px; flex-shrink:0; }
   .cat-legend { display:flex; flex-wrap:wrap; gap:7px 14px; padding-top:2px; }
-  .cat-legend-item { display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700; white-space:nowrap; }
-  .cat-legend-dot { width:8px; height:8px; border-radius:3px; flex-shrink:0; }
-  .cat-legend-count { color:#8fb0aa; font-weight:500; }
-  .completion-card {
-    background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); border-radius:12px;
-    padding:16px 20px 14px; display:flex; flex-direction:column; min-height:224px;
-  }
-  .completion-card .cc-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px; flex-shrink:0; }
-  .completion-card .cc-head .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#7a9d97; font-weight:700; }
-  .completion-card .cc-head .rate { font-size:22px; font-weight:800; color:#3FE0A5; }
-  .cc-rows-wrap { flex:1; display:flex; flex-direction:column; justify-content:space-between; }
-  .cc-row .cc-row-top { display:flex; justify-content:space-between; font-size:11.5px; color:#c9ddd8; margin-bottom:4px; }
-  .cc-row .cc-row-top .cc-pct { font-weight:700; color:#dceeE9; }
-  .cat-empty { font-size:12px; color:#7a9d97; padding:18px 4px; text-align:center; }
+  .cat-legend-item { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--ink-2); white-space:nowrap; }
+  .cat-legend-dot { width:9px; height:9px; border-radius:3px; flex-shrink:0; }
+  .cat-legend-count { color:var(--ink-3); font-weight:500; }
+  .completion-card { background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05); border-radius:12px;
+    padding:16px 20px 14px; display:flex; flex-direction:column; min-height:224px; }
+  .cc-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px; }
+  .cc-head .lbl { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3); font-weight:700; }
+  .cc-head .rate { font-size:22px; font-weight:800; color:var(--mint); }
+  .cc-rows-wrap { flex:1; display:flex; flex-direction:column; justify-content:space-between; gap:8px; }
+  .cc-row-top { display:flex; justify-content:space-between; font-size:12px; color:var(--ink-2); margin-bottom:4px; gap:8px; }
+  .cc-pct { font-weight:700; color:var(--ink); }
+  .cat-empty { font-size:13px; color:var(--ink-3); padding:18px 4px; text-align:center; }
 
   .teacher-board { display:flex; flex-direction:column; gap:8px; }
   .teacher-row { display:flex; align-items:center; gap:14px; padding:10px 14px; border-radius:12px;
-    background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.04); }
-  .teacher-rank { width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center;
-    font-size:12px; font-weight:800; color:#dceeE9; background:rgba(255,255,255,0.06); flex-shrink:0; }
-  .teacher-rank.gold { background:linear-gradient(145deg,#FFC100,#FF7400); color:#00131A; }
-  .teacher-rank.silver { background:linear-gradient(145deg,#DFF0EE,#a8c2bc); color:#00131A; }
-  .teacher-rank.bronze { background:linear-gradient(145deg,#d99a5c,#a66a34); color:#00131A; }
-  .teacher-name { flex:1; min-width:0; font-size:13px; font-weight:600; color:#e6f3ef; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .teacher-meta { font-size:11px; color:#7a9d97; flex-shrink:0; }
-  .teacher-rate { font-size:15px; font-weight:800; color:#3FE0A5; flex-shrink:0; width:56px; text-align:right; }
+    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); }
+  .teacher-rank { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:800; color:var(--ink); background:rgba(255,255,255,0.08); flex-shrink:0; }
+  .teacher-rank.top { background:var(--amber); color:var(--navy); }
+  .teacher-name { flex:1; min-width:0; font-size:14px; font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .teacher-meta { font-size:12px; color:var(--ink-3); flex-shrink:0; }
+  .teacher-rate { font-size:15px; font-weight:800; color:var(--mint); flex-shrink:0; width:60px; text-align:right; }
 
-  @media (max-width:1200px) {
-    .mcp-category-grid { grid-template-columns:repeat(2,1fr); }
-    .mcp-top-grid { grid-template-columns:1fr 1fr; }
-    .mcp-fy-compare-card { grid-column:1 / -1; }
+  /* width ≤ 1200px: set as a class on <html> by JS so exports keep the on-screen layout */
+  .w1200 .mcp-category-grid { grid-template-columns:repeat(2,1fr); }
+  .w1200 .mcp-top-grid { grid-template-columns:1fr 1fr; }
+  .w1200 .mcp-fy-compare-card { grid-column:1 / -1; }
+  .w1200 .metric-grid.five { grid-template-columns:repeat(3,1fr); }
+  /* width ≤ 1100px: set as a class on <html> by JS so exports keep the on-screen layout */
+  .w1100 .metric-grid, .w1100 .metric-grid.five { grid-template-columns:repeat(2,1fr); }
+  .w1100 .row-duo, .w1100 .row-duo.even { grid-template-columns:1fr; }
+  .w1100 .dashboard { padding:24px 20px; }
+  .w1100 .mcp-category-grid { grid-template-columns:1fr; }
+  /* width ≤ 640px: set as a class on <html> by JS so exports keep the on-screen layout */
+  .w640 body { padding:12px; }
+  .w640 .dashboard { padding:20px 14px 28px; }
+  .w640 .metric-grid, .w640 .metric-grid.five, .w640 .mcp-top-grid { grid-template-columns:1fr; }
+  .w640 .mcp-fy-compare-card { grid-column:auto; }
+  .w640 .top-bar { flex-direction:column; align-items:flex-start; }
+  .w640 .brand { flex-wrap:wrap; }
+  .w640 .f-row { grid-template-columns:1fr; gap:6px; }
+  .w640 .fgroup { flex-direction:column; align-items:flex-start; gap:6px; }
+  .w640 .metric-value { font-size:26px; }
+  @media (prefers-reduced-motion:reduce) {
+    *, *::before, *::after { transition:none !important; animation:none !important; }
   }
-  @media (max-width:1100px) {
-    .metric-grid { grid-template-columns:repeat(2,1fr); }
-    .row-duo, .bottom-grid { grid-template-columns:1fr; }
-    .dashboard { padding:24px 20px; }
-    .mcp-category-grid { grid-template-columns:1fr; }
-  }
-  @media (max-width:580px) {
-    .mcp-top-grid { grid-template-columns:1fr; }
-    .mcp-fy-compare-card { grid-column:auto; }
-  }
-  @media (max-width:580px) {
-    .metric-grid { grid-template-columns:1fr; }
-    .top-bar { flex-direction:column; align-items:start; }
-    .date-badge { font-size:12px; padding:4px 14px; }
-  }
-
+  /* Export: an exact, dark copy of the current tab as one tall page. The page size is set by the export button. */
   @media print {
-    body { background:#fff; padding:0; display:block; }
-    .dashboard { background:#fff; box-shadow:none; border:none; backdrop-filter:none; color:#111; max-width:100%; border-radius:0; }
-    .top-actions, .filter-row, .filter-select-row, .tab-switcher { display:none !important; }
-    .tab-section { display:block !important; page-break-after:always; }
-    .metric-value, .brand h1 { -webkit-text-fill-color: initial; background:none; color:#111 !important; }
-    .metric-label, .card-title h3, .kpi-mini .lbl, .breakdown-table td { color:#111 !important; }
+    html, body { -webkit-print-color-adjust:exact; print-color-adjust:exact; background:var(--bg) !important; }
+    .dashboard, .metric-card, .chart-card, .platform-card, .category-card, .tabs, .tag-select, .search-bar, .toolbar-btn, .date-badge, .status-pill {
+      backdrop-filter:none !important; -webkit-backdrop-filter:none !important; }
+    .tabs { position:static; }
+    body { min-height:0; }
+    * { box-shadow:none !important; text-shadow:none !important; } /* blurred shadows print as solid dark boxes */
+    /* gradient-clipped text prints as a solid block, so use the same colors as flat text */
+    .brand h1 { background:none; -webkit-text-fill-color:#f7f4ea; color:#f7f4ea; }
+    .brand h1 span { -webkit-text-fill-color:#f7f4ea; color:#f7f4ea; opacity:.75; }
+    .metric-value { background:none; -webkit-text-fill-color:#F5FBFF; color:#F5FBFF; }
     canvas { max-width:100%; }
   }
 </style>
@@ -278,246 +299,250 @@
       <h1>Marketing Funnel<span> Performance Dashboard</span></h1>
     </div>
     <div class="top-actions">
-      <div class="date-badge"><i class="fas fa-calendar-alt"></i> <span id="todayLabel">--</span></div>
-      <button class="toolbar-btn" id="exportCsvBtn"><i class="fas fa-file-csv"></i>Export Tab CSV</button>
-      <button class="toolbar-btn" id="exportPdfBtn"><i class="fas fa-file-pdf"></i>Export Dashboard PDF</button>
-      <div class="tab-switcher" id="tabSwitcher">
-        <div class="tab-avatar active" data-tab="overview" title="Executive Overview"><i class="fas fa-house"></i><span class="tab-name">Overview</span></div>
-        <div class="tab-avatar" data-tab="traffic" title="Traffic & Acquisition"><i class="fas fa-arrow-trend-up"></i><span class="tab-name">Traffic</span></div>
-        <div class="tab-avatar" data-tab="content" title="Content & Engagement"><i class="fas fa-file-lines"></i><span class="tab-name">Content</span></div>
-        <div class="tab-avatar" data-tab="conversions" title="Conversions & Key Events"><i class="fas fa-bullseye"></i><span class="tab-name">Conversions</span></div>
-        <div class="tab-avatar" data-tab="paid" title="Paid Media"><i class="fas fa-bullhorn"></i><span class="tab-name">Paid Media</span></div>
-        <div class="tab-avatar" data-tab="email" title="Email Marketing"><i class="fas fa-envelope"></i><span class="tab-name">Email</span></div>
-        <div class="tab-avatar" data-tab="outreach" title="Field Outreach"><i class="fas fa-hands-helping"></i><span class="tab-name">Outreach</span></div>
-        <div class="tab-avatar" data-tab="mcp" title="MCP Enrollments"><i class="fas fa-graduation-cap"></i><span class="tab-name">Enrollments</span></div>
-        <!-- Reserved navigation slot — enable once Sales Funnel Analytics data source is connected
-        <div class="tab-avatar" data-tab="sales-funnel" title="Sales Funnel Analytics"><i class="fas fa-filter"></i><span class="tab-name">Sales Funnel</span></div>
-        -->
-      </div>
+      <div class="status-pill" id="dataStatus" role="status"><span class="dot"></span><span id="dataStatusText">Sample data</span></div>
+      <div class="date-badge"><i class="fas fa-calendar-alt" aria-hidden="true"></i> <span id="todayLabel">--</span></div>
+      <button class="toolbar-btn" id="exportCsvBtn" type="button"><i class="fas fa-file-csv" aria-hidden="true"></i>Export table CSV</button>
+      <button class="toolbar-btn" id="exportPdfBtn" type="button"><i class="fas fa-file-pdf" aria-hidden="true"></i>Export PDF</button>
     </div>
   </div>
 
-  <div id="fallbackNotice" class="notice-banner" style="display:none;">
-    <i class="fas fa-triangle-exclamation"></i>
-    <span id="fallbackNoticeText">Displaying mock data. Live Google Sheets sync is not configured — see CONFIG in the page source to connect Marketing_Unified_Database_Backend.xlsx.</span>
+  <div id="fallbackNotice" class="notice-banner" role="note" style="display:none;">
+    <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+    <span id="fallbackNoticeText"></span>
   </div>
 
-  <div class="filter-row" id="dateFilterRow">
-    <button class="filter-tag" data-range="7"><i class="fas fa-calendar-week"></i>Last 7 Days</button>
-    <button class="filter-tag active" data-range="30"><i class="fas fa-calendar-week"></i>Last 30 Days</button>
-    <button class="filter-tag" data-range="90"><i class="fas fa-calendar-week"></i>Last Quarter</button>
-    <button class="filter-tag" data-range="365"><i class="fas fa-calendar-week"></i>Last Year</button>
-    <button class="filter-tag" data-range="custom"><i class="fas fa-sliders-h"></i>Custom Range</button>
-    <div id="customRangeBox" style="display:none; align-items:center; gap:8px;">
-      <input type="date" id="customStart" class="date-input">
-      <span style="color:#7a9d97; font-size:12px;">to</span>
-      <input type="date" id="customEnd" class="date-input">
-      <button id="applyCustom" class="apply-btn">Apply</button>
+  <nav class="tabs" id="tabSwitcher" role="tablist" aria-label="Dashboard sections">
+    <button class="tab" role="tab" type="button" data-tab="overview" id="tabbtn-overview" aria-controls="tab-overview" aria-selected="true"><i class="fas fa-house" aria-hidden="true"></i>Overview</button>
+    <button class="tab" role="tab" type="button" data-tab="traffic" id="tabbtn-traffic" aria-controls="tab-traffic" aria-selected="false" tabindex="-1"><i class="fas fa-arrow-trend-up" aria-hidden="true"></i>Traffic</button>
+    <button class="tab" role="tab" type="button" data-tab="content" id="tabbtn-content" aria-controls="tab-content" aria-selected="false" tabindex="-1"><i class="fas fa-file-lines" aria-hidden="true"></i>Content</button>
+    <button class="tab" role="tab" type="button" data-tab="conversions" id="tabbtn-conversions" aria-controls="tab-conversions" aria-selected="false" tabindex="-1"><i class="fas fa-bullseye" aria-hidden="true"></i>Conversions</button>
+    <button class="tab" role="tab" type="button" data-tab="paid" id="tabbtn-paid" aria-controls="tab-paid" aria-selected="false" tabindex="-1"><i class="fas fa-bullhorn" aria-hidden="true"></i>Paid Media</button>
+    <button class="tab" role="tab" type="button" data-tab="email" id="tabbtn-email" aria-controls="tab-email" aria-selected="false" tabindex="-1"><i class="fas fa-envelope" aria-hidden="true"></i>Email</button>
+    <button class="tab" role="tab" type="button" data-tab="outreach" id="tabbtn-outreach" aria-controls="tab-outreach" aria-selected="false" tabindex="-1"><i class="fas fa-hands-helping" aria-hidden="true"></i>Outreach</button>
+    <button class="tab" role="tab" type="button" data-tab="mcp" id="tabbtn-mcp" aria-controls="tab-mcp" aria-selected="false" tabindex="-1"><i class="fas fa-graduation-cap" aria-hidden="true"></i>Enrollments</button>
+    <!-- Reserved navigation slot: enable once Sales Funnel Analytics data source is connected
+    <button class="tab" role="tab" data-tab="sales-funnel"><i class="fas fa-filter"></i>Sales Funnel</button>
+    -->
+  </nav>
+
+  <div class="filter-row" id="dateFilterRow" role="group" aria-label="Date range">
+    <button class="filter-tag" type="button" data-range="7"><i class="fas fa-calendar-week" aria-hidden="true"></i>Last 7 days</button>
+    <button class="filter-tag active" type="button" data-range="30"><i class="fas fa-calendar-week" aria-hidden="true"></i>Last 30 days</button>
+    <button class="filter-tag" type="button" data-range="90"><i class="fas fa-calendar-week" aria-hidden="true"></i>Last quarter</button>
+    <button class="filter-tag" type="button" data-range="365"><i class="fas fa-calendar-week" aria-hidden="true"></i>Last year</button>
+    <button class="filter-tag" type="button" data-range="custom"><i class="fas fa-sliders-h" aria-hidden="true"></i>Custom range</button>
+    <div id="customRangeBox">
+      <input type="date" id="customStart" class="date-input" aria-label="Start date">
+      <span style="color:var(--ink-3); font-size:13px;">to</span>
+      <input type="date" id="customEnd" class="date-input" aria-label="End date">
+      <button id="applyCustom" class="apply-btn" type="button">Apply</button>
+      <span class="range-error" id="rangeError" role="alert"></span>
     </div>
   </div>
 
-  <div class="filter-select-row">
-    <span class="filter-select-label">Program Category</span>
-    <select class="tag-select" id="filterCategory"></select>
-    <span class="filter-select-label">Location</span>
-    <select class="tag-select" id="filterLocation"></select>
-    <span class="filter-select-label">Platform</span>
-    <select class="tag-select" id="filterPlatform"></select>
-    <span class="filter-select-label">Email Type</span>
-    <select class="tag-select" id="filterEmailType"></select>
+  <div class="filter-select-row" id="selectRow">
+    <label class="fgroup" data-tabs="overview paid"><span class="filter-select-label">Platform</span><select class="tag-select" id="filterPlatform"></select></label>
+    <label class="fgroup" data-tabs="paid"><span class="filter-select-label">Objective</span><select class="tag-select" id="filterObjective"></select></label>
+    <label class="fgroup" data-tabs="overview email"><span class="filter-select-label">Email type</span><select class="tag-select" id="filterEmailType"></select></label>
+    <label class="fgroup" data-tabs="email"><span class="filter-select-label">Campaign (CRM)</span><select class="tag-select" id="filterCrmCampaign"></select></label>
+    <label class="fgroup" data-tabs="email"><span class="filter-select-label">Subscription</span><select class="tag-select" id="filterSubscription"></select></label>
+    <label class="fgroup" data-tabs="outreach"><span class="filter-select-label">Location</span><select class="tag-select" id="filterLocation"></select></label>
+    <label class="fgroup" data-tabs="mcp"><span class="filter-select-label">Fiscal year</span><select class="tag-select" id="filterFiscalYear"></select></label>
   </div>
 
-  <!-- TAB 1: EXECUTIVE OVERVIEW -->
-  <div class="tab-section active" id="tab-overview">
-    <div class="metric-grid cols-8">
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Total Users</span><i class="fas fa-users"></i></div><div class="metric-value" id="ovTotalUsers">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Active Users</span><i class="fas fa-user-check"></i></div><div class="metric-value" id="ovActiveUsers">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Total Sessions</span><i class="fas fa-arrows-turn-to-dots blue"></i></div><div class="metric-value" id="ovSessions">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Avg Engagement Rate</span><i class="fas fa-chart-simple"></i></div><div class="metric-value" id="ovEngagement">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Total Key Events</span><i class="fas fa-bullseye purple"></i></div><div class="metric-value" id="ovKeyEvents">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Paid Spend</span><i class="fas fa-money-bill-wave orange"></i></div><div class="metric-value" id="ovSpend">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Total Email Delivered</span><i class="fas fa-envelope pink"></i></div><div class="metric-value" id="ovEmailDelivered">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Total Enrollments</span><i class="fas fa-graduation-cap"></i></div><div class="metric-value" id="ovEnrollments">--</div></div>
-    </div>
-
+  <!-- OVERVIEW -->
+  <div class="tab-section active" id="tab-overview" role="tabpanel" aria-labelledby="tabbtn-overview">
     <div class="row-duo">
       <div class="chart-card">
-        <div class="card-title"><h3><i class="fas fa-chart-line"></i>Active Users vs. Key Events</h3><span class="meta" id="ovTrendRangeLabel"></span></div>
-        <div style="position:relative; height:280px;"><canvas id="ovTrendChart"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <div class="card-title"><h3><i class="fas fa-circle-notch"></i>Reach Breakdown</h3></div>
-        <div style="position:relative; height:280px;"><canvas id="ovReachDonut"></canvas></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- TAB 2: TRAFFIC & USER ACQUISITION -->
-  <div class="tab-section" id="tab-traffic">
-    <div class="row-duo">
-      <div class="chart-card">
-        <div class="card-title"><h3><i class="fas fa-diagram-project"></i>Sessions by Channel Grouping</h3><span class="meta" id="trafficRangeLabel"></span></div>
-        <div style="position:relative; height:280px;"><canvas id="trafficDonut"></canvas></div>
+        <div class="card-title"><h3><i class="fas fa-filter" aria-hidden="true"></i>Funnel: from visit to enrollment</h3><span class="meta" id="funnelRangeLabel"></span></div>
+        <div class="funnel" id="funnel"></div>
+        <p class="card-note">The first three steps come from Google Analytics. Enrollments come from the class roster, so the last step shows direction, not a strict share of the steps above it.</p>
       </div>
       <div class="platform-card">
-        <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-list-ol"></i>Top Channels</h3></div>
+        <div class="card-title"><h3><i class="fas fa-lightbulb" aria-hidden="true"></i>What stands out</h3><span class="meta" id="hlRangeLabel"></span></div>
+        <ul class="hl" id="highlights"></ul>
+      </div>
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Total users</span><i class="fas fa-users" aria-hidden="true"></i></div><div class="metric-value" id="ovTotalUsers">--</div><p class="metric-sub">Daily users added up, so repeat visitors count each day</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Active users</span><i class="fas fa-user-check" aria-hidden="true"></i></div><div class="metric-value" id="ovActiveUsers">--</div><p class="metric-sub">Users who engaged, added up by day</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Sessions</span><i class="fas fa-route blue" aria-hidden="true"></i></div><div class="metric-value" id="ovSessions">--</div><p class="metric-sub">All traffic sources</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Engagement rate</span><i class="fas fa-chart-bar" aria-hidden="true"></i></div><div class="metric-value" id="ovEngagement">--</div><p class="metric-sub">Weighted by sessions</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Key events</span><i class="fas fa-bullseye purple" aria-hidden="true"></i></div><div class="metric-value" id="ovKeyEvents">--</div><p class="metric-sub">Enrollment submits, sign-ups and other goals</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Paid spend</span><i class="fas fa-money-bill-wave orange" aria-hidden="true"></i></div><div class="metric-value" id="ovSpend">--</div><p class="metric-sub">Meta Ads and Google Ads</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Emails delivered</span><i class="fas fa-envelope pink" aria-hidden="true"></i></div><div class="metric-value" id="ovEmailDelivered">--</div><p class="metric-sub">Automated and one-off sends</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Enrollments</span><i class="fas fa-graduation-cap" aria-hidden="true"></i></div><div class="metric-value" id="ovEnrollments">--</div><p class="metric-sub">MCP enrollments dated in this range</p></div>
+    </div>
+
+    <div class="row-duo even">
+      <div class="chart-card">
+        <div class="card-title"><h3><i class="fas fa-chart-line" aria-hidden="true"></i>Active users per day</h3><span class="meta" id="ovTrendRangeLabel"></span></div>
+        <div class="chart-box" style="height:240px;"><canvas id="ovUsersChart"></canvas><div class="chart-empty"></div></div>
+      </div>
+      <div class="chart-card">
+        <div class="card-title"><h3><i class="fas fa-bullseye" aria-hidden="true"></i>Key events per day</h3></div>
+        <div class="chart-box" style="height:240px;"><canvas id="ovEventsChart"></canvas><div class="chart-empty"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRAFFIC -->
+  <div class="tab-section" id="tab-traffic" role="tabpanel" aria-labelledby="tabbtn-traffic">
+    <div class="row-duo">
+      <div class="chart-card">
+        <div class="card-title"><h3><i class="fas fa-diagram-project" aria-hidden="true"></i>Sessions by channel</h3><span class="meta" id="trafficRangeLabel"></span></div>
+        <div class="chart-box" style="height:300px;"><canvas id="trafficBar"></canvas><div class="chart-empty"></div></div>
+      </div>
+      <div class="platform-card">
+        <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-list-ol" aria-hidden="true"></i>Top channels</h3></div>
         <table class="breakdown-table"><thead><tr><th>Channel</th><th>Sessions</th><th>Share</th></tr></thead><tbody id="trafficChannelBody"></tbody></table>
       </div>
     </div>
     <div class="platform-card">
-      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table"></i>Source / Medium Breakdown</h3></div>
-      <div class="search-bar"><i class="fas fa-magnifying-glass"></i><input type="text" id="trafficSearch" placeholder="Search source, campaign, or utm_content..."></div>
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table" aria-hidden="true"></i>Source / medium breakdown</h3></div>
+      <div class="search-bar"><i class="fas fa-magnifying-glass" aria-hidden="true"></i><input type="text" id="trafficSearch" placeholder="Search source, campaign, or utm_content" aria-label="Search traffic rows"></div>
       <div class="table-scroll"><table class="breakdown-table" id="trafficTable">
-        <thead><tr><th>Source / Medium</th><th>Campaign</th><th>utm_content</th><th>Sessions</th><th>Engaged Sessions</th><th>Active Users</th></tr></thead>
+        <thead><tr><th>Source / medium</th><th>Campaign</th><th>utm_content</th><th>Sessions</th><th>Engaged sessions</th><th>Active users</th></tr></thead>
         <tbody id="trafficTableBody"></tbody>
       </table></div>
+      <p class="card-note" id="trafficNote"></p>
     </div>
   </div>
 
-  <!-- TAB 3: CONTENT & ENGAGEMENT -->
-  <div class="tab-section" id="tab-content">
+  <!-- CONTENT -->
+  <div class="tab-section" id="tab-content" role="tabpanel" aria-labelledby="tabbtn-content">
     <div class="chart-card" style="margin-bottom:24px;">
-      <div class="card-title"><h3><i class="fas fa-ranking-star"></i>Top 10 Pages by Views</h3><span class="meta" id="contentRangeLabel"></span></div>
-      <div style="position:relative; height:340px;"><canvas id="contentBarChart"></canvas></div>
+      <div class="card-title"><h3><i class="fas fa-trophy" aria-hidden="true"></i>Top 10 pages by views</h3><span class="meta" id="contentRangeLabel"></span></div>
+      <div class="chart-box" style="height:340px;"><canvas id="contentBarChart"></canvas><div class="chart-empty"></div></div>
     </div>
     <div class="platform-card">
-      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table"></i>Page Engagement Detail</h3></div>
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table" aria-hidden="true"></i>Page engagement detail</h3></div>
       <div class="table-scroll"><table class="breakdown-table">
-        <thead><tr><th>Page Path / Screen Name</th><th>Views</th><th>Views per User</th><th>Avg Engagement Time</th></tr></thead>
+        <thead><tr><th>Page path / screen name</th><th>Views</th><th>Views per user</th><th>Avg engagement time</th></tr></thead>
         <tbody id="contentTableBody"></tbody>
       </table></div>
     </div>
   </div>
 
-  <!-- TAB 4: CONVERSIONS & KEY EVENTS DEEP-DIVE -->
-  <div class="tab-section" id="tab-conversions">
+  <!-- CONVERSIONS -->
+  <div class="tab-section" id="tab-conversions" role="tabpanel" aria-labelledby="tabbtn-conversions">
     <div class="kpi-mini-grid" id="conversionsKpiGrid"></div>
     <div class="chart-card" style="margin-bottom:24px;">
-      <div class="card-title"><h3><i class="fas fa-chart-column"></i>Top Conversion Sources</h3><span class="meta" id="conversionsRangeLabel"></span></div>
-      <div style="position:relative; height:300px;"><canvas id="conversionsBarChart"></canvas></div>
+      <div class="card-title"><h3><i class="fas fa-chart-column" aria-hidden="true"></i>Top pages for key events</h3><span class="meta" id="conversionsRangeLabel"></span></div>
+      <div class="chart-box" style="height:300px;"><canvas id="conversionsBarChart"></canvas><div class="chart-empty"></div></div>
     </div>
     <div class="platform-card">
-      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table"></i>Isolated Conversion Rate by Page</h3></div>
-      <p class="metric-sub" style="margin-bottom:14px;">Conversion rate = Event Count ÷ Sessions on that specific page, kept isolated per page to avoid metric skew.</p>
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table" aria-hidden="true"></i>Conversion rate by page</h3></div>
+      <p class="metric-sub" style="margin:-6px 0 14px;">Conversion rate is event count divided by sessions on that page, kept separate for each page so one busy page doesn't skew the rest.</p>
       <div class="table-scroll"><table class="breakdown-table">
-        <thead><tr><th>Page Path</th><th>Event Name</th><th>Event Count</th><th>Sessions on Page</th><th>Isolated Conv. Rate</th></tr></thead>
+        <thead><tr><th>Page path</th><th>Event name</th><th>Event count</th><th>Sessions on page</th><th>Conversion rate</th></tr></thead>
         <tbody id="conversionsTableBody"></tbody>
       </table></div>
+      <p class="card-note" id="conversionsNote"></p>
     </div>
   </div>
 
-  <!-- TAB 5: PAID MEDIA -->
-  <div class="tab-section" id="tab-paid">
-    <div class="filter-row" style="margin-bottom:16px;">
-      <span class="filter-select-label">Campaign Objective</span>
-      <select class="tag-select" id="filterObjective"></select>
-    </div>
+  <!-- PAID -->
+  <div class="tab-section" id="tab-paid" role="tabpanel" aria-labelledby="tabbtn-paid">
     <div class="metric-grid">
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Spend (USD)</span><i class="fas fa-dollar-sign orange"></i></div><div class="metric-value" id="paidSpend">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Impressions</span><i class="fas fa-eye"></i></div><div class="metric-value" id="paidImpressions">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Reach</span><i class="fas fa-satellite-dish blue"></i></div><div class="metric-value" id="paidReach">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Link Clicks</span><i class="fas fa-arrow-pointer"></i></div><div class="metric-value" id="paidClicks">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Leads</span><i class="fas fa-user-plus purple"></i></div><div class="metric-value" id="paidLeads">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">CTR (%)</span><i class="fas fa-percent"></i></div><div class="metric-value" id="paidCtr">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">CPC (USD)</span><i class="fas fa-hand-pointer"></i></div><div class="metric-value" id="paidCpc">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">CPM (USD)</span><i class="fas fa-chart-simple orange"></i></div><div class="metric-value" id="paidCpm">--</div></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Spend</span><i class="fas fa-dollar-sign orange" aria-hidden="true"></i></div><div class="metric-value" id="paidSpend">--</div><p class="metric-sub">Total in USD</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Impressions</span><i class="fas fa-eye" aria-hidden="true"></i></div><div class="metric-value" id="paidImpressions">--</div><p class="metric-sub">Times an ad was shown</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Reach</span><i class="fas fa-satellite-dish blue" aria-hidden="true"></i></div><div class="metric-value" id="paidReach">--</div><p class="metric-sub">Daily reach added up across campaigns</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Link clicks</span><i class="fas fa-arrow-pointer" aria-hidden="true"></i></div><div class="metric-value" id="paidClicks">--</div><p class="metric-sub">Clicks through to the site</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Leads</span><i class="fas fa-user-plus purple" aria-hidden="true"></i></div><div class="metric-value" id="paidLeads">--</div><p class="metric-sub">Form completions from ads</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Click-through rate</span><i class="fas fa-percent" aria-hidden="true"></i></div><div class="metric-value" id="paidCtr">--</div><p class="metric-sub">Link clicks ÷ impressions</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Cost per click</span><i class="fas fa-hand-pointer" aria-hidden="true"></i></div><div class="metric-value" id="paidCpc">--</div><p class="metric-sub">Spend ÷ link clicks. Lower is better</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Cost per 1,000 views</span><i class="fas fa-chart-bar orange" aria-hidden="true"></i></div><div class="metric-value" id="paidCpm">--</div><p class="metric-sub">Spend ÷ impressions × 1,000</p></div>
     </div>
-    <div class="chart-card" style="margin-bottom:24px;">
-      <div class="card-title"><h3><i class="fas fa-scale-balanced"></i>Spend vs. Link Clicks by Campaign</h3></div>
-      <div style="position:relative; height:300px;"><canvas id="paidComboChart"></canvas></div>
+    <div class="row-duo even">
+      <div class="chart-card">
+        <div class="card-title"><h3><i class="fas fa-dollar-sign" aria-hidden="true"></i>Spend by campaign</h3><span class="meta">Top 8 by spend</span></div>
+        <div class="chart-box" style="height:320px;"><canvas id="paidSpendChart"></canvas><div class="chart-empty"></div></div>
+      </div>
+      <div class="chart-card">
+        <div class="card-title"><h3><i class="fas fa-arrow-pointer" aria-hidden="true"></i>Link clicks by campaign</h3><span class="meta">Same campaigns, same order</span></div>
+        <div class="chart-box" style="height:320px;"><canvas id="paidClicksChart"></canvas><div class="chart-empty"></div></div>
+      </div>
     </div>
     <div class="platform-card">
-      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table"></i>Campaign Performance</h3></div>
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table" aria-hidden="true"></i>Campaign performance</h3></div>
       <div class="table-scroll"><table class="breakdown-table">
-        <thead><tr><th>Platform</th><th>Campaign</th><th>Objective</th><th>Spend</th><th>Impressions</th><th>Link Clicks</th><th>Leads</th><th>CTR</th><th>CPC</th></tr></thead>
+        <thead><tr><th>Platform</th><th>Campaign</th><th>Objective</th><th>Spend</th><th>Impressions</th><th>Link clicks</th><th>Leads</th><th>CTR</th><th>CPC</th></tr></thead>
         <tbody id="paidTableBody"></tbody>
       </table></div>
     </div>
   </div>
 
-  <!-- TAB 6: EMAIL MARKETING -->
-  <div class="tab-section" id="tab-email">
-    <div class="filter-row" style="margin-bottom:16px;">
-      <span class="filter-select-label">Campaign (CRM)</span>
-      <select class="tag-select" id="filterCrmCampaign"></select>
-      <span class="filter-select-label">Subscription</span>
-      <select class="tag-select" id="filterSubscription"></select>
+  <!-- EMAIL -->
+  <div class="tab-section" id="tab-email" role="tabpanel" aria-labelledby="tabbtn-email">
+    <div class="metric-grid five">
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Delivered</span><i class="fas fa-paper-plane" aria-hidden="true"></i></div><div class="metric-value" id="emDelivered">--</div><p class="metric-sub">Emails that reached an inbox</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Opens</span><i class="fas fa-envelope-open blue" aria-hidden="true"></i></div><div class="metric-value" id="emOpens">--</div><p class="metric-sub">Bots excluded</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Clicks</span><i class="fas fa-arrow-pointer purple" aria-hidden="true"></i></div><div class="metric-value" id="emClicks">--</div><p class="metric-sub">Bots excluded</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Open rate</span><i class="fas fa-percent" aria-hidden="true"></i></div><div class="metric-value" id="emOpenRate">--</div><p class="metric-sub">Opens ÷ delivered</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Click-to-open rate</span><i class="fas fa-bullseye orange" aria-hidden="true"></i></div><div class="metric-value" id="emCtor">--</div><p class="metric-sub">Clicks ÷ opens</p></div>
     </div>
     <div class="metric-grid">
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Total Delivered</span><i class="fas fa-paper-plane"></i></div><div class="metric-value" id="emDelivered">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Opens (excl. bots)</span><i class="fas fa-envelope-open blue"></i></div><div class="metric-value" id="emOpens">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Clicks (excl. bots)</span><i class="fas fa-arrow-pointer purple"></i></div><div class="metric-value" id="emClicks">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Open Rate (%)</span><i class="fas fa-percent"></i></div><div class="metric-value" id="emOpenRate">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Click-to-Open Rate (%)</span><i class="fas fa-bullseye orange"></i></div><div class="metric-value" id="emCtor">--</div></div>
-    </div>
-    <div class="metric-grid">
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Hard Bounces</span><i class="fas fa-ban pink"></i></div><div class="metric-value" id="emHardBounce">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Soft Bounces</span><i class="fas fa-triangle-exclamation orange"></i></div><div class="metric-value" id="emSoftBounce">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Unsubscribes</span><i class="fas fa-user-minus"></i></div><div class="metric-value" id="emUnsub">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Spam Reports</span><i class="fas fa-flag pink"></i></div><div class="metric-value" id="emSpam">--</div></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Hard bounces</span><i class="fas fa-ban pink" aria-hidden="true"></i></div><div class="metric-value" id="emHardBounce">--</div><p class="metric-sub">Permanent failures. Lower is better</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Soft bounces</span><i class="fas fa-triangle-exclamation orange" aria-hidden="true"></i></div><div class="metric-value" id="emSoftBounce">--</div><p class="metric-sub">Temporary failures. Lower is better</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Unsubscribes</span><i class="fas fa-user-minus" aria-hidden="true"></i></div><div class="metric-value" id="emUnsub">--</div><p class="metric-sub">Lower is better</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Spam reports</span><i class="fas fa-flag pink" aria-hidden="true"></i></div><div class="metric-value" id="emSpam">--</div><p class="metric-sub">Lower is better</p></div>
     </div>
     <div class="chart-card" style="margin-bottom:24px;">
-      <div class="card-title"><h3><i class="fas fa-scale-balanced"></i>Automated Workflows vs. One-off Campaigns</h3></div>
-      <div style="position:relative; height:280px;"><canvas id="emCompareChart"></canvas></div>
+      <div class="card-title"><h3><i class="fas fa-scale-balanced" aria-hidden="true"></i>Automated workflows vs. one-off campaigns</h3><span class="meta">Rates, so different send sizes compare fairly</span></div>
+      <div class="chart-box" style="height:280px;"><canvas id="emCompareChart"></canvas><div class="chart-empty"></div></div>
     </div>
     <div class="platform-card">
-      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table"></i>Email Detail</h3></div>
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table" aria-hidden="true"></i>Email detail</h3></div>
       <div class="table-scroll"><table class="breakdown-table">
-        <thead><tr><th>Email Name</th><th>Campaign (CRM)</th><th>Email Type</th><th>Delivered</th><th>Opens</th><th>Clicks</th></tr></thead>
+        <thead><tr><th>Email name</th><th>Campaign (CRM)</th><th>Type</th><th>Delivered</th><th>Opens</th><th>Clicks</th></tr></thead>
         <tbody id="emTableBody"></tbody>
       </table></div>
+      <p class="card-note" id="emailNote"></p>
     </div>
   </div>
 
-  <!-- TAB 7: FIELD OUTREACH & AGGREGATED DIGITAL -->
-  <div class="tab-section" id="tab-outreach">
-    <div class="metric-grid">
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Flyers Distributed</span><i class="fas fa-note-sticky"></i></div><div class="metric-value" id="ouFlyers">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Meaningful Conversations</span><i class="fas fa-comments blue"></i></div><div class="metric-value" id="ouConversations">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Appealed Opportunities</span><i class="fas fa-handshake purple"></i></div><div class="metric-value" id="ouAppealed">--</div></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Engagement Efficiency</span><i class="fas fa-gauge-high orange"></i></div><div class="metric-value" id="ouEfficiency">--</div><p class="metric-sub">Conversations / Flyers</p></div>
-    </div>
-    <div class="metric-grid" style="grid-template-columns:1fr;">
-      <div class="metric-card" style="max-width:340px;"><div class="metric-header"><span class="metric-label">Opportunity Conversion</span><i class="fas fa-percent"></i></div><div class="metric-value" id="ouConversion">--</div><p class="metric-sub">Appealed / Conversations</p></div>
+  <!-- OUTREACH -->
+  <div class="tab-section" id="tab-outreach" role="tabpanel" aria-labelledby="tabbtn-outreach">
+    <div class="metric-grid five">
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Flyers distributed</span><i class="fas fa-note-sticky" aria-hidden="true"></i></div><div class="metric-value" id="ouFlyers">--</div><p class="metric-sub">Handed out in person</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Meaningful conversations</span><i class="fas fa-comments blue" aria-hidden="true"></i></div><div class="metric-value" id="ouConversations">--</div><p class="metric-sub">Real two-way exchanges</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Appealed opportunities</span><i class="fas fa-handshake purple" aria-hidden="true"></i></div><div class="metric-value" id="ouAppealed">--</div><p class="metric-sub">Conversations that turned into interest</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Engagement efficiency</span><i class="fas fa-gauge-high orange" aria-hidden="true"></i></div><div class="metric-value" id="ouEfficiency">--</div><p class="metric-sub">Conversations ÷ flyers</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Opportunity conversion</span><i class="fas fa-percent" aria-hidden="true"></i></div><div class="metric-value" id="ouConversion">--</div><p class="metric-sub">Appealed ÷ conversations</p></div>
     </div>
     <div class="chart-card">
-      <div class="card-title"><h3><i class="fas fa-chart-column"></i>Meaningful Conversations by Location &amp; Experience Type</h3></div>
-      <div style="position:relative; height:340px;"><canvas id="outreachBarChart"></canvas></div>
+      <div class="card-title"><h3><i class="fas fa-chart-column" aria-hidden="true"></i>Meaningful conversations by location and experience type</h3></div>
+      <div class="chart-box" style="height:340px;"><canvas id="outreachBarChart"></canvas><div class="chart-empty"></div></div>
     </div>
   </div>
 
-  <!-- TAB 8: MCP PROGRAM ENROLLMENTS -->
-  <div class="tab-section" id="tab-mcp">
-    <div class="filter-row" style="margin-bottom:8px;">
-      <span class="filter-select-label">Fiscal Year</span>
-      <select class="tag-select" id="filterFiscalYear"></select>
-    </div>
+  <!-- ENROLLMENTS -->
+  <div class="tab-section" id="tab-mcp" role="tabpanel" aria-labelledby="tabbtn-mcp">
     <div id="mcpEmptyWarning" class="notice-banner danger" style="display:none;"></div>
-
     <div class="mcp-top-grid">
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Total Enrollment Volume</span><i class="fas fa-users"></i></div><div class="metric-value" id="mcpTotal">--</div><p class="metric-sub" id="mcpTotalSub">--</p></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Completion Rate (%)</span><i class="fas fa-circle-check"></i></div><div class="metric-value" id="mcpCompletion">--</div><p class="metric-sub" id="mcpCompletionSub">--</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Total enrollment volume</span><i class="fas fa-users" aria-hidden="true"></i></div><div class="metric-value" id="mcpTotal">--</div><p class="metric-sub" id="mcpTotalSub">--</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Completion rate</span><i class="fas fa-circle-check" aria-hidden="true"></i></div><div class="metric-value" id="mcpCompletion">--</div><p class="metric-sub" id="mcpCompletionSub">--</p></div>
       <div class="chart-card mcp-fy-compare-card">
-        <div class="card-title" style="margin-bottom:10px;"><h3><i class="fas fa-chart-column"></i>Enrollment Volume by Fiscal Year</h3></div>
-        <div style="position:relative; height:130px;"><canvas id="mcpFyCompareChart"></canvas></div>
+        <div class="card-title" style="margin-bottom:10px;"><h3><i class="fas fa-chart-column" aria-hidden="true"></i>Enrollment volume by fiscal year</h3></div>
+        <div class="chart-box" style="height:130px;"><canvas id="mcpFyCompareChart"></canvas><div class="chart-empty"></div></div>
       </div>
     </div>
-
     <div class="mcp-category-grid" id="mcpCategoryGrid"></div>
-
     <div class="platform-card">
-      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-award"></i>Top 10 Teachers by Completion Rate</h3><span class="meta">Min. 3 enrollments in range</span></div>
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-award" aria-hidden="true"></i>Top 10 teachers by completion rate</h3><span class="meta">Minimum 3 enrollments in the filter</span></div>
       <div class="teacher-board" id="teacherBoard"></div>
     </div>
   </div>
 
-  <!-- RESERVED: Sales Funnel Analytics tab section — build once GA4/CRM funnel-stage data is mapped
+  <!-- RESERVED: Sales Funnel Analytics tab section. Build once GA4/CRM funnel-stage data is mapped
   <div class="tab-section" id="tab-sales-funnel"></div>
   -->
 
   <div class="footer-row">
-    <span><i class="fas fa-circle" style="color:#FFC100; font-size:6px; margin-right:8px;"></i><span id="lastUpdatedLabel">Last updated: --</span> | Data refreshes on load.</span>
-    <span><i class="fas fa-sync-alt" style="margin-right:6px;"></i><span id="footerRangeLabel">Showing filtered marketing funnel data</span></span>
+    <span id="lastUpdatedLabel">--</span>
+    <span id="footerRangeLabel">--</span>
   </div>
 
 </div>
@@ -533,7 +558,7 @@ const MOCK_DAYS = 150; // depth of generated mock history
 function seeded(n){ const x = Math.sin(n * 999.317) * 10000; return x - Math.floor(x); }
 function randInt(seed, min, max){ return Math.floor(min + seeded(seed) * (max - min + 1)); }
 function pick(arr, seed){ return arr[randInt(seed, 0, arr.length - 1)]; }
-function toISODate(d){ return d.toISOString().slice(0,10); }
+function toISODate(d){ const p = n => String(n).padStart(2,'0'); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; } // local date, not UTC
 function daysAgo(n){ return new Date(NOW.getTime() - n*86400000); }
 
 // Safe numeric coercion — treats '', null, undefined, and 'NaN' (any case) as 0.
@@ -804,7 +829,7 @@ MOCK.In_Person_Outreach_Log = (() => {
   let id = 0;
   for (let i = MOCK_DAYS; i >= 0; i -= 3) {
     const d = daysAgo(i);
-    const n = randInt(id+900, 0, 2);
+    const n = randInt(id+900, 1, 2); // sample data: at least one outreach event per visit day
     for (let j = 0; j < n; j++) {
       id++;
       const flyers = randInt(id+901, 20, 220);
@@ -971,105 +996,194 @@ function mapLiveRow(tabKey, raw){
     default: return raw;
   }
 }
+/* =========================================================================================
+   PART 4B — DATA STATUS (live vs. sample)
+   ========================================================================================= */
+const liveTabs = new Set();
+let loadedAt = null;
 
 async function loadLiveDataIfConfigured(){
   const anyConfigured = CONFIG.sheetPublishedBase && Object.values(CONFIG.sheetGids).some(Boolean);
-  if (!anyConfigured) { showFallbackNotice('Displaying mock data. Live Google Sheets sync is not configured — see CONFIG in the page source to connect Marketing_Unified_Database_Backend.xlsx.'); return; }
-  let anyFailed = false;
+  if (!anyConfigured) { paintDataStatus(); return; }
   await Promise.all(TAB_KEYS.map(async (key) => {
     const rows = await fetchSheetTabCSV(key);
-    if (rows && rows.length) {
-      DATA[key] = rows.map(r => mapLiveRow(key, r));
-    } else {
-      anyFailed = true; // keep mock for this tab
-    }
+    if (rows && rows.length) { DATA[key] = rows.map(r => mapLiveRow(key, r)); liveTabs.add(key); }
   }));
-  if (anyFailed) showFallbackNotice('Some tabs could not be reached from the live sheet — showing mock data for those, live data for the rest.');
-  else el('fallbackNotice').style.display = 'none';
+  loadedAt = new Date();
+  paintDataStatus();
   buildFilterOptions();
   renderActiveTab();
 }
-function showFallbackNotice(text){ el('fallbackNoticeText').textContent = text; el('fallbackNotice').style.display = 'flex'; }
+
+function paintDataStatus(){
+  const mode = liveTabs.size === 0 ? 'mock' : (liveTabs.size === TAB_KEYS.length ? 'live' : 'partial');
+  const pill = el('dataStatus');
+  pill.classList.toggle('live', mode === 'live');
+  el('dataStatusText').textContent = mode === 'live' ? 'Live data' : (mode === 'partial' ? 'Partly live data' : 'Sample data');
+  const banner = el('fallbackNotice');
+  if (mode === 'live') { banner.style.display = 'none'; }
+  else {
+    el('fallbackNoticeText').textContent = mode === 'mock'
+      ? 'You are looking at sample data. The live Google Sheets sync is not connected yet, so none of these numbers are real. See CONFIG in the page source to connect Marketing_Unified_Database_Backend.xlsx.'
+      : 'Some tabs could not be reached from the live sheet. Those tabs show sample data; the rest are live.';
+    banner.style.display = 'flex';
+  }
+  const f = d => d.toLocaleString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+  el('lastUpdatedLabel').textContent = mode === 'mock' ? 'Sample data, generated when the page loaded.' : `Live data loaded ${f(loadedAt || NOW)}. Refreshes on page load.`;
+}
 
 /* =========================================================================================
-   PART 5 — GLOBAL FILTER STATE
+   PART 5 — FILTER STATE, DATE MATH, COMPARISON PERIOD
    ========================================================================================= */
+const DAY = 86400000;
 const state = {
-  rangeDays: 30,
-  rangeStart: null,
-  rangeEnd: null,
-  category: 'all',
-  location: 'all',
-  platform: 'all',
-  emailType: 'all',
-  objective: 'all',
-  crmCampaign: 'all',
-  subscription: 'all',
-  fiscalYear: 'all',
-  activeTab: 'overview',
-  trafficSearch: ''
+  rangeDays: 30, rangeStart: null, rangeEnd: null,
+  platform: 'all', location: 'all', emailType: 'all', objective: 'all', crmCampaign: 'all', subscription: 'all',
+  fiscalYear: 'all', activeTab: 'overview', trafficSearch: ''
 };
-
+const startOfDay = d => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
 function applyPresetRange(days){
   state.rangeDays = days;
-  state.rangeEnd = new Date(NOW);
-  state.rangeStart = days === 'all' ? new Date(0) : daysAgo(days - 1);
+  state.rangeEnd = startOfDay(NOW);
+  state.rangeStart = startOfDay(new Date(NOW.getTime() - (days - 1) * DAY));
 }
 applyPresetRange(30);
 
-function inRange(dateStr){
-  if (!dateStr) return true;
-  const d = new Date(dateStr + 'T00:00:00');
-  if (isNaN(d)) return true;
-  return d >= state.rangeStart && d <= new Date(state.rangeEnd.getTime() + 86399000);
+// Accepts 2026-09-15, 20260915 (GA4 export) or any string Date can read. Anything else is excluded, not guessed.
+function parseDay(s){
+  s = str(s);
+  let d;
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) d = new Date(s.slice(0,10) + 'T00:00:00');
+  else if (/^\d{8}$/.test(s)) d = new Date(`${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}T00:00:00`);
+  else d = new Date(s);
+  return isNaN(d) ? null : d;
 }
+function inSpan(dateStr, start, end){
+  const d = parseDay(dateStr);
+  return !!d && d >= start && d < new Date(end.getTime() + DAY);
+}
+const inRange = dateStr => inSpan(dateStr, state.rangeStart, state.rangeEnd);
+
+// Same-length window directly before the selected range, used for every period-over-period badge.
+function compareSpan(){
+  const len = Math.round((state.rangeEnd - state.rangeStart) / DAY) + 1;
+  const end = new Date(state.rangeStart.getTime() - DAY);
+  const start = new Date(end.getTime() - (len - 1) * DAY);
+  return { start, end, len };
+}
+const inPrev = dateStr => { const c = compareSpan(); return inSpan(dateStr, c.start, c.end); };
+
+const fmtShort = d => d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
 function rangeLabel(){
   const f = d => d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
   return `${f(state.rangeStart)} – ${f(state.rangeEnd)}`;
 }
 
 /* =========================================================================================
+   PART 5B — SAFE MATH AND FORMATTING
+   ========================================================================================= */
+const esc = v => String(v === null || v === undefined ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sum = (rows, key) => rows.reduce((a, r) => a + num(r[key]), 0);
+// A rate on a zero denominator is "no answer" (null), never 0%.
+const rate = (a, b, mult = 1) => num(b) > 0 ? num(a) / num(b) * mult : null;
+const fmtRate = (v, d = 1) => v === null ? '--' : v.toFixed(d) + '%';
+const fmtMoney = (v, d = 2) => v === null ? '--' : '$' + v.toLocaleString('en-US', {minimumFractionDigits:d, maximumFractionDigits:d});
+
+function setDelta(id, cur, prev, o = {}){
+  const node = el(id + 'Delta');
+  if (!node) return;
+  const good = o.good || 'up', kind = o.kind || 'count';
+  node.style.display = 'none';
+  if (cur === null || cur === undefined || prev === null || prev === undefined) return;
+  let diff, label;
+  if (kind === 'rate') { diff = cur - prev; label = `${Math.abs(diff).toFixed(1)} pts`; }
+  else { if (prev <= 0) return; diff = (cur - prev) / prev * 100; label = `${Math.abs(diff).toFixed(1)}%`; }
+  const flat = Math.abs(diff) < 0.5;
+  let cls = 'flat', icon = 'fa-minus';
+  if (!flat) {
+    icon = diff > 0 ? 'fa-arrow-up' : 'fa-arrow-down';
+    cls = good === 'neutral' ? 'neutral' : ((diff > 0) === (good === 'up') ? '' : 'down');
+  }
+  const c = compareSpan();
+  node.className = 'metric-change ' + cls;
+  node.title = `Compared with ${fmtShort(c.start)} – ${fmtShort(c.end)}`;
+  node.innerHTML = `<i class="fas ${icon}" aria-hidden="true"></i>${flat ? 'Flat' : label} vs. previous ${c.len} days`;
+  node.style.display = 'inline-flex';
+}
+function paint(list){
+  list.forEach(m => {
+    el(m.id).textContent = m.fmt(m.cur);
+    setDelta(m.id, m.cur, m.prev, m);
+  });
+}
+function injectDeltaNodes(){
+  document.querySelectorAll('.metric-value[id]').forEach(v => {
+    if (el(v.id + 'Delta')) return;
+    const d = document.createElement('div');
+    d.id = v.id + 'Delta'; d.className = 'metric-change'; d.style.display = 'none';
+    v.after(d);
+  });
+}
+
+/* =========================================================================================
    PART 6 — FILTER UI WIRING
    ========================================================================================= */
-function fillSelect(selectEl, options, includeAll = true, allLabel = 'All'){
+function fillSelect(selectEl, options, allLabel){
   selectEl.innerHTML = '';
-  if (includeAll) {
-    const o = document.createElement('option'); o.value = 'all'; o.textContent = allLabel; selectEl.appendChild(o);
-  }
-  options.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; selectEl.appendChild(o); });
+  const o = document.createElement('option'); o.value = 'all'; o.textContent = allLabel; selectEl.appendChild(o);
+  options.forEach(v => { const x = document.createElement('option'); x.value = v; x.textContent = v; selectEl.appendChild(x); });
 }
-function uniq(arr){ return [...new Set(arr)].filter(Boolean).sort(); }
+const uniq = arr => [...new Set(arr)].filter(Boolean).sort();
+function keepSelection(selectEl, key){ selectEl.value = state[key]; if (selectEl.value !== state[key]) { state[key] = 'all'; selectEl.value = 'all'; } }
 
 function buildFilterOptions(){
-  fillSelect(el('filterCategory'), uniq(COURSE_TAXONOMY.map(c => c.category)), true, 'All Categories');
-  fillSelect(el('filterLocation'), uniq([...LOCATIONS, ...OUTREACH_LOCATIONS]), true, 'All Locations');
-  fillSelect(el('filterPlatform'), uniq(PLATFORMS), true, 'All Platforms');
-  fillSelect(el('filterEmailType'), uniq(EMAIL_TYPES), true, 'All Email Types');
-  fillSelect(el('filterObjective'), uniq(OBJECTIVES), true, 'All Objectives');
-  fillSelect(el('filterCrmCampaign'), uniq(DATA.Email_Marketing_Data.map(r => r.campaignCRM)), true, 'All Campaigns');
-  fillSelect(el('filterSubscription'), uniq(DATA.Email_Marketing_Data.map(r => r.subscription)), true, 'All Subscriptions');
-  fillSelect(el('filterFiscalYear'), fiscalYearsInData(), true, 'All Fiscal Years');
+  fillSelect(el('filterLocation'), uniq(DATA.In_Person_Outreach_Log.map(r => r.locationOfOutreachActivity)), 'All locations');
+  fillSelect(el('filterPlatform'), uniq(DATA['Paid Media'].map(r => r.platform)), 'All platforms');
+  fillSelect(el('filterEmailType'), uniq(DATA.Email_Marketing_Data.map(r => r.emailType)), 'All email types');
+  fillSelect(el('filterObjective'), uniq(DATA['Paid Media'].map(r => r.campaignObjective)), 'All objectives');
+  fillSelect(el('filterCrmCampaign'), uniq(DATA.Email_Marketing_Data.map(r => r.campaignCRM)), 'All campaigns');
+  fillSelect(el('filterSubscription'), uniq(DATA.Email_Marketing_Data.map(r => r.subscription)), 'All subscriptions');
+  fillSelect(el('filterFiscalYear'), fiscalYearsInData(), 'All fiscal years');
+  [['filterLocation','location'],['filterPlatform','platform'],['filterEmailType','emailType'],['filterObjective','objective'],
+   ['filterCrmCampaign','crmCampaign'],['filterSubscription','subscription'],['filterFiscalYear','fiscalYear']]
+    .forEach(([id,key]) => keepSelection(el(id), key));
 }
-
-// Pulls every distinct FYxx-xx token actually present in Class: Program Cohort, so the filter
-// always reflects real cohorts rather than a hardcoded list.
+// Pulls every distinct FYxx-xx token actually present in Class: Program Cohort.
 function fiscalYearsInData(){
-  const found = DATA.MCP_Enrollment_Data.map(r => {
-    const m = str(r.classProgramCohort).match(/FY\d{2}-\d{2}/i);
-    return m ? m[0].toUpperCase() : null;
-  });
-  return uniq(found).sort();
+  return uniq(DATA.MCP_Enrollment_Data.map(r => { const m = str(r.classProgramCohort).match(/FY\d{2}-\d{2}/i); return m ? m[0].toUpperCase() : null; }));
 }
 
-// The Enrollment tab runs on Fiscal Year alone — the global date-range and
-// Program Category/Location/Platform/Email Type filters don't apply to it, so hide them there.
+// Each filter only appears on the tabs it actually changes.
 function updateGlobalFilterVisibility(){
-  const onMcp = state.activeTab === 'mcp';
-  el('dateFilterRow').style.display = onMcp ? 'none' : 'flex';
-  document.querySelector('.filter-select-row').style.display = onMcp ? 'none' : 'flex';
+  const tab = state.activeTab;
+  el('dateFilterRow').style.display = tab === 'mcp' ? 'none' : 'flex';
+  let any = false;
+  document.querySelectorAll('#selectRow .fgroup').forEach(g => {
+    const show = g.dataset.tabs.split(' ').includes(tab);
+    g.style.display = show ? 'flex' : 'none';
+    any = any || show;
+  });
+  el('selectRow').style.display = any ? 'flex' : 'none';
+}
+
+function selectTab(tab, focus){
+  document.querySelectorAll('.tab').forEach(t => {
+    const on = t.dataset.tab === tab;
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
+    t.tabIndex = on ? 0 : -1;
+    if (on && focus) t.focus();
+  });
+  document.querySelectorAll('.tab-section').forEach(s => s.classList.toggle('active', s.id === 'tab-' + tab));
+  state.activeTab = tab;
+  try { history.replaceState(null, '', '#' + tab); } catch (e) {}
+  el('exportCsvBtn').disabled = !el('tab-' + tab).querySelector('table');
+  updateGlobalFilterVisibility();
+  renderActiveTab();
 }
 
 function wireFilters(){
+  const applyBtn = el('applyCustom');
+  const resetApplied = () => { applyBtn.classList.remove('applied'); applyBtn.textContent = 'Apply'; el('rangeError').textContent = ''; };
   document.querySelectorAll('#dateFilterRow .filter-tag').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('#dateFilterRow .filter-tag').forEach(b => b.classList.remove('active'));
@@ -1077,602 +1191,597 @@ function wireFilters(){
       const r = btn.dataset.range;
       el('customRangeBox').style.display = (r === 'custom') ? 'flex' : 'none';
       if (r === 'custom') return;
-      applyPresetRange(r === '365' ? 365 : (r === '90' ? 90 : (r === '7' ? 7 : 30)));
+      applyPresetRange(Number(r));
       renderActiveTab();
     });
   });
-  el('applyCustom').addEventListener('click', () => {
+  el('customStart').addEventListener('input', resetApplied);
+  el('customEnd').addEventListener('input', resetApplied);
+  applyBtn.addEventListener('click', () => {
     const s = el('customStart').value, e = el('customEnd').value;
-    if (!s || !e) return;
-    state.rangeStart = new Date(s + 'T00:00:00');
-    state.rangeEnd = new Date(e + 'T00:00:00');
-    state.rangeDays = 'custom';
+    if (!s || !e) { el('rangeError').textContent = 'Pick a start and an end date.'; return; }
+    if (s > e) { el('rangeError').textContent = 'The start date has to come before the end date.'; return; }
+    state.rangeStart = parseDay(s); state.rangeEnd = parseDay(e); state.rangeDays = 'custom';
+    applyBtn.classList.add('applied'); applyBtn.innerHTML = '&#10003; Applied'; el('rangeError').textContent = '';
     renderActiveTab();
   });
 
   const bind = (id, key) => el(id).addEventListener('change', (e) => { state[key] = e.target.value; renderActiveTab(); });
-  bind('filterCategory','category'); bind('filterLocation','location'); bind('filterPlatform','platform');
-  bind('filterEmailType','emailType'); bind('filterObjective','objective'); bind('filterCrmCampaign','crmCampaign');
+  bind('filterLocation','location'); bind('filterPlatform','platform'); bind('filterEmailType','emailType');
+  bind('filterObjective','objective'); bind('filterCrmCampaign','crmCampaign');
   bind('filterSubscription','subscription'); bind('filterFiscalYear','fiscalYear');
-
   el('trafficSearch').addEventListener('input', (e) => { state.trafficSearch = e.target.value.toLowerCase(); renderTraffic(); });
 
-  document.querySelectorAll('.tab-avatar').forEach(t => {
-    t.addEventListener('click', () => {
-      document.querySelectorAll('.tab-avatar').forEach(x => x.classList.remove('active'));
-      document.querySelectorAll('.tab-section').forEach(x => x.classList.remove('active'));
-      t.classList.add('active');
-      const tab = t.dataset.tab;
-      el('tab-' + tab).classList.add('active');
-      state.activeTab = tab;
-      updateGlobalFilterVisibility();
-      renderActiveTab();
+  const tabs = [...document.querySelectorAll('.tab')];
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => selectTab(t.dataset.tab));
+    t.addEventListener('keydown', (ev) => {
+      const k = ev.key; let n = null;
+      if (k === 'ArrowRight') n = (i + 1) % tabs.length;
+      else if (k === 'ArrowLeft') n = (i - 1 + tabs.length) % tabs.length;
+      else if (k === 'Home') n = 0; else if (k === 'End') n = tabs.length - 1;
+      if (n !== null) { ev.preventDefault(); selectTab(tabs[n].dataset.tab, true); }
     });
   });
 
   el('exportCsvBtn').addEventListener('click', exportActiveTabCSV);
-  el('exportPdfBtn').addEventListener('click', () => window.print());
+  const tabBar = el('tabSwitcher');
+  const syncStuck = () => tabBar.classList.toggle('stuck', tabBar.getBoundingClientRect().top <= 0.5);
+  window.addEventListener('scroll', syncStuck, { passive: true });
+  el('exportPdfBtn').addEventListener('click', exportPagePDF);
+  window.addEventListener('beforeprint', () => { snapChartsToFinalState(); if (!flattened.length) flattenChartsForExport(); });
+  window.addEventListener('afterprint', () => { const s = el('exportPageSize'); if (s) s.remove(); restoreCharts(); if (savedTitle !== null) { document.title = savedTitle; savedTitle = null; } });
 }
 
 /* =========================================================================================
    PART 7 — CHART REGISTRY & THEME
+   Series colors follow the brand: Amber, a Navy-family sky, Orange, Mint, Marigold, in that fixed order.
    ========================================================================================= */
 Chart.defaults.font.family = "'Montserrat', sans-serif";
-Chart.defaults.color = '#7a9d97';
-const PALETTE = { gold:'#FFC100', orange:'#FF7400', teal:'#3FE0A5', purple:'#B18CFF', blue:'#5AC8FA', pink:'#FF6B9D', ice:'#DFF0EE' };
-const gridColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.size = 12;
+Chart.defaults.color = 'rgba(223,240,238,0.68)';
+const C = { amber:'#FFC100', sky:'#2FA8D0', orange:'#FF7400', mint:'#3FE0A5', marigold:'#FF9A00', mist:'#DFF0EE', surface:'#0a1d24' };
+const SERIES = [C.amber, C.sky, C.orange, C.mint, C.marigold];
+const gridColor = 'rgba(223,240,238,0.08)';
+const legendCfg = (extra = {}) => ({ labels: { color:'rgba(223,240,238,0.82)', boxWidth:10, boxHeight:10, usePointStyle:true, pointStyle:'rectRounded', ...extra } });
 const charts = {};
-function makeChart(id, config){
-  if (charts[id]) charts[id].destroy();
+function isEmptyData(cfg){
+  const ds = (cfg.data && cfg.data.datasets) || [];
+  return !ds.length || ds.every(d => !d.data.length || d.data.every(v => !num(v)));
+}
+function makeChart(id, config, emptyMsg){
   const ctx = el(id);
   if (!ctx) return;
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+  const box = ctx.parentElement, empty = box.querySelector('.chart-empty');
+  if (isEmptyData(config)) {
+    ctx.style.display = 'none';
+    if (empty) { empty.textContent = emptyMsg || 'No data in this range. Try widening your date filter.'; empty.style.display = 'flex'; }
+    return;
+  }
+  ctx.style.display = ''; if (empty) empty.style.display = 'none';
+  const title = ctx.closest('.chart-card, .category-card')?.querySelector('h3, h4');
+  ctx.setAttribute('role', 'img');
+  ctx.setAttribute('aria-label', (title ? title.textContent + '. ' : '') + 'Chart. The same numbers appear in the tables and cards on this tab.');
   charts[id] = new Chart(ctx, config);
   return charts[id];
 }
+const baseScales = (horizontal) => horizontal
+  ? { x: { grid:{ color:gridColor }, border:{ display:false }, beginAtZero:true }, y: { grid:{ display:false }, border:{ display:false } } }
+  : { x: { grid:{ display:false }, border:{ color:gridColor } }, y: { grid:{ color:gridColor }, border:{ display:false }, beginAtZero:true } };
+const barStyle = { borderRadius:4, borderSkipped:false, maxBarThickness:28 };
+const fmtTick = v => v >= 1000 ? (v / 1000) + 'k' : v;
 
-/* =========================================================================================
-   PART 8 — RENDER: TAB 1 EXECUTIVE OVERVIEW
-   ========================================================================================= */
-function renderOverview(){
-  const rows = DATA.GA4_Executive_Overview.filter(r => inRange(r.date));
-  const totalUsers = rows.reduce((a,r) => a + num(r.totalUsers), 0);
-  const activeUsers = rows.reduce((a,r) => a + num(r.activeUsers), 0);
-  const sessions = rows.reduce((a,r) => a + num(r.sessions), 0);
-  const avgEngagement = rows.length ? rows.reduce((a,r) => a + num(r.engagementRate), 0) / rows.length : 0;
-  const keyEvents = rows.reduce((a,r) => a + num(r.keyEvents), 0);
-  const reach = rows.reduce((a,r) => a + num(r.reach), 0);
-
-  const paidRows = DATA['Paid Media'].filter(r => inRange(r.date) && (state.platform === 'all' || r.platform === state.platform));
-  const spend = paidRows.reduce((a,r) => a + num(r.spend), 0);
-
-  const emailRows = DATA.Email_Marketing_Data.filter(r => inRange(r.date) && (state.emailType === 'all' || r.emailType === state.emailType));
-  const delivered = emailRows.reduce((a,r) => a + num(r.delivered), 0);
-
-  const mcpRows = filteredMcp();
-  const enrollments = mcpRows.length;
-
-  el('ovTotalUsers').textContent = fmtInt(totalUsers);
-  el('ovActiveUsers').textContent = fmtInt(activeUsers);
-  el('ovSessions').textContent = fmtInt(sessions);
-  el('ovEngagement').textContent = fmtPct(avgEngagement);
-  el('ovKeyEvents').textContent = fmtInt(keyEvents);
-  el('ovSpend').textContent = fmtUSD(spend);
-  el('ovEmailDelivered').textContent = fmtInt(delivered);
-  el('ovEnrollments').textContent = fmtInt(enrollments);
-  el('ovTrendRangeLabel').textContent = rangeLabel();
-
-  makeChart('ovTrendChart', {
+function lineChart(id, rows, key, label, color){
+  makeChart(id, {
     type: 'line',
-    data: {
-      labels: rows.map(r => r.date),
-      datasets: [
-        { label: 'Active Users', data: rows.map(r => r.activeUsers), borderColor: PALETTE.gold, backgroundColor: 'rgba(255,193,0,0.08)', fill: true, tension: 0.35, yAxisID: 'y', pointRadius: 0 },
-        { label: 'Key Events', data: rows.map(r => r.keyEvents), borderColor: PALETTE.blue, backgroundColor: 'rgba(90,200,250,0.08)', fill: true, tension: 0.35, yAxisID: 'y1', pointRadius: 0 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      scales: {
-        x: { grid: { color: gridColor }, ticks: { maxTicksLimit: 8 } },
-        y: { position: 'left', grid: { color: gridColor } },
-        y1: { position: 'right', grid: { display: false } }
-      },
-      plugins: { legend: { labels: { color: '#dceeE9' } } }
-    }
-  });
-
-  makeChart('ovReachDonut', {
-    type: 'doughnut',
-    data: {
-      labels: ['Organic Reach', 'Paid Reach', 'Email Reach'],
-      datasets: [{ data: [Math.round(reach*0.55), Math.round(reach*0.3), Math.round(reach*0.15)],
-        backgroundColor: [PALETTE.teal, PALETTE.gold, PALETTE.blue], borderWidth: 0 }]
-    },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#dceeE9' } } } }
+    data: { labels: rows.map(r => fmtShort(parseDay(r.date))), datasets: [{ label, data: rows.map(r => num(r[key])), borderColor: color, backgroundColor: color + '1f', fill: true, tension: 0.3, borderWidth: 2, pointRadius: 0, pointHoverRadius: 5, pointHoverBackgroundColor: color, pointHoverBorderColor: C.surface, pointHoverBorderWidth: 2 }] },
+    options: { responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      scales: { x: { grid:{ display:false }, border:{ color:gridColor }, ticks:{ maxTicksLimit:7 } }, y: { grid:{ color:gridColor }, border:{ display:false }, beginAtZero:true, ticks:{ callback:fmtTick } } },
+      plugins: { legend:{ display:false } } }
   });
 }
 
 /* =========================================================================================
-   PART 9 — RENDER: TAB 2 TRAFFIC & USER ACQUISITION
+   PART 8 — OVERVIEW (funnel, highlights, KPIs, trends)
+   ========================================================================================= */
+function ovAgg(inFn){
+  const ga = DATA.GA4_Executive_Overview.filter(r => inFn(r.date));
+  const asFraction = ga.length && ga.every(r => num(r.engagementRate) <= 1);
+  const sessions = sum(ga, 'sessions');
+  const engaged = ga.reduce((a, r) => a + num(r.sessions) * num(r.engagementRate) * (asFraction ? 1 : 0.01), 0);
+  const paid = DATA['Paid Media'].filter(r => inFn(r.date) && (state.platform === 'all' || r.platform === state.platform));
+  const em = DATA.Email_Marketing_Data.filter(r => inFn(r.date) && (state.emailType === 'all' || r.emailType === state.emailType));
+  const enr = DATA.MCP_Enrollment_Data.filter(r => inFn(r.enrollmentDate));
+  return { rows: ga, n: ga.length, users: sum(ga,'totalUsers'), active: sum(ga,'activeUsers'), sessions, engaged,
+    engRate: rate(engaged, sessions, 100), keyEvents: sum(ga,'keyEvents'),
+    spend: sum(paid,'spend'), hasPaid: paid.length > 0, delivered: sum(em,'delivered'), hasEmail: em.length > 0,
+    enrollments: enr.length, hasEnr: enr.length > 0 };
+}
+
+function renderFunnel(a){
+  const stages = [
+    { label:'Sessions', sub:'All sources', v:a.sessions },
+    { label:'Engaged sessions', sub:'Sessions × engagement rate', v:a.engaged },
+    { label:'Key events', sub:'Enrollment submits and sign-ups', v:a.keyEvents },
+    { label:'Enrollments', sub:'MCP class roster', v:a.enrollments }
+  ];
+  const box = el('funnel');
+  if (!a.n || a.sessions <= 0) { box.innerHTML = `<div class="empty-state"><p class="big">No traffic data in this range.</p><p class="small">Try widening your date filter.</p></div>`; return; }
+  box.innerHTML = stages.map((s, i) => {
+    const width = Math.min(100, Math.max(0.6, s.v / stages[0].v * 100));
+    const step = i === 0 ? 'Top of the funnel' : `${fmtRate(rate(s.v, stages[i-1].v, 100))} of ${stages[i-1].label.toLowerCase()}`;
+    return `<div class="f-row"><div class="f-label">${esc(s.label)}<small>${esc(s.sub)}</small></div>
+      <div class="f-track"><div class="f-bar" style="width:calc(${width.toFixed(2)}% * 0.62);"></div><span class="f-val">${fmtInt(s.v)}</span><span class="f-step">${esc(step)}</span></div></div>`;
+  }).join('');
+}
+
+function highlightsFor(){
+  const out = [];
+  const traffic = DATA.GA4_Traffic_Acquisition.filter(r => inRange(r.date));
+  const byCh = {}; traffic.forEach(r => byCh[r.defaultChannelGrouping] = (byCh[r.defaultChannelGrouping] || 0) + num(r.sessions));
+  const chTotal = Object.values(byCh).reduce((a, b) => a + b, 0);
+  const topCh = Object.entries(byCh).sort((a, b) => b[1] - a[1])[0];
+  if (topCh && chTotal > 0) out.push(`<strong>${esc(topCh[0])}</strong> brings the most traffic, at ${fmtRate(rate(topCh[1], chTotal, 100), 0)} of sessions.`);
+
+  const conv = {}; DATA.GA4_Isolated_Conversions.filter(r => inRange(r.date)).forEach(r => {
+    const c = conv[r.pagePath] || (conv[r.pagePath] = { e: 0, s: 0 }); c.e += num(r.eventCount); c.s += num(r.sessionsOnPage); });
+  const best = Object.entries(conv).filter(([, v]) => v.s >= 100).map(([p, v]) => [p, rate(v.e, v.s, 100)]).sort((a, b) => b[1] - a[1])[0];
+  if (best) out.push(`<strong>${esc(best[0])}</strong> converts best, at ${fmtRate(best[1])} of its sessions.`);
+
+  const paid = DATA['Paid Media'].filter(r => inRange(r.date));
+  const plat = {}; paid.forEach(r => { const p = plat[r.platform] || (plat[r.platform] = { s: 0, c: 0 }); p.s += num(r.spend); p.c += num(r.linkClicks); });
+  const cpcs = Object.entries(plat).map(([k, v]) => [k, rate(v.s, v.c)]).filter(x => x[1] !== null).sort((a, b) => a[1] - b[1]);
+  if (cpcs.length > 1) out.push(`<strong>${esc(cpcs[0][0])}</strong> costs less per click: ${fmtMoney(cpcs[0][1])} against ${fmtMoney(cpcs[cpcs.length-1][1])} on ${esc(cpcs[cpcs.length-1][0])}.`);
+
+  const em = DATA.Email_Marketing_Data.filter(r => inRange(r.date));
+  const t = k => { const x = em.filter(r => r.emailType === k); return rate(sum(x,'opens'), sum(x,'delivered'), 100); };
+  const oa = t('AUTOMATED'), or = t('REGULAR');
+  if (oa !== null && or !== null) out.push(`<strong>${oa >= or ? 'Automated emails' : 'One-off campaigns'}</strong> get opened more: ${fmtRate(Math.max(oa, or))} against ${fmtRate(Math.min(oa, or))}.`);
+  return out;
+}
+
+function renderOverview(){
+  const a = ovAgg(inRange);
+  const cmp = state.rangeDays === 'all' ? null : ovAgg(inPrev);
+  const P = cmp && cmp.n ? cmp : null;
+  paint([
+    { id:'ovTotalUsers', cur:a.users, prev:P && P.users, fmt:fmtInt },
+    { id:'ovActiveUsers', cur:a.active, prev:P && P.active, fmt:fmtInt },
+    { id:'ovSessions', cur:a.sessions, prev:P && P.sessions, fmt:fmtInt },
+    { id:'ovEngagement', cur:a.engRate, prev:P && P.engRate, fmt:v => fmtRate(v), kind:'rate' },
+    { id:'ovKeyEvents', cur:a.keyEvents, prev:P && P.keyEvents, fmt:fmtInt },
+    { id:'ovSpend', cur:a.spend, prev:P && P.hasPaid ? P.spend : null, fmt:fmtUSD, good:'neutral' },
+    { id:'ovEmailDelivered', cur:a.delivered, prev:P && P.hasEmail ? P.delivered : null, fmt:fmtInt, good:'neutral' },
+    { id:'ovEnrollments', cur:a.enrollments, prev:cmp && cmp.hasEnr ? cmp.enrollments : null, fmt:fmtInt }
+  ]);
+  el('ovTrendRangeLabel').textContent = rangeLabel();
+  el('funnelRangeLabel').textContent = rangeLabel();
+  el('hlRangeLabel').textContent = 'This range';
+  renderFunnel(a);
+  const hl = highlightsFor();
+  el('highlights').innerHTML = hl.length
+    ? hl.map(t => `<li><i class="fas fa-circle" aria-hidden="true"></i><span>${t}</span></li>`).join('')
+    : `<li><span>Not enough data in this range to call anything out.</span></li>`;
+  lineChart('ovUsersChart', a.rows, 'activeUsers', 'Active users', C.amber);
+  lineChart('ovEventsChart', a.rows, 'keyEvents', 'Key events', C.sky);
+}
+
+/* =========================================================================================
+   PART 9 — TRAFFIC
    ========================================================================================= */
 function renderTraffic(){
   const rows = DATA.GA4_Traffic_Acquisition.filter(r => inRange(r.date));
   el('trafficRangeLabel').textContent = rangeLabel();
-
   const byChannel = {};
-  rows.forEach(r => { byChannel[r.defaultChannelGrouping] = (byChannel[r.defaultChannelGrouping]||0) + num(r.sessions); });
-  const totalSessions = Object.values(byChannel).reduce((a,b)=>a+b,0);
-  const channelEntries = Object.entries(byChannel).sort((a,b) => b[1]-a[1]);
+  rows.forEach(r => { byChannel[r.defaultChannelGrouping] = (byChannel[r.defaultChannelGrouping] || 0) + num(r.sessions); });
+  const total = Object.values(byChannel).reduce((a, b) => a + b, 0);
+  const entries = Object.entries(byChannel).sort((a, b) => b[1] - a[1]);
 
-  makeChart('trafficDonut', {
-    type: 'doughnut',
-    data: { labels: channelEntries.map(e=>e[0]), datasets: [{ data: channelEntries.map(e=>e[1]),
-      backgroundColor: [PALETTE.gold, PALETTE.blue, PALETTE.purple, PALETTE.teal, PALETTE.orange, PALETTE.pink, PALETTE.ice, '#5A6E6A'], borderWidth: 0 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color:'#dceeE9', boxWidth:10, font:{size:10.5} } } } }
+  makeChart('trafficBar', {
+    type: 'bar',
+    data: { labels: entries.map(e => e[0]), datasets: [{ label:'Sessions', data: entries.map(e => e[1]), backgroundColor: C.amber, ...barStyle }] },
+    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, scales: baseScales(true), plugins:{ legend:{ display:false } } }
   });
 
-  el('trafficChannelBody').innerHTML = channelEntries.map(([ch,s]) =>
-    `<tr><td>${ch}</td><td>${fmtInt(s)}</td><td>${fmtPct(safeDiv(s,totalSessions)*100)}</td></tr>`).join('') ||
-    `<tr><td colspan="3" style="text-align:center;color:#7a9d97;">No data in this range.</td></tr>`;
+  el('trafficChannelBody').innerHTML = entries.map(([ch, s]) =>
+    `<tr><td>${esc(ch)}</td><td>${fmtInt(s)}</td><td>${fmtRate(rate(s, total, 100))}</td></tr>`).join('') ||
+    `<tr><td colspan="3" class="muted">No data in this range.</td></tr>`;
 
-  const search = state.trafficSearch;
-  const tableRows = rows.filter(r => !search ||
-    r.sourceMedium.toLowerCase().includes(search) || r.campaign.toLowerCase().includes(search) || r.utmContent.toLowerCase().includes(search)
-  ).slice(0, 200);
-  el('trafficTableBody').innerHTML = tableRows.map(r =>
-    `<tr><td>${r.sourceMedium}</td><td>${r.campaign}</td><td>${r.utmContent}</td><td>${fmtInt(r.sessions)}</td><td>${fmtInt(r.engagedSessions)}</td><td>${fmtInt(r.activeUsers)}</td></tr>`
-  ).join('') || `<tr><td colspan="6" style="text-align:center;color:#7a9d97;">No matching rows.</td></tr>`;
+  const q = state.trafficSearch;
+  const match = rows.filter(r => !q || r.sourceMedium.toLowerCase().includes(q) || r.campaign.toLowerCase().includes(q) || r.utmContent.toLowerCase().includes(q));
+  el('trafficTableBody').innerHTML = match.slice(0, 200).map(r =>
+    `<tr><td>${esc(r.sourceMedium)}</td><td>${esc(r.campaign)}</td><td>${esc(r.utmContent)}</td><td>${fmtInt(r.sessions)}</td><td>${fmtInt(r.engagedSessions)}</td><td>${fmtInt(r.activeUsers)}</td></tr>`
+  ).join('') || `<tr><td colspan="6" class="muted">${q ? 'No rows match your search.' : 'No data in this range.'}</td></tr>`;
+  el('trafficNote').textContent = match.length > 200 ? `Showing the first 200 of ${fmtInt(match.length)} rows. Use search to narrow them.` : '';
 }
 
 /* =========================================================================================
-   PART 10 — RENDER: TAB 3 CONTENT & ENGAGEMENT
+   PART 10 — CONTENT
    ========================================================================================= */
 function renderContent(){
   const rows = DATA.GA4_Page_Engagement.filter(r => inRange(r.date));
   el('contentRangeLabel').textContent = rangeLabel();
   const byPage = {};
   rows.forEach(r => {
-    if (!byPage[r.pagePath]) byPage[r.pagePath] = { views:0, viewsPerUserSum:0, timeSum:0, n:0 };
-    const p = byPage[r.pagePath];
-    p.views += num(r.views); p.viewsPerUserSum += num(r.viewsPerUser); p.timeSum += num(r.avgEngagementTimeSec); p.n++;
+    const p = byPage[r.pagePath] || (byPage[r.pagePath] = { views:0, vpu:0, time:0, n:0 });
+    p.views += num(r.views); p.vpu += num(r.viewsPerUser); p.time += num(r.avgEngagementTimeSec); p.n++;
   });
-  const pageEntries = Object.entries(byPage).map(([path, v]) => ({
-    path, views: v.views, viewsPerUser: safeDiv(v.viewsPerUserSum, v.n), avgTime: safeDiv(v.timeSum, v.n)
-  })).sort((a,b) => b.views - a.views);
-
-  const top10 = pageEntries.slice(0, 10);
+  const entries = Object.entries(byPage).map(([path, v]) => ({ path, views:v.views, vpu:v.vpu / v.n, time:v.time / v.n })).sort((a, b) => b.views - a.views);
+  const top = entries.slice(0, 10);
   makeChart('contentBarChart', {
     type: 'bar',
-    data: { labels: top10.map(p=>p.path), datasets: [{ label: 'Views', data: top10.map(p=>p.views), backgroundColor: PALETTE.gold, borderRadius: 6 }] },
-    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      scales: { x: { grid: { color: gridColor } }, y: { grid: { display: false } } },
-      plugins: { legend: { display: false } } }
+    data: { labels: top.map(p => p.path), datasets: [{ label:'Views', data: top.map(p => p.views), backgroundColor: C.amber, ...barStyle }] },
+    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, scales: baseScales(true), plugins:{ legend:{ display:false } } }
   });
-
-  el('contentTableBody').innerHTML = pageEntries.map(p =>
-    `<tr><td>${p.path}</td><td>${fmtInt(p.views)}</td><td>${p.viewsPerUser.toFixed(2)}</td><td>${fmtDuration(p.avgTime)}</td></tr>`
-  ).join('') || `<tr><td colspan="4" style="text-align:center;color:#7a9d97;">No data in this range.</td></tr>`;
+  el('contentTableBody').innerHTML = entries.map(p =>
+    `<tr><td>${esc(p.path)}</td><td>${fmtInt(p.views)}</td><td>${p.vpu.toFixed(2)}</td><td>${fmtDuration(p.time)}</td></tr>`
+  ).join('') || `<tr><td colspan="4" class="muted">No data in this range.</td></tr>`;
 }
 
 /* =========================================================================================
-   PART 11 — RENDER: TAB 4 CONVERSIONS & KEY EVENTS DEEP-DIVE
+   PART 11 — CONVERSIONS
    ========================================================================================= */
 function renderConversions(){
   const rows = DATA.GA4_Isolated_Conversions.filter(r => inRange(r.date));
   el('conversionsRangeLabel').textContent = rangeLabel();
-
   const byEvent = {};
-  rows.forEach(r => { byEvent[r.eventName] = (byEvent[r.eventName]||0) + num(r.eventCount); });
-  const eventNames = Object.keys(byEvent);
-
-  el('conversionsKpiGrid').innerHTML = eventNames.map(name => {
-    const isPrimary = DASHBOARD_CONFIG.primaryKeyEvents.includes(name);
-    return `<div class="kpi-mini"><div class="lbl">${isPrimary ? '<i class="fas fa-star" style="color:#FFC100;font-size:10px;margin-right:6px;"></i>' : ''}${name}</div>
+  rows.forEach(r => { byEvent[r.eventName] = (byEvent[r.eventName] || 0) + num(r.eventCount); });
+  el('conversionsKpiGrid').innerHTML = Object.keys(byEvent).map(name => {
+    const primary = DASHBOARD_CONFIG.primaryKeyEvents.includes(name);
+    return `<div class="kpi-mini"><div class="lbl">${primary ? '<i class="fas fa-star" style="color:var(--amber);font-size:12px;margin-right:6px;" title="Primary key event" aria-label="Primary key event"></i>' : ''}${esc(name)}</div>
       <div class="val">${fmtInt(byEvent[name])}</div><div class="sub">key events in range</div></div>`;
-  }).join('') || `<div class="empty-state"><p class="big">No key events in this range.</p></div>`;
+  }).join('') || `<div class="empty-state"><p class="big">No key events in this range.</p><p class="small">Try widening your date filter.</p></div>`;
 
-  const bySource = {};
-  rows.forEach(r => { bySource[r.pagePath] = (bySource[r.pagePath]||0) + num(r.eventCount); });
-  const topSources = Object.entries(bySource).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  const byPage = {};
+  rows.forEach(r => { byPage[r.pagePath] = (byPage[r.pagePath] || 0) + num(r.eventCount); });
+  const top = Object.entries(byPage).sort((a, b) => b[1] - a[1]).slice(0, 8);
   makeChart('conversionsBarChart', {
     type: 'bar',
-    data: { labels: topSources.map(s=>s[0]), datasets: [{ label: 'Key Events', data: topSources.map(s=>s[1]), backgroundColor: PALETTE.purple, borderRadius: 6 }] },
-    options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: gridColor } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } }
+    data: { labels: top.map(s => s[0]), datasets: [{ label:'Key events', data: top.map(s => s[1]), backgroundColor: C.amber, ...barStyle }] },
+    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, scales: baseScales(true), plugins:{ legend:{ display:false } } }
   });
 
-  el('conversionsTableBody').innerHTML = rows.slice(0, 200).map(r => {
-    const rate = safeDiv(r.eventCount, r.sessionsOnPage) * 100;
-    return `<tr><td>${r.pagePath}</td><td>${r.eventName}</td><td>${fmtInt(r.eventCount)}</td><td>${fmtInt(r.sessionsOnPage)}</td><td>${fmtPct(rate,2)}</td></tr>`;
-  }).join('') || `<tr><td colspan="5" style="text-align:center;color:#7a9d97;">No conversions in this range.</td></tr>`;
+  el('conversionsTableBody').innerHTML = rows.slice(0, 200).map(r =>
+    `<tr><td>${esc(r.pagePath)}</td><td>${esc(r.eventName)}</td><td>${fmtInt(r.eventCount)}</td><td>${fmtInt(r.sessionsOnPage)}</td><td>${fmtRate(rate(r.eventCount, r.sessionsOnPage, 100), 2)}</td></tr>`
+  ).join('') || `<tr><td colspan="5" class="muted">No conversions in this range.</td></tr>`;
+  el('conversionsNote').textContent = rows.length > 200 ? `Showing the first 200 of ${fmtInt(rows.length)} rows.` : '';
 }
 
 /* =========================================================================================
-   PART 12 — RENDER: TAB 5 PAID MEDIA
+   PART 12 — PAID MEDIA
    ========================================================================================= */
-function renderPaid(){
-  const rows = DATA['Paid Media'].filter(r => inRange(r.date)
+function paidRows(inFn){
+  return DATA['Paid Media'].filter(r => inFn(r.date)
     && (state.platform === 'all' || r.platform === state.platform)
     && (state.objective === 'all' || r.campaignObjective === state.objective));
-
-  const spend = rows.reduce((a,r)=>a+num(r.spend),0);
-  const impressions = rows.reduce((a,r)=>a+num(r.impressions),0);
-  const reach = rows.reduce((a,r)=>a+num(r.reach),0);
-  const clicks = rows.reduce((a,r)=>a+num(r.linkClicks),0);
-  const leads = rows.reduce((a,r)=>a+num(r.leads),0);
-
-  el('paidSpend').textContent = fmtUSD(spend);
-  el('paidImpressions').textContent = fmtInt(impressions);
-  el('paidReach').textContent = fmtInt(reach);
-  el('paidClicks').textContent = fmtInt(clicks);
-  el('paidLeads').textContent = fmtInt(leads);
-  el('paidCtr').textContent = fmtPct(safeDiv(clicks,impressions)*100, 2);
-  el('paidCpc').textContent = fmtUSD2(safeDiv(spend,clicks));
-  el('paidCpm').textContent = fmtUSD2(safeDiv(spend,impressions)*1000);
+}
+function paidAgg(rows){
+  const a = { n: rows.length, spend: sum(rows,'spend'), impressions: sum(rows,'impressions'), reach: sum(rows,'reach'), clicks: sum(rows,'linkClicks'), leads: sum(rows,'leads') };
+  a.ctr = rate(a.clicks, a.impressions, 100); a.cpc = rate(a.spend, a.clicks); a.cpm = rate(a.spend, a.impressions, 1000);
+  return a;
+}
+function renderPaid(){
+  const rows = paidRows(inRange);
+  const a = paidAgg(rows);
+  const p = state.rangeDays === 'all' ? null : paidAgg(paidRows(inPrev));
+  const P = p && p.n ? p : null;
+  paint([
+    { id:'paidSpend', cur:a.spend, prev:P && P.spend, fmt:fmtUSD, good:'neutral' },
+    { id:'paidImpressions', cur:a.impressions, prev:P && P.impressions, fmt:fmtInt },
+    { id:'paidReach', cur:a.reach, prev:P && P.reach, fmt:fmtInt },
+    { id:'paidClicks', cur:a.clicks, prev:P && P.clicks, fmt:fmtInt },
+    { id:'paidLeads', cur:a.leads, prev:P && P.leads, fmt:fmtInt },
+    { id:'paidCtr', cur:a.ctr, prev:P && P.ctr, fmt:v => fmtRate(v, 2), kind:'rate' },
+    { id:'paidCpc', cur:a.cpc, prev:P && P.cpc, fmt:v => fmtMoney(v), good:'down' },
+    { id:'paidCpm', cur:a.cpm, prev:P && P.cpm, fmt:v => fmtMoney(v), good:'neutral' }
+  ]);
 
   const byCampaign = {};
   rows.forEach(r => {
-    if (!byCampaign[r.campaign]) byCampaign[r.campaign] = { spend:0, clicks:0, platform:r.platform, objective:r.campaignObjective, impressions:0, leads:0 };
-    const c = byCampaign[r.campaign];
+    const c = byCampaign[r.campaign] || (byCampaign[r.campaign] = { spend:0, clicks:0, impressions:0, leads:0, platform:r.platform, objective:r.campaignObjective });
     c.spend += num(r.spend); c.clicks += num(r.linkClicks); c.impressions += num(r.impressions); c.leads += num(r.leads);
   });
-  const campaignEntries = Object.entries(byCampaign).sort((a,b) => b[1].spend - a[1].spend).slice(0, 12);
-
-  makeChart('paidComboChart', {
+  const entries = Object.entries(byCampaign).sort((a, b) => b[1].spend - a[1].spend).slice(0, 12);
+  const top8 = entries.slice(0, 8);
+  const hbar = (id, label, key, color) => makeChart(id, {
     type: 'bar',
-    data: {
-      labels: campaignEntries.map(c=>c[0]),
-      datasets: [
-        { label: 'Spend (USD)', data: campaignEntries.map(c=>c[1].spend), backgroundColor: PALETTE.orange, yAxisID: 'y', borderRadius: 6 },
-        { type: 'line', label: 'Link Clicks', data: campaignEntries.map(c=>c[1].clicks), borderColor: PALETTE.blue, backgroundColor: PALETTE.blue, yAxisID: 'y1', tension: 0.3 }
-      ]
-    },
-    options: { responsive: true, maintainAspectRatio: false,
-      scales: { x: { grid: { display:false }, ticks: { maxRotation: 40, minRotation: 40 } }, y: { position:'left', grid:{color:gridColor} }, y1: { position:'right', grid:{display:false} } },
-      plugins: { legend: { labels: { color:'#dceeE9' } } } }
+    data: { labels: top8.map(c => c[0]), datasets: [{ label, data: top8.map(c => c[1][key]), backgroundColor: color, ...barStyle }] },
+    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, scales: baseScales(true), plugins:{ legend:{ display:false } } }
   });
+  hbar('paidSpendChart', 'Spend (USD)', 'spend', C.orange);
+  hbar('paidClicksChart', 'Link clicks', 'clicks', C.sky);
 
-  el('paidTableBody').innerHTML = campaignEntries.map(([name,c]) =>
-    `<tr><td><span class="badge ${c.platform==='Meta Ads'?'blue':'gold'}">${c.platform}</span></td><td>${name}</td><td>${c.objective}</td><td>${fmtUSD2(c.spend)}</td><td>${fmtInt(c.impressions)}</td><td>${fmtInt(c.clicks)}</td><td>${fmtInt(c.leads)}</td><td>${fmtPct(safeDiv(c.clicks,c.impressions)*100,2)}</td><td>${fmtUSD2(safeDiv(c.spend,c.clicks))}</td></tr>`
-  ).join('') || `<tr><td colspan="9" style="text-align:center;color:#7a9d97;">No campaigns match these filters.</td></tr>`;
+  el('paidTableBody').innerHTML = entries.map(([name, c]) =>
+    `<tr><td><span class="badge ${c.platform === 'Meta Ads' ? 'blue' : 'gold'}">${esc(c.platform)}</span></td><td>${esc(name)}</td><td>${esc(c.objective)}</td><td>${fmtMoney(c.spend)}</td><td>${fmtInt(c.impressions)}</td><td>${fmtInt(c.clicks)}</td><td>${fmtInt(c.leads)}</td><td>${fmtRate(rate(c.clicks, c.impressions, 100), 2)}</td><td>${fmtMoney(rate(c.spend, c.clicks))}</td></tr>`
+  ).join('') || `<tr><td colspan="9" class="muted">No campaigns match these filters.</td></tr>`;
 }
 
 /* =========================================================================================
-   PART 13 — RENDER: TAB 6 EMAIL MARKETING
+   PART 13 — EMAIL
    ========================================================================================= */
-function renderEmail(){
-  const rows = DATA.Email_Marketing_Data.filter(r => inRange(r.date)
+function emailRows(inFn){
+  return DATA.Email_Marketing_Data.filter(r => inFn(r.date)
     && (state.emailType === 'all' || r.emailType === state.emailType)
     && (state.crmCampaign === 'all' || r.campaignCRM === state.crmCampaign)
     && (state.subscription === 'all' || r.subscription === state.subscription));
+}
+function emailAgg(rows){
+  const a = { n: rows.length, delivered: sum(rows,'delivered'), opens: sum(rows,'opens'), clicks: sum(rows,'clicks'),
+    hard: sum(rows,'hardBounces'), soft: sum(rows,'softBounces'), unsub: sum(rows,'unsubscribes'), spam: sum(rows,'spamReports') };
+  a.openRate = rate(a.opens, a.delivered, 100); a.ctor = rate(a.clicks, a.opens, 100);
+  return a;
+}
+function renderEmail(){
+  const rows = emailRows(inRange);
+  const a = emailAgg(rows);
+  const p = state.rangeDays === 'all' ? null : emailAgg(emailRows(inPrev));
+  const P = p && p.n ? p : null;
+  paint([
+    { id:'emDelivered', cur:a.delivered, prev:P && P.delivered, fmt:fmtInt, good:'neutral' },
+    { id:'emOpens', cur:a.opens, prev:P && P.opens, fmt:fmtInt },
+    { id:'emClicks', cur:a.clicks, prev:P && P.clicks, fmt:fmtInt },
+    { id:'emOpenRate', cur:a.openRate, prev:P && P.openRate, fmt:v => fmtRate(v), kind:'rate' },
+    { id:'emCtor', cur:a.ctor, prev:P && P.ctor, fmt:v => fmtRate(v), kind:'rate' },
+    { id:'emHardBounce', cur:a.hard, prev:P && P.hard, fmt:fmtInt, good:'down' },
+    { id:'emSoftBounce', cur:a.soft, prev:P && P.soft, fmt:fmtInt, good:'down' },
+    { id:'emUnsub', cur:a.unsub, prev:P && P.unsub, fmt:fmtInt, good:'down' },
+    { id:'emSpam', cur:a.spam, prev:P && P.spam, fmt:fmtInt, good:'down' }
+  ]);
 
-  const delivered = rows.reduce((a,r)=>a+num(r.delivered),0);
-  const opens = rows.reduce((a,r)=>a+num(r.opens),0);
-  const clicks = rows.reduce((a,r)=>a+num(r.clicks),0);
-  const hardBounces = rows.reduce((a,r)=>a+num(r.hardBounces),0);
-  const softBounces = rows.reduce((a,r)=>a+num(r.softBounces),0);
-  const unsub = rows.reduce((a,r)=>a+num(r.unsubscribes),0);
-  const spam = rows.reduce((a,r)=>a+num(r.spamReports),0);
-
-  el('emDelivered').textContent = fmtInt(delivered);
-  el('emOpens').textContent = fmtInt(opens);
-  el('emClicks').textContent = fmtInt(clicks);
-  el('emOpenRate').textContent = fmtPct(safeDiv(opens,delivered)*100);
-  el('emCtor').textContent = fmtPct(safeDiv(clicks,opens)*100);
-  el('emHardBounce').textContent = fmtInt(hardBounces);
-  el('emSoftBounce').textContent = fmtInt(softBounces);
-  el('emUnsub').textContent = fmtInt(unsub);
-  el('emSpam').textContent = fmtInt(spam);
-
-  const auto = rows.filter(r => r.emailType === 'AUTOMATED');
-  const reg = rows.filter(r => r.emailType === 'REGULAR');
-  const agg = arr => ({ delivered: arr.reduce((a,r)=>a+num(r.delivered),0), opens: arr.reduce((a,r)=>a+num(r.opens),0), clicks: arr.reduce((a,r)=>a+num(r.clicks),0) });
-  const a = agg(auto), r = agg(reg);
-
+  const auto = emailAgg(rows.filter(r => r.emailType === 'AUTOMATED')), reg = emailAgg(rows.filter(r => r.emailType === 'REGULAR'));
   makeChart('emCompareChart', {
     type: 'bar',
-    data: { labels: ['Delivered','Opens','Clicks'],
+    data: { labels: ['Open rate', 'Click-to-open rate'],
       datasets: [
-        { label: 'Automated Workflows', data: [a.delivered, a.opens, a.clicks], backgroundColor: PALETTE.teal, borderRadius: 6 },
-        { label: 'One-off Campaigns', data: [r.delivered, r.opens, r.clicks], backgroundColor: PALETTE.pink, borderRadius: 6 }
+        { label:'Automated workflows', data:[auto.openRate || 0, auto.ctor || 0], backgroundColor:C.amber, ...barStyle, maxBarThickness:56 },
+        { label:'One-off campaigns', data:[reg.openRate || 0, reg.ctor || 0], backgroundColor:C.sky, ...barStyle, maxBarThickness:56 }
       ] },
-    options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid:{color:gridColor} }, x: { grid:{display:false} } }, plugins: { legend: { labels:{color:'#dceeE9'} } } }
+    options: { responsive:true, maintainAspectRatio:false,
+      scales: { x:{ grid:{ display:false }, border:{ color:gridColor } }, y:{ grid:{ color:gridColor }, border:{ display:false }, beginAtZero:true, ticks:{ callback:v => v + '%' } } },
+      plugins: { legend: legendCfg(), tooltip:{ callbacks:{ label: c => `${c.dataset.label}: ${c.parsed.y.toFixed(1)}%` } } } }
   });
 
-  el('emTableBody').innerHTML = rows.slice(0,200).map(r =>
-    `<tr><td>${r.emailName}</td><td>${r.campaignCRM}</td><td><span class="badge ${r.emailType==='AUTOMATED'?'green':'gold'}">${r.emailType}</span></td><td>${fmtInt(r.delivered)}</td><td>${fmtInt(r.opens)}</td><td>${fmtInt(r.clicks)}</td></tr>`
-  ).join('') || `<tr><td colspan="6" style="text-align:center;color:#7a9d97;">No emails match these filters.</td></tr>`;
+  el('emTableBody').innerHTML = rows.slice(0, 200).map(r =>
+    `<tr><td>${esc(r.emailName)}</td><td>${esc(r.campaignCRM)}</td><td><span class="badge ${r.emailType === 'AUTOMATED' ? 'green' : 'gold'}">${esc(r.emailType)}</span></td><td>${fmtInt(r.delivered)}</td><td>${fmtInt(r.opens)}</td><td>${fmtInt(r.clicks)}</td></tr>`
+  ).join('') || `<tr><td colspan="6" class="muted">No emails match these filters.</td></tr>`;
+  el('emailNote').textContent = rows.length > 200 ? `Showing the first 200 of ${fmtInt(rows.length)} rows.` : '';
 }
 
 /* =========================================================================================
-   PART 14 — RENDER: TAB 7 FIELD OUTREACH & AGGREGATED DIGITAL
+   PART 14 — OUTREACH
    ========================================================================================= */
 function renderOutreach(){
-  const rows = DATA.In_Person_Outreach_Log.filter(r => inRange(r.date)
-    && (state.location === 'all' || r.locationOfOutreachActivity === state.location));
-
-  const flyers = rows.reduce((a,r)=>a+num(r.flyersDistributed),0);
-  const conversations = rows.reduce((a,r)=>a+num(r.meaningfulConversations),0);
-  const appealed = rows.reduce((a,r)=>a+num(r.appealedOpportunities),0);
-
+  const rows = DATA.In_Person_Outreach_Log.filter(r => inRange(r.date) && (state.location === 'all' || r.locationOfOutreachActivity === state.location));
+  const flyers = sum(rows,'flyersDistributed'), conv = sum(rows,'meaningfulConversations'), appealed = sum(rows,'appealedOpportunities');
   el('ouFlyers').textContent = fmtInt(flyers);
-  el('ouConversations').textContent = fmtInt(conversations);
+  el('ouConversations').textContent = fmtInt(conv);
   el('ouAppealed').textContent = fmtInt(appealed);
-  el('ouEfficiency').textContent = fmtPct(safeDiv(conversations,flyers)*100);
-  el('ouConversion').textContent = fmtPct(safeDiv(appealed,conversations)*100);
+  el('ouEfficiency').textContent = fmtRate(rate(conv, flyers, 100));
+  el('ouConversion').textContent = fmtRate(rate(appealed, conv, 100));
 
   const grouped = {};
-  rows.forEach(r => {
-    const key = r.locationOfOutreachActivity;
-    if (!grouped[key]) grouped[key] = {};
-    grouped[key][r.typeOfExperience] = (grouped[key][r.typeOfExperience]||0) + num(r.meaningfulConversations);
-  });
+  rows.forEach(r => { const k = r.locationOfOutreachActivity; (grouped[k] = grouped[k] || {})[r.typeOfExperience] = ((grouped[k] || {})[r.typeOfExperience] || 0) + num(r.meaningfulConversations); });
   const locs = Object.keys(grouped);
-  const typeColors = { 'Community Event':PALETTE.gold, 'School Fair':PALETTE.blue, 'Door-to-Door':PALETTE.teal, 'Partner Referral Table':PALETTE.purple, 'Pop-up Workshop':PALETTE.pink };
-  const datasets = OUTREACH_TYPES.map(t => ({ label: t, data: locs.map(l => grouped[l][t] || 0), backgroundColor: typeColors[t] }));
-
+  const types = uniq(rows.map(r => r.typeOfExperience));
+  const datasets = types.map((t, i) => ({ label:t, data: locs.map(l => grouped[l][t] || 0), backgroundColor: SERIES[i % SERIES.length], borderColor: C.surface, borderWidth: 2, borderRadius: 3 }));
   makeChart('outreachBarChart', {
-    type: 'bar',
-    data: { labels: locs, datasets },
-    options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked:true, grid:{display:false} }, y: { stacked:true, grid:{color:gridColor} } },
-      plugins: { legend: { position:'bottom', labels:{color:'#dceeE9', boxWidth:10, font:{size:10.5}} } } }
+    type: 'bar', data: { labels: locs, datasets },
+    options: { responsive:true, maintainAspectRatio:false,
+      scales: { x:{ stacked:true, grid:{ display:false }, border:{ color:gridColor } }, y:{ stacked:true, grid:{ color:gridColor }, border:{ display:false } } },
+      plugins: { legend: { position:'bottom', ...legendCfg() } } }
   });
 }
 
 /* =========================================================================================
-   PART 15 — RENDER: TAB 8 MCP PROGRAM ENROLLMENTS
+   PART 15 — ENROLLMENTS (MCP)
    ========================================================================================= */
-const SEG_COLORS = [PALETTE.gold, PALETTE.blue, PALETTE.teal, PALETTE.purple, PALETTE.pink, PALETTE.orange, PALETTE.ice];
+const SEG_COLORS = SERIES;
 function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
 function fyOf(row){ const m = str(row.classProgramCohort).match(/FY\d{2}-\d{2}/i); return m ? m[0].toUpperCase() : str(row.classProgramCohort); }
-function mcpRowsForFY(fy){
-  return DATA.MCP_Enrollment_Data.filter(r => fyOf(r) === fy).map(r => ({ ...r, ...categorizeCourse(r.classCourse) }));
-}
-// Fiscal Year is the only filter on this tab — scoped to the selected FY, or every FY when "all".
+function mcpRowsForFY(fy){ return DATA.MCP_Enrollment_Data.filter(r => fyOf(r) === fy).map(r => ({ ...r, ...categorizeCourse(r.classCourse) })); }
 function filteredMcp(){
-  return DATA.MCP_Enrollment_Data
-    .filter(r => state.fiscalYear === 'all' || fyOf(r) === state.fiscalYear)
-    .map(r => ({ ...r, ...categorizeCourse(r.classCourse) }));
+  return DATA.MCP_Enrollment_Data.filter(r => state.fiscalYear === 'all' || fyOf(r) === state.fiscalYear).map(r => ({ ...r, ...categorizeCourse(r.classCourse) }));
 }
 
 function renderMcp(){
   const rows = filteredMcp();
-
   const warnEl = el('mcpEmptyWarning');
   if (!rows.length) {
-    const msg = state.fiscalYear === 'all'
-      ? 'No MCP enrollment records are available.'
-      : `No enrollments found for ${state.fiscalYear}. Try a different fiscal year.`;
-    warnEl.innerHTML = `<i class="fas fa-triangle-exclamation"></i><span>${msg}</span>`;
+    warnEl.innerHTML = `<i class="fas fa-triangle-exclamation" aria-hidden="true"></i><span>${state.fiscalYear === 'all' ? 'No MCP enrollment records are available.' : `No enrollments found for ${esc(state.fiscalYear)}. Try a different fiscal year.`}</span>`;
     warnEl.style.display = 'flex';
-  } else {
-    warnEl.style.display = 'none';
-  }
+  } else warnEl.style.display = 'none';
 
-  const total = rows.length;
-  const completed = rows.filter(r => r.status === 'Completed').length;
+  const total = rows.length, completed = rows.filter(r => r.status === 'Completed').length;
   el('mcpTotal').textContent = fmtInt(total);
   el('mcpTotalSub').textContent = state.fiscalYear === 'all' ? 'All fiscal years' : state.fiscalYear;
-  el('mcpCompletion').textContent = total ? fmtPct(safeDiv(completed,total)*100) : '--';
+  el('mcpCompletion').textContent = fmtRate(rate(completed, total, 100));
   el('mcpCompletionSub').textContent = total ? `${fmtInt(completed)} of ${fmtInt(total)} completed` : 'No enrollments in this filter';
-
   renderMcpFyCompareChart();
   renderMcpCategoryGrid();
   renderTeacherBoard(rows);
 }
 
-// Vertical bar comparing total enrollment volume across every fiscal year on record,
-// independent of the FY filter — the filter only decides which bar gets highlighted.
 function renderMcpFyCompareChart(){
   const fys = fiscalYearsInData();
   const totals = fys.map(fy => DATA.MCP_Enrollment_Data.filter(r => fyOf(r) === fy).length);
-  const highlightFY = state.fiscalYear === 'all' ? fys[fys.length - 1] : state.fiscalYear;
+  const hi = state.fiscalYear === 'all' ? fys[fys.length - 1] : state.fiscalYear;
   makeChart('mcpFyCompareChart', {
     type: 'bar',
-    data: { labels: fys, datasets: [{
-      data: totals,
-      backgroundColor: fys.map(fy => fy === highlightFY ? PALETTE.gold : 'rgba(122,157,151,0.5)'),
-      borderRadius: 6, maxBarThickness: 44
-    }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      scales: {
-        x: { grid: { display:false }, ticks: { color:'#a2c2bb', font:{size:11, weight:'600'} } },
-        y: { grid: { color:gridColor }, ticks: { color:'#7a9d97', font:{size:10} } }
-      },
-      plugins: { legend: { display:false }, tooltip: { callbacks: { label: (ctx) => `${fmtInt(ctx.parsed.y)} enrollments` } } }
-    }
+    data: { labels: fys, datasets: [{ data: totals, backgroundColor: fys.map(fy => fy === hi ? C.amber : 'rgba(223,240,238,0.30)'), borderRadius:4, borderSkipped:false, maxBarThickness:44 }] },
+    options: { responsive:true, maintainAspectRatio:false, scales: baseScales(false),
+      plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label: c => `${fmtInt(c.parsed.y)} enrollments` } } } }
   });
 }
 
-// Resolves which rows/labels make up the "current" bar and the "previous" bar for the
-// category comparison charts. A specific FY compares against the single FY right before it;
-// "All Fiscal Years" compares the latest FY against every prior FY combined into one bar.
 function resolveMcpComparison(){
   const fys = fiscalYearsInData();
   if (state.fiscalYear === 'all') {
-    const currentFY = fys[fys.length - 1] || null;
-    const priorFYs = fys.slice(0, -1);
-    const previousLabel = priorFYs.length > 1 ? 'Prior FYs' : (priorFYs[0] || null);
-    return {
-      currentFY, previousLabel,
-      currentRows: currentFY ? mcpRowsForFY(currentFY) : [],
-      previousRows: priorFYs.flatMap(mcpRowsForFY)
-    };
+    const currentFY = fys[fys.length - 1] || null, prior = fys.slice(0, -1);
+    return { currentFY, previousLabel: prior.length > 1 ? 'Prior FYs' : (prior[0] || null),
+      currentRows: currentFY ? mcpRowsForFY(currentFY) : [], previousRows: prior.flatMap(mcpRowsForFY) };
   }
-  const currentFY = state.fiscalYear;
-  const idx = fys.indexOf(currentFY);
-  const previousLabel = idx > 0 ? fys[idx - 1] : null;
-  return {
-    currentFY, previousLabel,
-    currentRows: mcpRowsForFY(currentFY),
-    previousRows: previousLabel ? mcpRowsForFY(previousLabel) : []
-  };
+  const currentFY = state.fiscalYear, idx = fys.indexOf(currentFY), previousLabel = idx > 0 ? fys[idx - 1] : null;
+  return { currentFY, previousLabel, currentRows: mcpRowsForFY(currentFY), previousRows: previousLabel ? mcpRowsForFY(previousLabel) : [] };
 }
 
 function renderMcpCategoryGrid(){
   const { currentFY, previousLabel, currentRows, previousRows } = resolveMcpComparison();
-
-  const grid = el('mcpCategoryGrid');
-  grid.innerHTML = COURSE_TAXONOMY.map(cat => {
+  el('mcpCategoryGrid').innerHTML = COURSE_TAXONOMY.map(cat => {
     const slug = slugify(cat.category);
-    const curCatRows = currentRows.filter(r => r.category === cat.category);
-    const prevCatRows = previousRows.filter(r => r.category === cat.category);
-    const catTotal = curCatRows.length;
-    const prevCatTotal = prevCatRows.length;
-    const catCompleted = curCatRows.filter(r => r.status === 'Completed').length;
-    const catRate = catTotal ? safeDiv(catCompleted, catTotal) * 100 : 0;
-    const delta = (previousLabel && prevCatTotal) ? safeDiv(catTotal - prevCatTotal, prevCatTotal) * 100 : null;
-
+    const cur = currentRows.filter(r => r.category === cat.category), prev = previousRows.filter(r => r.category === cat.category);
+    const catTotal = cur.length, prevTotal = prev.length, catCompleted = cur.filter(r => r.status === 'Completed').length;
+    const delta = (previousLabel && prevTotal) ? (catTotal - prevTotal) / prevTotal * 100 : null;
     const groupStats = cat.groups.map(g => {
-      const gRows = curCatRows.filter(r => r.group === g);
-      const gTotal = gRows.length;
-      const gCompleted = gRows.filter(r => r.status === 'Completed').length;
-      return { group: g, total: gTotal, completed: gCompleted, rate: gTotal ? safeDiv(gCompleted, gTotal) * 100 : 0 };
+      const gr = cur.filter(r => r.group === g), done = gr.filter(r => r.status === 'Completed').length;
+      return { group: g, total: gr.length, rate: rate(done, gr.length, 100) };
     });
-
-    const hasChartData = catTotal > 0 || prevCatTotal > 0;
-    const chartBlock = hasChartData
+    const chartBlock = (catTotal > 0 || prevTotal > 0)
       ? `<div class="cat-bar-chart"><canvas id="mcpCatChart_${slug}"></canvas></div><div class="cat-legend" id="mcpCatLegend_${slug}"></div>`
       : `<div class="cat-empty">No enrollments in this filter.</div>`;
-
-    const deltaBadge = delta === null ? '' :
-      `<span class="badge ${delta >= 0 ? 'green' : 'red'}">${delta >= 0 ? '+' : ''}${delta.toFixed(1)}% vs ${previousLabel}</span>`;
-
+    const deltaBadge = delta === null ? '' : `<span class="badge ${delta >= 0 ? 'green' : 'red'}">${delta >= 0 ? '+' : ''}${delta.toFixed(1)}% vs. ${esc(previousLabel)}</span>`;
     const completionRows = groupStats.map(g => `
-      <div class="cc-row">
-        <div class="cc-row-top"><span>${g.group}</span><span class="cc-pct">${g.total ? fmtPct(g.rate) : '—'}</span></div>
-        <div class="progress-track"><div class="progress-fill" style="width:${g.total ? g.rate : 0}%;"></div></div>
-      </div>`).join('');
-
-    return `
-      <div class="category-block" data-cat="${slug}">
-        <div class="category-card">
-          <div class="cat-title">
-            <h4>${cat.category}</h4>
-            <div class="cat-title-right">${deltaBadge}<span class="cat-total">${fmtInt(catTotal)}</span></div>
-          </div>
-          <p class="cat-sub">${previousLabel ? `${previousLabel} vs. ${currentFY}` : (currentFY || 'No fiscal year data')} · by Mid-Level Group</p>
-          <div class="cat-chart-wrap">${chartBlock}</div>
-        </div>
-        <div class="completion-card">
-          <div class="cc-head"><span class="lbl">Completion Rate</span><span class="rate">${catTotal ? fmtPct(catRate) : '--'}</span></div>
-          <div class="cc-rows-wrap">${completionRows}</div>
-        </div>
-      </div>`;
+      <div class="cc-row"><div class="cc-row-top"><span>${esc(g.group)}</span><span class="cc-pct">${fmtRate(g.rate)}</span></div>
+      <div class="progress-track"><div class="progress-fill" style="width:${g.rate || 0}%;"></div></div></div>`).join('');
+    return `<div class="category-block" data-cat="${slug}">
+      <div class="category-card">
+        <div class="cat-title"><h4>${esc(cat.category)}</h4><div class="cat-title-right">${deltaBadge}<span class="cat-total">${fmtInt(catTotal)}</span></div></div>
+        <p class="cat-sub">${previousLabel ? `${esc(previousLabel)} vs. ${esc(currentFY)}` : esc(currentFY || 'No fiscal year data')} · by course group</p>
+        <div class="cat-chart-wrap">${chartBlock}</div>
+      </div>
+      <div class="completion-card"><div class="cc-head"><span class="lbl">Completion rate</span><span class="rate">${fmtRate(rate(catCompleted, catTotal, 100))}</span></div>
+      <div class="cc-rows-wrap">${completionRows}</div></div></div>`;
   }).join('');
 
   COURSE_TAXONOMY.forEach(cat => {
-    const slug = slugify(cat.category);
-    const canvas = el(`mcpCatChart_${slug}`);
+    const slug = slugify(cat.category), canvas = el(`mcpCatChart_${slug}`);
     if (!canvas) return;
-    const curCatRows = currentRows.filter(r => r.category === cat.category);
-    const prevCatRows = previousRows.filter(r => r.category === cat.category);
+    const cur = currentRows.filter(r => r.category === cat.category), prev = previousRows.filter(r => r.category === cat.category);
     const labels = previousLabel ? [previousLabel, currentFY] : [currentFY];
-
-    makeChart(`mcpCatChart_${slug}`, {
+    canvas.setAttribute('role', 'img'); canvas.setAttribute('aria-label', `${cat.category}: enrollments by course group, ${labels.join(' vs. ')}`);
+    if (charts[`mcpCatChart_${slug}`]) charts[`mcpCatChart_${slug}`].destroy();
+    charts[`mcpCatChart_${slug}`] = new Chart(canvas, {
       type: 'bar',
-      data: {
-        labels,
-        datasets: cat.groups.map((g, gi) => ({
-          label: g,
-          data: previousLabel
-            ? [prevCatRows.filter(r => r.group === g).length, curCatRows.filter(r => r.group === g).length]
-            : [curCatRows.filter(r => r.group === g).length],
-          backgroundColor: SEG_COLORS[gi % SEG_COLORS.length],
-          borderRadius: 3
-        }))
-      },
-      options: {
-        indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-        scales: {
-          x: { stacked: true, display: false },
-          y: { stacked: true, grid: { display:false }, ticks: { color:'#a2c2bb', font:{size:10.5, weight:'700'} } }
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.x}` } }
-        }
-      }
+      data: { labels, datasets: cat.groups.map((g, gi) => ({ label: g,
+        data: previousLabel ? [prev.filter(r => r.group === g).length, cur.filter(r => r.group === g).length] : [cur.filter(r => r.group === g).length],
+        backgroundColor: SEG_COLORS[gi % SEG_COLORS.length], borderColor: C.surface, borderWidth: 2, borderRadius: 3 })) },
+      options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        scales: { x:{ stacked:true, display:false }, y:{ stacked:true, grid:{ display:false }, border:{ display:false }, ticks:{ color:'rgba(223,240,238,0.82)', font:{ size:12, weight:'600' } } } },
+        plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label: c => `${c.dataset.label}: ${c.parsed.x}` } } } }
     });
-
-    // Custom HTML legend — colored to match each segment (never a flat dark grey) and free to
-    // wrap onto multiple lines, so nothing gets clipped the way a canvas-drawn side legend can.
     const legendEl = el(`mcpCatLegend_${slug}`);
-    if (legendEl) {
-      legendEl.innerHTML = cat.groups.map((g, gi) => {
-        const count = curCatRows.filter(r => r.group === g).length;
-        const prevCount = prevCatRows.filter(r => r.group === g).length;
-        if (!count && !prevCount) return '';
-        const color = SEG_COLORS[gi % SEG_COLORS.length];
-        return `<span class="cat-legend-item" style="color:${color};"><span class="cat-legend-dot" style="background:${color};"></span>${g}<span class="cat-legend-count">${count}</span></span>`;
-      }).join('');
-    }
+    if (legendEl) legendEl.innerHTML = cat.groups.map((g, gi) => {
+      const count = cur.filter(r => r.group === g).length;
+      if (!count && !prev.filter(r => r.group === g).length) return '';
+      const color = SEG_COLORS[gi % SEG_COLORS.length];
+      return `<span class="cat-legend-item"><span class="cat-legend-dot" style="background:${color};"></span>${esc(g)}<span class="cat-legend-count">${count}</span></span>`;
+    }).join('');
   });
 }
 
 function renderTeacherBoard(rows){
-  const byTeacher = {};
-  rows.forEach(r => {
-    if (!byTeacher[r.classInstructor]) byTeacher[r.classInstructor] = { total: 0, completed: 0 };
-    byTeacher[r.classInstructor].total++;
-    if (r.status === 'Completed') byTeacher[r.classInstructor].completed++;
-  });
-  const ranked = Object.entries(byTeacher)
-    .filter(([,v]) => v.total >= 3)
-    .map(([name,v]) => ({ name, total: v.total, completed: v.completed, rate: safeDiv(v.completed, v.total) * 100 }))
-    .sort((a,b) => b.rate - a.rate || b.total - a.total)
-    .slice(0, 10);
-
-  el('teacherBoard').innerHTML = ranked.map((t,i) => {
-    const rankClass = i===0 ? 'gold' : (i===1 ? 'silver' : (i===2 ? 'bronze' : ''));
-    return `<div class="teacher-row">
-      <div class="teacher-rank ${rankClass}">${i+1}</div>
-      <div class="teacher-name">${t.name}</div>
-      <div class="teacher-meta">${fmtInt(t.completed)}/${fmtInt(t.total)} completed</div>
-      <div class="teacher-rate">${fmtPct(t.rate)}</div>
-    </div>`;
-  }).join('') || `<div class="cat-empty">Not enough data in this filter — each instructor needs at least 3 enrollments to rank.</div>`;
+  const by = {};
+  rows.forEach(r => { const t = by[r.classInstructor] || (by[r.classInstructor] = { total:0, completed:0 }); t.total++; if (r.status === 'Completed') t.completed++; });
+  const ranked = Object.entries(by).filter(([, v]) => v.total >= 3)
+    .map(([name, v]) => ({ name, total:v.total, completed:v.completed, rate: rate(v.completed, v.total, 100) }))
+    .sort((a, b) => b.rate - a.rate || b.total - a.total).slice(0, 10);
+  el('teacherBoard').innerHTML = ranked.map((t, i) => `<div class="teacher-row">
+      <div class="teacher-rank ${i < 3 ? 'top' : ''}">${i + 1}</div><div class="teacher-name">${esc(t.name)}</div>
+      <div class="teacher-meta">${fmtInt(t.completed)}/${fmtInt(t.total)} completed</div><div class="teacher-rate">${fmtRate(t.rate)}</div></div>`).join('')
+    || `<div class="cat-empty">Not enough data in this filter. Each instructor needs at least 3 enrollments to rank.</div>`;
 }
 
 /* =========================================================================================
-   PART 16 — TAB ROUTER, EXPORT, INIT
+   PART 16 — ROUTER, EXPORT, INIT
    ========================================================================================= */
 const RENDERERS = { overview: renderOverview, traffic: renderTraffic, content: renderContent, conversions: renderConversions,
   paid: renderPaid, email: renderEmail, outreach: renderOutreach, mcp: renderMcp };
 
 function renderActiveTab(){
   el('footerRangeLabel').textContent = state.activeTab === 'mcp'
-    ? `Showing ${state.fiscalYear === 'all' ? 'all fiscal years' : state.fiscalYear} · filtered marketing funnel data`
-    : `Showing ${rangeLabel()} · filtered marketing funnel data`;
+    ? `Showing ${state.fiscalYear === 'all' ? 'all fiscal years' : state.fiscalYear}`
+    : `Showing ${rangeLabel()}`;
   const fn = RENDERERS[state.activeTab];
   if (fn) fn();
 }
 function renderAll(){ Object.values(RENDERERS).forEach(fn => fn()); }
 
+// Prints the current tab as ONE page exactly as wide and tall as it is on screen, dark background included,
+// so the saved PDF scrolls like the website instead of breaking into white letter-size pages.
+let savedTitle = null;
+let flattened = [];
+// Charts animate in; print would catch them half-drawn, so jump every chart to its final state first.
+function snapChartsToFinalState(){
+  Chart.defaults.animation = false;
+  Object.values(charts).forEach(c => { c.options.animation = false; c.update('none'); });
+}
+// Transparent canvases can print as white patches in some PDF viewers. Swap each visible chart for an
+// opaque image painted on the card color, and swap back after printing.
+async function flattenChartsForExport(){
+  const jobs = [];
+  document.querySelectorAll('.tab-section.active canvas').forEach(cv => {
+    if (cv.style.display === 'none' || !cv.width) return;
+    const off = document.createElement('canvas'); off.width = cv.width; off.height = cv.height;
+    const ctx = off.getContext('2d'); ctx.fillStyle = '#14262b'; ctx.fillRect(0, 0, off.width, off.height); ctx.drawImage(cv, 0, 0);
+    const img = new Image();
+    img.src = off.toDataURL('image/png');
+    img.style.cssText = `width:${cv.clientWidth}px;height:${cv.clientHeight}px;display:block;`;
+    img.alt = cv.getAttribute('aria-label') || 'Chart';
+    cv.style.display = 'none'; cv.after(img);
+    flattened.push({ cv, img });
+    jobs.push(img.decode().catch(() => {}));
+  });
+  await Promise.all(jobs);
+}
+function restoreCharts(){
+  flattened.forEach(({ cv, img }) => { img.remove(); cv.style.display = ''; });
+  flattened = [];
+}
+
+// Prints the current tab as ONE page exactly as wide and tall as it is on screen, dark background included,
+// so the saved PDF scrolls like the website instead of breaking into white letter-size pages.
+async function exportPagePDF(){
+  snapChartsToFinalState();
+  await flattenChartsForExport();
+  const root = document.documentElement;
+  const w = Math.ceil(root.clientWidth), h = Math.ceil(Math.max(root.scrollHeight, document.body.scrollHeight)) + 4;
+  let style = el('exportPageSize');
+  if (!style) { style = document.createElement('style'); style.id = 'exportPageSize'; document.head.appendChild(style); }
+  style.textContent = `@page { size: ${w}px ${h}px; margin: 0; }`;
+  savedTitle = document.title;
+  document.title = `ReDefiners-Marketing-Funnel-${state.activeTab}-${toISODate(NOW)}`;
+  window.print();
+}
+
 function exportActiveTabCSV(){
-  const section = el('tab-' + state.activeTab);
-  if (!section) return;
-  const table = section.querySelector('table');
-  if (!table) { alert('This tab has no table to export.'); return; }
+  const table = el('tab-' + state.activeTab).querySelector('table');
+  if (!table) return;
   const rows = [...table.querySelectorAll('tr')].map(tr =>
-    [...tr.querySelectorAll('th,td')].map(cell => `"${cell.textContent.replace(/"/g,'""').trim()}"`).join(',')
-  );
-  const csv = rows.join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    [...tr.querySelectorAll('th,td')].map(cell => `"${cell.textContent.replace(/"/g, '""').trim()}"`).join(','));
   const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
+  link.href = URL.createObjectURL(new Blob([rows.join('\n')], { type:'text/csv;charset=utf-8;' }));
   link.download = `marketing-funnel-${state.activeTab}-${toISODate(NOW)}.csv`;
   document.body.appendChild(link); link.click(); document.body.removeChild(link);
 }
 
+// Breakpoints are classes on <html> (not media queries) so a printed/exported copy uses the exact layout on screen.
+function syncBreakpoints(){
+  const w = document.documentElement.clientWidth;
+  [1200, 1100, 640].forEach(b => document.documentElement.classList.toggle('w' + b, w <= b));
+}
+
 function init(){
+  syncBreakpoints();
+  window.addEventListener('resize', syncBreakpoints);
   el('todayLabel').textContent = NOW.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
-  el('lastUpdatedLabel').textContent = 'Last updated: ' + NOW.toLocaleString('en-US', {month:'short', day:'numeric', hour:'numeric', minute:'2-digit'});
+  injectDeltaNodes();
   buildFilterOptions();
   wireFilters();
-  updateGlobalFilterVisibility();
+  paintDataStatus();
+  const fromHash = location.hash.replace('#', '');
+  const tab = RENDERERS[fromHash] ? fromHash : 'overview';
   renderAll();
+  selectTab(tab);
   loadLiveDataIfConfigured();
 }
 document.addEventListener('DOMContentLoaded', init);
