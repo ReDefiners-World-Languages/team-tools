@@ -163,20 +163,6 @@
   .breakdown-table .plat-name { display:flex; align-items:center; gap:10px; font-weight:600; }
   .breakdown-table .plat-name i { font-size:16px; width:20px; }
 
-  .insight-card {
-    background:rgba(255,255,255,0.025); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-    border-radius:12px; padding:26px 26px 24px; border:1px solid rgba(255,255,255,0.04); margin-bottom:22px;
-  }
-  .insight-head { display:flex; align-items:center; gap:10px; margin-bottom:18px; }
-  .insight-head h3 { font-weight:600; font-size:16.5px; color:#d9ecE6; }
-  .insight-grid { display:grid; grid-template-columns:1fr 1fr; gap:30px; }
-  .insight-col p.heading { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; margin-bottom:12px; }
-  .insight-col ul { list-style:none; display:flex; flex-direction:column; gap:12px; }
-  .insight-col li { font-size:14px; line-height:1.65; padding-left:16px; position:relative; }
-  .insight-col li::before { content:''; position:absolute; left:0; top:9px; width:5px; height:5px; border-radius:50%; background:currentColor; }
-  .insight-single ul { list-style:none; display:flex; flex-direction:column; gap:12px; }
-  .insight-single li { font-size:14px; line-height:1.65; padding-left:16px; position:relative; color:#d7ece7; }
-  .insight-single li::before { content:''; position:absolute; left:0; top:9px; width:5px; height:5px; border-radius:50%; background:currentColor; }
 
   .footer-row { margin-top:8px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:#3f6a63;
     letter-spacing:0.3px; border-top:1px solid rgba(255,255,255,0.05); padding-top:18px; }
@@ -229,7 +215,7 @@
 
   @media (max-width:1000px) {
     .metric-grid { grid-template-columns:repeat(2,1fr); }
-    .row-duo, .bottom-grid, .insight-grid, .audience-grid-2 { grid-template-columns:1fr; }
+    .row-duo, .bottom-grid, .audience-grid-2 { grid-template-columns:1fr; }
     .dashboard { padding:24px 20px; }
     .post-metrics { flex-wrap:wrap; gap:10px; }
   }
@@ -355,31 +341,6 @@
       </div>
     </div>
 
-    <!-- Zone D: Insights -->
-    <div class="insight-card">
-      <div class="insight-head">
-        <span class="glow-dot" style="background:#7A9D96; box-shadow:0 0 8px #7A9D96;"></span>
-        <h3>Field notes &amp; insights</h3>
-      </div>
-      <div class="insight-grid">
-        <div class="insight-col">
-          <p class="heading" style="color:#FFC100;">What's working</p>
-          <ul class="voice">
-            <li style="color:#f0dca0; font-style:italic;">Our Ramadan reflections post pulled an 18.3% engagement rate on Instagram, the strongest result across all six platforms this year.</li>
-            <li style="color:#f0dca0; font-style:italic;">X is our steadiest channel by far. We're posting there every 2.8 days on average, more often than anywhere else.</li>
-            <li style="color:#f0dca0; font-style:italic;">YouTube gets the fewest posts but the biggest individual wins. The myth-busting explainer hit 1,844 views, more than any single piece of content on any other platform.</li>
-          </ul>
-        </div>
-        <div class="insight-col">
-          <p class="heading" style="color:#FF7400;">Where to improve</p>
-          <ul class="voice">
-            <li style="color:#F3C9A8; font-style:italic;">TikTok's average engagement rate sits at 3.2%, the lowest of the six platforms. Shorter hooks or trending audio are worth testing before writing the format off.</li>
-            <li style="color:#F3C9A8; font-style:italic;">YouTube videos go up every 21 days on average, with one gap stretching to 26. A lighter, more frequent format could close that gap without adding much production time.</li>
-            <li style="color:#F3C9A8; font-style:italic;">Facebook's top engagement post hit 37.5%, but that came from a small view count. Treat percentage spikes on low-reach posts as a caution, not a trend, until reach grows.</li>
-          </ul>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- AUDIENCE TAB -->
@@ -469,15 +430,6 @@
         <p class="small">Try widening your date filter.</p>
       </div>
     </div>
-    <div class="insight-card insight-single">
-      <div class="insight-head">
-        <span class="glow-dot" style="background:var(--ig-color); box-shadow:0 0 8px var(--ig-color);"></span>
-        <h3>Instagram field notes</h3>
-      </div>
-      <ul class="voice">
-        <li style="color:#d7ece7; font-style:italic;">Instagram is averaging an 8.1% engagement rate over the past year, the strongest of any platform we track.</li><li style="color:#d7ece7; font-style:italic;">The Ramadan reflections post is the single best performer at 18.3% engagement. Personal, reflective content is resonating more than program announcements.</li><li style="color:#d7ece7; font-style:italic;">Posting stays consistent, about once every 4 days with no gap longer than 6 days. That consistency is likely part of why engagement holds up.</li>
-      </ul>
-    </div>
   </div>
 
 
@@ -520,15 +472,6 @@
         <p class="big">No Facebook content in this range.</p>
         <p class="small">Try widening your date filter.</p>
       </div>
-    </div>
-    <div class="insight-card insight-single">
-      <div class="insight-head">
-        <span class="glow-dot" style="background:var(--fb-color); box-shadow:0 0 8px var(--fb-color);"></span>
-        <h3>Facebook field notes</h3>
-      </div>
-      <ul class="voice">
-        <li style="color:#d7ece7; font-style:italic;">Facebook engagement averages 7.6% over the year, close behind Instagram.</li><li style="color:#d7ece7; font-style:italic;">The highest single rate we saw was 37.5%, on a post about language access changing outcomes. That came from a small view count, so treat it as a nice signal rather than a benchmark to chase.</li><li style="color:#d7ece7; font-style:italic;">Posting cadence is steady, about every 3.8 days. That rhythm isn't hurting reach, so it's worth keeping.</li>
-      </ul>
     </div>
   </div>
 
@@ -573,15 +516,6 @@
         <p class="small">Try widening your date filter.</p>
       </div>
     </div>
-    <div class="insight-card insight-single">
-      <div class="insight-head">
-        <span class="glow-dot" style="background:var(--tk-color); box-shadow:0 0 8px var(--tk-color);"></span>
-        <h3>TikTok field notes</h3>
-      </div>
-      <ul class="voice">
-        <li style="color:#d7ece7; font-style:italic;">TikTok is our weakest platform on engagement, averaging 3.2% over the year.</li><li style="color:#d7ece7; font-style:italic;">The tongue twister challenge still did best at 6.2%. Playful, low production content is outperforming polished clips here.</li><li style="color:#d7ece7; font-style:italic;">We're posting about once a week, with gaps stretching to 10 days. More frequent, lower effort videos are worth testing before writing the platform off.</li>
-      </ul>
-    </div>
   </div>
 
 
@@ -624,15 +558,6 @@
         <p class="big">No YouTube content in this range.</p>
         <p class="small">Try widening your date filter.</p>
       </div>
-    </div>
-    <div class="insight-card insight-single">
-      <div class="insight-head">
-        <span class="glow-dot" style="background:var(--yt-color); box-shadow:0 0 8px var(--yt-color);"></span>
-        <h3>YouTube field notes</h3>
-      </div>
-      <ul class="voice">
-        <li style="color:#d7ece7; font-style:italic;">YouTube posts the least often of any platform, averaging one video every 21 days.</li><li style="color:#d7ece7; font-style:italic;">Despite that, the myth-busting explainer pulled 1,844 views, the highest single view count across every platform this year.</li><li style="color:#d7ece7; font-style:italic;">That combination points to real demand without enough supply. A shorter, more frequent format could capture more of that interest without a full production cycle each time.</li>
-      </ul>
     </div>
   </div>
 
@@ -677,15 +602,6 @@
         <p class="small">Try widening your date filter.</p>
       </div>
     </div>
-    <div class="insight-card insight-single">
-      <div class="insight-head">
-        <span class="glow-dot" style="background:var(--li-color); box-shadow:0 0 8px var(--li-color);"></span>
-        <h3>LinkedIn field notes</h3>
-      </div>
-      <ul class="voice">
-        <li style="color:#d7ece7; font-style:italic;">LinkedIn engagement averages 3.1%, with impressions as our best available reach signal on this platform.</li><li style="color:#d7ece7; font-style:italic;">The workplace idioms post reached 3,173 impressions, the platform's high point for the year. Practical, career relevant content is what performs best here.</li><li style="color:#d7ece7; font-style:italic;">We're posting about once a week. That cadence fits a professional audience that isn't expecting daily updates.</li>
-      </ul>
-    </div>
   </div>
 
 
@@ -728,15 +644,6 @@
         <p class="big">No X content in this range.</p>
         <p class="small">Try widening your date filter.</p>
       </div>
-    </div>
-    <div class="insight-card insight-single">
-      <div class="insight-head">
-        <span class="glow-dot" style="background:var(--x-color); box-shadow:0 0 8px var(--x-color);"></span>
-        <h3>X field notes</h3>
-      </div>
-      <ul class="voice">
-        <li style="color:#d7ece7; font-style:italic;">X has the lowest average engagement rate at 2.0%, but it's also our most active platform, posting every 2.8 days on average.</li><li style="color:#d7ece7; font-style:italic;">The Super Bowl halftime post about Spanish reach was the strongest performer at 3.5% engagement. Timely, culturally relevant posts still cut through here.</li><li style="color:#d7ece7; font-style:italic;">High volume with a low rate is normal for this platform. The real question is whether that posting frequency is worth the time it takes, since the raw rate stays flat regardless.</li>
-      </ul>
     </div>
   </div>
 
