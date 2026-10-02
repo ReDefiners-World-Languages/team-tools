@@ -373,7 +373,7 @@
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Engagement rate</span><i class="fas fa-chart-bar" aria-hidden="true"></i></div><div class="metric-value" id="ovEngagement">--</div><p class="metric-sub">Weighted by sessions</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Key events</span><i class="fas fa-bullseye purple" aria-hidden="true"></i></div><div class="metric-value" id="ovKeyEvents">--</div><p class="metric-sub">Enrollment submits, sign-ups and other goals</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Paid spend</span><i class="fas fa-money-bill-wave orange" aria-hidden="true"></i></div><div class="metric-value" id="ovSpend">--</div><p class="metric-sub">Meta Ads and Google Ads</p></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Emails delivered</span><i class="fas fa-envelope pink" aria-hidden="true"></i></div><div class="metric-value" id="ovEmailDelivered">--</div><p class="metric-sub">Automated and one-off sends</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Emails delivered</span><i class="fas fa-envelope pink" aria-hidden="true"></i></div><div class="metric-value" id="ovEmailDelivered">--</div><p class="metric-sub">One-off emails count on their send date, automated emails on their activation date</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Email open rate</span><i class="fas fa-envelope-open" aria-hidden="true"></i></div><div class="metric-value" id="ovOpenRate">--</div><p class="metric-sub">Opens ÷ delivered. The sheet's opens can exceed delivered, so this can pass 100%</p></div>
     </div>
 
@@ -499,7 +499,7 @@
     <div class="platform-card">
       <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table" aria-hidden="true"></i>Email detail</h3></div>
       <div class="table-scroll"><table class="breakdown-table">
-        <thead><tr><th>Email name</th><th>Campaign (CRM)</th><th>Type</th><th>Delivered</th><th>Opens</th><th>Clicks</th></tr></thead>
+        <thead><tr><th>Email name</th><th>Campaign (CRM)</th><th>Type</th><th>Date</th><th>Delivered</th><th>Opens</th><th>Clicks</th></tr></thead>
         <tbody id="emTableBody"></tbody>
       </table></div>
       <p class="card-note" id="emailNote"></p>
@@ -1046,10 +1046,10 @@ function injectDeltaNodes(){
 /* =========================================================================================
    PART 6 — FILTER UI WIRING
    ========================================================================================= */
-function fillSelect(selectEl, options, allLabel){
+function fillSelect(selectEl, options, allLabel, labelFn){
   selectEl.innerHTML = '';
   const o = document.createElement('option'); o.value = 'all'; o.textContent = allLabel; selectEl.appendChild(o);
-  options.forEach(v => { const x = document.createElement('option'); x.value = v; x.textContent = v; selectEl.appendChild(x); });
+  options.forEach(v => { const x = document.createElement('option'); x.value = v; x.textContent = labelFn ? labelFn(v) : v; selectEl.appendChild(x); });
 }
 const uniq = arr => [...new Set(arr)].filter(Boolean).sort();
 function keepSelection(selectEl, key){ selectEl.value = state[key]; if (selectEl.value !== state[key]) { state[key] = 'all'; selectEl.value = 'all'; } }
@@ -1057,7 +1057,7 @@ function keepSelection(selectEl, key){ selectEl.value = state[key]; if (selectEl
 function buildFilterOptions(){
   fillSelect(el('filterLocation'), uniq(DATA.In_Person_Outreach_Log.map(r => r.locationOfOutreachActivity)), 'All locations');
   fillSelect(el('filterPlatform'), uniq(DATA['Paid Media'].map(r => r.platform)), 'All platforms');
-  fillSelect(el('filterEmailType'), uniq(DATA.Email_Marketing_Data.map(r => r.emailType)), 'All email types');
+  fillSelect(el('filterEmailType'), uniq(DATA.Email_Marketing_Data.map(r => r.emailType)), 'All email types', v => v === 'AUTOMATED' ? 'Automated (activation date)' : 'One-off (send date)');
   fillSelect(el('filterObjective'), uniq(DATA['Paid Media'].map(r => r.campaignObjective)), 'All objectives');
   fillSelect(el('filterCrmCampaign'), uniq(DATA.Email_Marketing_Data.map(r => r.campaignCRM)), 'All campaigns');
   fillSelect(el('filterSubscription'), uniq(DATA.Email_Marketing_Data.map(r => r.subscription)), 'All subscriptions');
@@ -1461,10 +1461,13 @@ function renderEmail(){
       plugins: { legend: legendCfg(), tooltip:{ callbacks:{ label: c => `${c.dataset.label}: ${c.parsed.y.toFixed(1)}%` } } } }
   });
 
-  el('emTableBody').innerHTML = rows.slice(0, 200).map(r =>
-    `<tr><td>${esc(r.emailName)}</td><td>${esc(r.campaignCRM)}</td><td><span class="badge ${r.emailType === 'AUTOMATED' ? 'green' : 'gold'}">${r.emailType === 'AUTOMATED' ? 'AUTOMATED' : 'ONE-OFF'}</span></td><td>${fmtInt(r.delivered)}</td><td>${fmtInt(r.opens)}</td><td>${fmtInt(r.clicks)}</td></tr>`
-  ).join('') || `<tr><td colspan="6" class="muted">No emails match these filters.</td></tr>`;
-  el('emailNote').textContent = 'Dates are when each email was created; the sheet has no send date.' + (rows.length > 200 ? ` Showing the first 200 of ${fmtInt(rows.length)} rows.` : '');
+  const kindLabel = { sent:'Sent', activated:'Activated', created:'Created' };
+  const fmtDay = d => parseDay(d).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  const newestFirst = rows.slice().sort((a, b) => b.date.localeCompare(a.date));
+  el('emTableBody').innerHTML = newestFirst.slice(0, 200).map(r =>
+    `<tr><td>${esc(r.emailName)}</td><td>${esc(r.campaignCRM)}</td><td><span class="badge ${r.emailType === 'AUTOMATED' ? 'green' : 'gold'}">${r.emailType === 'AUTOMATED' ? 'AUTOMATED' : 'ONE-OFF'}</span></td><td>${r.dateKind ? kindLabel[r.dateKind] + ' ' : ''}${fmtDay(r.date)}</td><td>${fmtInt(r.delivered)}</td><td>${fmtInt(r.opens)}</td><td>${fmtInt(r.clicks)}</td></tr>`
+  ).join('') || `<tr><td colspan="7" class="muted">No emails match these filters.</td></tr>`;
+  el('emailNote').textContent = 'One-off emails are dated by the day they were sent. Automated emails send continuously, so their date is when they were last activated, not a send date. Use the Email type filter to look at one kind at a time.' + (rows.length > 200 ? ` Showing the first 200 of ${fmtInt(rows.length)} rows.` : '');
 }
 
 /* =========================================================================================

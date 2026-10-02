@@ -33,3 +33,15 @@ The transform drops the newest GA week when it is under 35% of the recent median
 The Enrollments view reads `MCP_Enrollment_Data_SF`, which refreshes from Salesforce every 4 hours and has a `Class: Fiscal Year`
 column. On Sep 30, 2026 it held 5,607 rows, FY22-23 to FY26-27. (Earlier that day it was capped at 2,000 rows and the shrink check
 refused it.) The older export tab `MCP_Enrollment_Data` is no longer used and can be deleted.
+
+## Email tab dates
+
+`Email_Marketing_Data` has a `Delivery Date` column (S) that is filled on every row since 2026-10-02. The dashboard filters, sorts and
+labels emails by it, not by `Created Date`.
+- **One-off emails** (`BATCH`, `BATCH (localtime)`, `AB`): Delivery Date is the real send date (HubSpot `hs_publish_date`, New York date).
+- **Automated emails** (`AUTOMATED`): Delivery Date is the HubSpot activation (last publish) date, not a send date, because automated
+  emails send continuously. Their Notes cell says so. The transform records this as `dateKind` (`sent`, `activated`, or `created` when
+  Delivery Date is blank or the column is missing) and the dashboard shows "Sent", "Activated" or "Created" in front of each date.
+  In a short window an automated email only appears if it was activated in that window.
+- Do not rely on row order in the sheet (batch emails first, automated block last). The transform and dashboard sort by date.
+- The Notes column is free text and is not synced.

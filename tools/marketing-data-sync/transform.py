@@ -126,17 +126,25 @@ def paid(t):
 
 
 def email(t):
+    """Dates come from 'Delivery Date' (filled on every row since 2026-10-02). For one-off emails (BATCH, BATCH (localtime), AB) it is
+    the real send date. For AUTOMATED emails it is the HubSpot activation (last publish) date, NOT a send date, because automated
+    emails send continuously. dateKind records which, so the dashboard can say so. A blank Delivery Date, or a sheet without the
+    column, falls back to 'Created Date' and is marked 'created'."""
+    has_delivery = 'Delivery Date' in t.header
     out = []
     for r in t.rows:
-        d = iso(t.get(r, 'Created Date'))   # the sheet has no send date
+        kind = 'AUTOMATED' if text(t.get(r, 'Email Type')).upper() == 'AUTOMATED' else 'REGULAR'
+        d = iso(t.get(r, 'Delivery Date')) if has_delivery else ''
+        date_kind = ('activated' if kind == 'AUTOMATED' else 'sent') if d else 'created'
+        if not d:
+            d = iso(t.get(r, 'Created Date'))
         if not d:
             continue
-        kind = 'AUTOMATED' if text(t.get(r, 'Email Type')).upper() == 'AUTOMATED' else 'REGULAR'
         out.append([d, text(t.get(r, 'Email Name')), text(t.get(r, 'Campaign (CRM)')), kind, text(t.get(r, 'Subscription')),
                     num(t.get(r, 'Delivered')), num(t.get(r, 'Opens (excl. bots)')), num(t.get(r, 'Clicks (excl. bots)')),
-                    num(t.get(r, 'Hard Bounces')), num(t.get(r, 'Soft Bounces')), num(t.get(r, 'Unsubscribes')), num(t.get(r, 'Spam Reports'))])
+                    num(t.get(r, 'Hard Bounces')), num(t.get(r, 'Soft Bounces')), num(t.get(r, 'Unsubscribes')), num(t.get(r, 'Spam Reports')), date_kind])
     return table(['date', 'emailName', 'campaignCRM', 'emailType', 'subscription', 'delivered', 'opens', 'clicks',
-                  'hardBounces', 'softBounces', 'unsubscribes', 'spamReports'], out)
+                  'hardBounces', 'softBounces', 'unsubscribes', 'spamReports', 'dateKind'], out)
 
 
 def outreach(t):
