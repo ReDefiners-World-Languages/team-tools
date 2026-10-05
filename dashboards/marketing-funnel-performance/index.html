@@ -1906,6 +1906,20 @@ function renderMcpCategoryGrid(){
       return `<span class="cat-legend-item"><span class="cat-legend-dot" style="background:${color};"></span>${esc(g)}<span class="cat-legend-count">${count}</span></span>`;
     }).join('');
   });
+  equalizeMcpCards();
+}
+
+// Legends wrap differently per category (long course names), which made one card a few pixels taller and pushed
+// its neighbours out of line. Give every category card, and every completion card, the height of the tallest one.
+function equalizeMcpCards(){
+  const grid = el('mcpCategoryGrid');
+  if (!grid || !grid.offsetParent) return;   // tab is hidden, so nothing can be measured yet
+  ['.category-card', '.completion-card'].forEach(sel => {
+    const cards = [...grid.querySelectorAll(sel)];
+    cards.forEach(c => { c.style.minHeight = ''; });
+    const tallest = Math.max(0, ...cards.map(c => c.getBoundingClientRect().height));
+    if (tallest) cards.forEach(c => { c.style.minHeight = Math.ceil(tallest) + 'px'; });
+  });
 }
 
 function renderTeacherBoard(rows){
@@ -1998,6 +2012,7 @@ function exportActiveTabCSV(){
 function syncBreakpoints(){
   const w = document.documentElement.clientWidth;
   [1200, 1100, 640].forEach(b => document.documentElement.classList.toggle('w' + b, w <= b));
+  if (typeof state !== 'undefined' && state.activeTab === 'mcp') equalizeMcpCards();
 }
 
 async function init(){
@@ -2014,6 +2029,8 @@ async function init(){
   const tab = RENDERERS[fromHash] ? fromHash : 'overview';
   renderAll();
   selectTab(tab);
+  // Web fonts change how legends wrap, so re-measure the cards once they have loaded.
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (state.activeTab === 'mcp') equalizeMcpCards(); });
 }
 document.addEventListener('DOMContentLoaded', init);
 </script>
