@@ -897,6 +897,22 @@ let liveMeta = null;       // the parsed data.json, when it loaded
 let GRAN = 'day';          // sample data is daily; the live sheet is weekly
 let ANCHOR = NOW;          // "today" for the range buttons: the end of the newest week in the data
 
+// The range buttons count back from the newest data in ANY tab (capped at today), so the freshest tab is never cut off.
+// A weekly row dated Sep 28 covers Sep 28 to Oct 4, so weekly tabs count to the end of their newest week.
+function newestDataDay(payload){
+  let best = null;
+  Object.entries(payload.latest || {}).forEach(([tab, day]) => {
+    const d = parseDay(day);
+    if (!d) return;
+    const weekly = payload.granularity === 'week' && (tab.startsWith('GA4_') || tab === 'Paid Media');
+    const end = new Date(d.getTime() + (weekly ? 6 * DAY : 0));
+    if (!best || end > best) best = end;
+  });
+  const today = startOfDay(NOW);
+  if (best && best > today) best = today;
+  return best || parseDay(payload.anchorDate);
+}
+
 function expandTable(t){
   return t.rows.map(r => { const o = {}; t.cols.forEach((c, i) => o[c] = r[i]); return o; });
 }
@@ -913,7 +929,7 @@ async function loadLiveData(){
     LIVE_KEYS.forEach(k => { DATA[k] = expandTable(payload.tabs[k]); });
     DATA.Digital_Ads_and_Email_Outreach = [];   // not drawn, and it must not keep sample rows next to live ones
     GRAN = payload.granularity || 'day';
-    const anchor = parseDay(payload.anchorDate);
+    const anchor = newestDataDay(payload);
     if (anchor) ANCHOR = anchor;
     liveMeta = payload;
   } catch (err) {
@@ -990,6 +1006,17 @@ function compareSpan(){
   return { start, end, len };
 }
 const inPrev = dateStr => { const c = compareSpan(); return inSpan(dateStr, c.start, c.end); };
+// Weekly rows: compare with the same NUMBER of weeks right before the earliest week present, so a tab that lags the others
+// (3 weeks in the window against 4 before it) is not read as a drop.
+function prevWeeksSpan(rows){
+  const weeks = [...new Set(rows.map(r => r.date))].sort();
+  if (!weeks.length) return null;
+  const first = parseDay(weeks[0]), k = weeks.length;
+  return { start: new Date(first.getTime() - k * 7 * DAY), end: new Date(first.getTime() - DAY), k };
+}
+const prevSpanFor = rows => GRAN === 'week' ? prevWeeksSpan(rows) : compareSpan();
+const spanFn = s => (d => !!s && inSpan(d, s.start, s.end));
+const spanText = s => s.k ? `${s.k} week${s.k > 1 ? 's' : ''}` : `${s.len} days`;
 
 const fmtShort = d => d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
 function rangeLabel(){
@@ -1022,10 +1049,10 @@ function setDelta(id, cur, prev, o = {}){
     icon = diff > 0 ? 'fa-arrow-up' : 'fa-arrow-down';
     cls = good === 'neutral' ? 'neutral' : ((diff > 0) === (good === 'up') ? '' : 'down');
   }
-  const c = compareSpan();
+  const c = o.span || compareSpan();
   node.className = 'metric-change ' + cls;
   node.title = `Compared with ${fmtShort(c.start)} – ${fmtShort(c.end)}`;
-  node.innerHTML = `<i class="fas ${icon}" aria-hidden="true"></i>${flat ? 'Flat' : label} vs. previous ${c.len} days`;
+  node.innerHTML = `<i class="fas ${icon}" aria-hidden="true"></i>${flat ? 'Flat' : label} vs. previous ${spanText(c)}`;
   node.style.display = 'inline-flex';
 }
 function paint(list){
@@ -1205,14 +1232,14 @@ function lineChart(id, rows, key, label, color){
 /* =========================================================================================
    PART 8 — OVERVIEW (funnel, highlights, KPIs, trends)
    ========================================================================================= */
-function ovAgg(inFn){
-  const ga = DATA.GA4_Executive_Overview.filter(r => inFn(r.date));
+function ovAgg(inGa, inPaid, inEmail){
+  const ga = DATA.GA4_Executive_Overview.filter(r => inGa(r.date));
   const asFraction = ga.length && ga.every(r => num(r.engagementRate) <= 1);
   const sessions = sum(ga, 'sessions');
   const engaged = ga.reduce((a, r) => a + num(r.sessions) * num(r.engagementRate) * (asFraction ? 1 : 0.01), 0);
-  const paid = DATA['Paid Media'].filter(r => inFn(r.date) && (state.platform === 'all' || r.platform === state.platform));
-  const em = DATA.Email_Marketing_Data.filter(r => inFn(r.date) && (state.emailType === 'all' || r.emailType === state.emailType));
-  return { rows: ga, n: ga.length, users: sum(ga,'totalUsers'), active: sum(ga,'activeUsers'), sessions, engaged,
+  const paid = DATA['Paid Media'].filter(r => inPaid(r.date) && (state.platform === 'all' || r.platform === state.platform));
+  const em = DATA.Email_Marketing_Data.filter(r => inEmail(r.date) && (state.emailType === 'all' || r.emailType === state.emailType));
+  return { rows: ga, paidList: paid, n: ga.length, users: sum(ga,'totalUsers'), active: sum(ga,'activeUsers'), sessions, engaged,
     engRate: rate(engaged, sessions, 100), keyEvents: sum(ga,'keyEvents'),
     spend: sum(paid,'spend'), hasPaid: paid.length > 0, delivered: sum(em,'delivered'), hasEmail: em.length > 0, enoughEmail: em.length >= 3,
     openRate: rate(sum(em,'opens'), sum(em,'delivered'), 100) };
@@ -1260,18 +1287,20 @@ function highlightsFor(){
 }
 
 function renderOverview(){
-  const a = ovAgg(inRange);
-  const cmp = state.rangeDays === 'all' ? null : ovAgg(inPrev);
-  const P = cmp && cmp.n ? cmp : null;
+  const a = ovAgg(inRange, inRange, inRange);
+  const none = state.rangeDays === 'all';
+  const gaSpan = none ? null : prevSpanFor(a.rows), paidSpan = none ? null : prevSpanFor(a.paidList), emSpan = none ? null : compareSpan();
+  const P = none ? null : ovAgg(spanFn(gaSpan), spanFn(paidSpan), spanFn(emSpan));
+  const G = P && P.n ? P : null;
   paint([
-    { id:'ovTotalUsers', cur:a.users, prev:P && P.users, fmt:fmtInt },
-    { id:'ovActiveUsers', cur:a.active, prev:P && P.active, fmt:fmtInt },
-    { id:'ovSessions', cur:a.sessions, prev:P && P.sessions, fmt:fmtInt },
-    { id:'ovEngagement', cur:a.engRate, prev:P && P.engRate, fmt:v => fmtRate(v), kind:'rate' },
-    { id:'ovKeyEvents', cur:a.keyEvents, prev:P && P.keyEvents, fmt:fmtInt },
-    { id:'ovSpend', cur:a.hasPaid ? a.spend : null, prev:P && P.hasPaid ? P.spend : null, fmt:fmtUSD, good:'neutral' },
-    { id:'ovEmailDelivered', cur:a.hasEmail ? a.delivered : null, prev:P && P.enoughEmail && a.enoughEmail ? P.delivered : null, fmt:fmtInt, good:'neutral' },
-    { id:'ovOpenRate', cur:a.openRate, prev:P && P.enoughEmail && a.enoughEmail ? P.openRate : null, fmt:v => fmtRate(v), kind:'rate' }
+    { id:'ovTotalUsers', cur:a.users, prev:G && G.users, fmt:fmtInt, span:gaSpan },
+    { id:'ovActiveUsers', cur:a.active, prev:G && G.active, fmt:fmtInt, span:gaSpan },
+    { id:'ovSessions', cur:a.sessions, prev:G && G.sessions, fmt:fmtInt, span:gaSpan },
+    { id:'ovEngagement', cur:a.engRate, prev:G && G.engRate, fmt:v => fmtRate(v), kind:'rate', span:gaSpan },
+    { id:'ovKeyEvents', cur:a.keyEvents, prev:G && G.keyEvents, fmt:fmtInt, span:gaSpan },
+    { id:'ovSpend', cur:a.hasPaid ? a.spend : null, prev:P && P.hasPaid ? P.spend : null, fmt:fmtUSD, good:'neutral', span:paidSpan },
+    { id:'ovEmailDelivered', cur:a.hasEmail ? a.delivered : null, prev:P && P.enoughEmail && a.enoughEmail ? P.delivered : null, fmt:fmtInt, good:'neutral', span:emSpan },
+    { id:'ovOpenRate', cur:a.openRate, prev:P && P.enoughEmail && a.enoughEmail ? P.openRate : null, fmt:v => fmtRate(v), kind:'rate', span:emSpan }
   ]);
   el('ovTrendRangeLabel').textContent = rangeLabel();
   el('funnelRangeLabel').textContent = rangeLabel();
@@ -1383,17 +1412,18 @@ function paidAgg(rows){
 function renderPaid(){
   const rows = paidRows(inRange);
   const a = paidAgg(rows);
-  const p = state.rangeDays === 'all' ? null : paidAgg(paidRows(inPrev));
+  const pSpan = state.rangeDays === 'all' ? null : prevSpanFor(rows);
+  const p = pSpan ? paidAgg(paidRows(spanFn(pSpan))) : null;
   const P = p && p.n ? p : null;
   paint([
-    { id:'paidSpend', cur:a.spend, prev:P && P.spend, fmt:fmtUSD, good:'neutral' },
-    { id:'paidImpressions', cur:a.impressions, prev:P && P.impressions, fmt:fmtInt },
-    { id:'paidReach', cur:a.reach, prev:P && P.reach, fmt:fmtInt },
-    { id:'paidClicks', cur:a.clicks, prev:P && P.clicks, fmt:fmtInt },
-    { id:'paidLeads', cur:a.leads, prev:P && P.leads, fmt:fmtInt },
-    { id:'paidCtr', cur:a.ctr, prev:P && P.ctr, fmt:v => fmtRate(v, 2), kind:'rate' },
-    { id:'paidCpc', cur:a.cpc, prev:P && P.cpc, fmt:v => fmtMoney(v), good:'down' },
-    { id:'paidCpm', cur:a.cpm, prev:P && P.cpm, fmt:v => fmtMoney(v), good:'neutral' }
+    { id:'paidSpend', cur:a.spend, prev:P && P.spend, fmt:fmtUSD, good:'neutral', span:pSpan },
+    { id:'paidImpressions', cur:a.impressions, prev:P && P.impressions, fmt:fmtInt, span:pSpan },
+    { id:'paidReach', cur:a.reach, prev:P && P.reach, fmt:fmtInt, span:pSpan },
+    { id:'paidClicks', cur:a.clicks, prev:P && P.clicks, fmt:fmtInt, span:pSpan },
+    { id:'paidLeads', cur:a.leads, prev:P && P.leads, fmt:fmtInt, span:pSpan },
+    { id:'paidCtr', cur:a.ctr, prev:P && P.ctr, fmt:v => fmtRate(v, 2), kind:'rate', span:pSpan },
+    { id:'paidCpc', cur:a.cpc, prev:P && P.cpc, fmt:v => fmtMoney(v), good:'down', span:pSpan },
+    { id:'paidCpm', cur:a.cpm, prev:P && P.cpm, fmt:v => fmtMoney(v), good:'neutral', span:pSpan }
   ].map(m => a.n ? m : { ...m, cur:null }));
 
   const byCampaign = {};

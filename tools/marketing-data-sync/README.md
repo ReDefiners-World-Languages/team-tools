@@ -45,3 +45,13 @@ labels emails by it, not by `Created Date`.
   In a short window an automated email only appears if it was activated in that window.
 - Do not rely on row order in the sheet (batch emails first, automated block last). The transform and dashboard sort by date.
 - The Notes column is free text and is not synced.
+
+## Date window and comparisons
+
+The dashboard's range buttons (last 7 days, 30 days, and so on) count back from the newest data in **any** tab, capped at today.
+Weekly tabs (GA4, Paid Media) count to the end of their newest week. The newest tab is therefore never cut off, even when another
+tab lags a week or two behind. `anchorDate` in `data.json` records the same rule; the page recomputes it from `latest`.
+
+Period-over-period badges for weekly data compare the weeks present in the window with the **same number of weeks** right
+before the earliest of them (for example "vs. previous 3 weeks"), so a lagging tab is not read as a drop. Daily or event data
+(email, outreach) compares with the same-length calendar window before.

@@ -225,8 +225,14 @@ def build(raw_dir, mcp_tab='MCP_Enrollment_Data'):
     raw_ga_latest = latest(tabs['GA4_Executive_Overview'])   # before any partial week is dropped, so the stale-data check compares like with like
     partial = drop_partial_ga_week(tabs)
     today = dt.date.today()
-    ga_latest = latest(tabs['GA4_Executive_Overview'])
-    anchor = min(today, dt.date.fromisoformat(ga_latest) + dt.timedelta(days=6)) if ga_latest else today
+    # The dashboard counts its range buttons back from the newest data in any tab (weekly tabs to the end of their newest week).
+    ends = []
+    for name, tab in tabs.items():
+        newest = latest(tab)
+        if newest:
+            weekly = name.startswith('GA4_') or name == 'Paid Media'
+            ends.append(dt.date.fromisoformat(newest) + dt.timedelta(days=6 if weekly else 0))
+    anchor = min(today, max(ends)) if ends else today
     return {
         'generatedAt': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
         'source': 'Marketing_Unified_Database_Backend (Google Sheet), synced by tools/marketing-data-sync',
