@@ -1868,7 +1868,7 @@ function renderMcpCategoryGrid(){
     return `<div class="category-block" data-cat="${slug}">
       <div class="category-card">
         <div class="cat-title"><h4>${esc(cat.category)}</h4><div class="cat-title-right">${deltaBadge}<span class="cat-total">${fmtInt(catTotal)}</span></div></div>
-        <p class="cat-sub">${previousLabel ? `${esc(previousLabel)} vs. ${esc(currentFY)}` : esc(currentFY || 'No fiscal year data')} · by course group</p>
+        <p class="cat-sub">${previousLabel ? `${esc(previousLabel)} vs. ${esc(currentFY)}` : esc(currentFY || 'No fiscal year data')} · share by course group</p>
         <div class="cat-chart-wrap">${chartBlock}</div>
       </div>
       <div class="completion-card"><div class="cc-head"><span class="lbl">Completion rate</span><span class="rate">${fmtRate(rate(catCompleted, catTotal, 100))}</span></div>
@@ -1880,16 +1880,23 @@ function renderMcpCategoryGrid(){
     if (!canvas) return;
     const cur = currentRows.filter(r => r.category === cat.category), prev = previousRows.filter(r => r.category === cat.category);
     const labels = previousLabel ? [previousLabel, currentFY] : [currentFY];
-    canvas.setAttribute('role', 'img'); canvas.setAttribute('aria-label', `${cat.category}: enrollments by course group, ${labels.join(' vs. ')}`);
+    canvas.setAttribute('role', 'img'); canvas.setAttribute('aria-label', `${cat.category}: share of enrollments by course group, ${labels.join(' vs. ')}`);
+    // Raw counts per bar (one entry per label); the bars are drawn as shares so every bar stacks to 100%.
+    const counts = cat.groups.map(g => previousLabel
+      ? [prev.filter(r => r.group === g).length, cur.filter(r => r.group === g).length]
+      : [cur.filter(r => r.group === g).length]);
+    const totals = labels.map((_, i) => counts.reduce((sum, c) => sum + c[i], 0));
     if (charts[`mcpCatChart_${slug}`]) charts[`mcpCatChart_${slug}`].destroy();
     charts[`mcpCatChart_${slug}`] = new Chart(canvas, {
       type: 'bar',
       data: { labels, datasets: cat.groups.map((g, gi) => ({ label: g,
-        data: previousLabel ? [prev.filter(r => r.group === g).length, cur.filter(r => r.group === g).length] : [cur.filter(r => r.group === g).length],
+        data: counts[gi].map((n, i) => totals[i] ? n / totals[i] * 100 : 0), counts: counts[gi],
         backgroundColor: SEG_COLORS[gi % SEG_COLORS.length], borderColor: C.surface, borderWidth: 2, borderRadius: 3 })) },
       options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        scales: { x:{ stacked:true, display:false }, y:{ stacked:true, grid:{ display:false }, border:{ display:false }, ticks:{ color:'rgba(223,240,238,0.82)', font:{ size:12, weight:'600' } } } },
-        plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label: c => `${c.dataset.label}: ${c.parsed.x}` } } } }
+        scales: { x:{ stacked:true, display:false, min:0, max:100 }, y:{ stacked:true, grid:{ display:false }, border:{ display:false }, ticks:{ color:'rgba(223,240,238,0.82)', font:{ size:12, weight:'600' } } } },
+        plugins: { legend:{ display:false }, tooltip:{ callbacks:{
+          label: c => `${c.dataset.label}: ${fmtInt(c.dataset.counts[c.dataIndex])} (${c.parsed.x.toFixed(1)}%)`,
+          footer: items => `Total ${items[0].label}: ${fmtInt(totals[items[0].dataIndex])} enrollments` } } } }
     });
     const legendEl = el(`mcpCatLegend_${slug}`);
     if (legendEl) legendEl.innerHTML = cat.groups.map((g, gi) => {
