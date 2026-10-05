@@ -10,9 +10,9 @@ Keeps `dashboards/marketing-funnel-performance/data.json` current from the Googl
 
 1. **Fetch (Composio workbench).** Read each tab in full with `GOOGLESHEETS_VALUES_GET` (range = the tab name in single quotes, no
    start/end rows: a bounded range is ignored and repeats rows). Tabs: `GA4_Executive_Overview`, `GA4_Traffic_Acquisition`,
-   `GA4_Page_Engagement`, `GA4_Isolated_Conversions`, `Paid Media`, `Email_Marketing_Data`, `In_Person_Outreach_Log`,
-   `MCP_Enrollment_Data_SF`. Always pass `account="Work Sheets"` to `run_composio_tool` (two Google Sheets accounts are connected and the call fails without it). Save each as `/mnt/files/raw/<tab>.json` (the `values` list), zip them, call
-   `upload_local_file`, and use the returned `s3_url`. Row counts on Sep 30, 2026: 180, 8130, 16818, 887, 48, 344, 398, 5608 (they only grow).
+   `GA4_Page_Engagement`, `GA4_Conversion_Attribution`, `GA4_Conversion_First_Touch`, `GA4_Conversion_Landing_Pairs`,
+   `GA4_Landing_Page_Sessions`, `Paid Media`, `Email_Marketing_Data`, `In_Person_Outreach_Log`, `MCP_Enrollment_Data_SF`. Always pass `account="Work Sheets"` to `run_composio_tool` (two Google Sheets accounts are connected and the call fails without it). Save each as `/mnt/files/raw/<tab>.json` (the `values` list), zip them, call
+   `upload_local_file`, and use the returned `s3_url`. Row counts on Oct 5, 2026: 180, 8184, 16905, 735, 313, 374, 1572, 510, 346, 423, 5674 (they only grow).
    The Drive connector truncates big tabs; do not use it for this.
 2. **Download and transform (local).**
    ```
@@ -27,6 +27,23 @@ Keeps `dashboards/marketing-funnel-performance/data.json` current from the Googl
 
 The transform drops the newest GA week when it is under 35% of the recent median (a mid-week pull) and records it in
 `partialWeekDropped`; the dashboard says so in its footer.
+
+## Conversions tab (four tabs, written by Paul)
+
+The Conversions tab shows what brought people to each conversion. It reads `GA4_Conversion_Attribution` (session view: channel, source / medium,
+campaign, landing page), `GA4_Conversion_First_Touch` (first-ever touch, no landing page: GA4 has none), `GA4_Conversion_Landing_Pairs` (top 20
+landing page and conversion pairs per week) and `GA4_Landing_Page_Sessions` (all sessions per landing page, the denominator for rates).
+All are weekly, Monday to Sunday, complete weeks only (Paul appends the newest complete week; never the current partial one).
+- **Tab names and headers belong to Paul.** `transform.py` looks columns up by header name, so a rename on the sheet breaks the sync and the
+  dashboard. Route any rename through Lucas Blanco first.
+- **Public file, so no query strings.** Landing pages are stored as path only. The source tabs hold query strings with tracking IDs
+  (`_hsenc`, `hsa_acc`, `fbclid`). The Host column and the pairs tab's Sessions column are not carried either (see the comments in `transform.py`).
+- `Channel (adjusted)` is Paul's rule (Peachjar, Flyer and chatgpt.com are shown by source, not left in Referral or Unassigned). The raw GA4
+  channel is kept in `data.json` as `rawChannel` but the dashboard does not show it.
+- `GA4_Isolated_Conversions` is **no longer synced**; the tab stays in the sheet. The dashboard has no use for it any more.
+- Dashboard settings for this tab live in the `CONV_*` constants at the top of its block in `index.html`: the conversion list and labels
+  (`CONV_EVENTS`), the tracking-gap lines (`CONV_GAP_THRESHOLD_SESSION` = 30, final; `CONV_GAP_THRESHOLD_FIRST_TOUCH` = 40, provisional) and
+  the low-volume greying (`CONV_LOW_VOLUME_MIN` = 10, provisional).
 
 ## Enrollment tab
 
