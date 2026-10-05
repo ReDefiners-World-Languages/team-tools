@@ -1415,6 +1415,13 @@ function highlightsFor(){
   const topCh = Object.entries(byCh).sort((a, b) => b[1] - a[1])[0];
   if (topCh && chTotal > 0) out.push(`<strong>${esc(topCh[0])}</strong> brings the most traffic, at ${fmtRate(rate(topCh[1], chTotal, 100), 0)} of sessions.`);
 
+  // The biggest source we can trace. Direct and Unassigned are left out on purpose: they are the sources we cannot trace.
+  const ca = CONV_TABS.attribution.f, cc = {}; let cTotal = 0;
+  DATA[CONV_TABS.attribution.tab].filter(r => inRange(r[ca.week])).forEach(r => { const n = num(r[ca.count]); cTotal += n;
+    if (!['Direct', 'Unassigned'].includes(r[ca.channel])) cc[r[ca.channel]] = (cc[r[ca.channel]] || 0) + n; });
+  const topConv = Object.entries(cc).sort((a, b) => b[1] - a[1])[0];
+  if (topConv && cTotal > 0) out.push(`<strong>${esc(chanName(topConv[0]))}</strong> is the biggest traceable source of conversions: ${fmtInt(topConv[1])} of ${fmtInt(cTotal)}.`);
+
   const paid = DATA['Paid Media'].filter(r => inRange(r.date));
   const plat = {}; paid.forEach(r => { const p = plat[r.platform] || (plat[r.platform] = { s: 0, c: 0 }); p.s += num(r.spend); p.c += num(r.linkClicks); });
   const cpcs = Object.entries(plat).map(([k, v]) => [k, rate(v.s, v.c)]).filter(x => x[1] !== null).sort((a, b) => a[1] - b[1]);
