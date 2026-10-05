@@ -98,14 +98,61 @@ def ga_pages(t):
     return table(['date', 'pagePath', 'views', 'viewsPerUser', 'avgEngagementTimeSec'], out)
 
 
-def ga_conversions(t):
+# --- Conversions tab: what brought people to each conversion (four tabs written by Paul, Analytics Expert) ---
+# Tab names and headers belong to Paul: renaming one on the sheet breaks the dashboard, so it goes through Lucas first.
+# data.json is public, so landing pages keep the path only: query strings carry tracking IDs (_hsenc, hsa_acc, fbclid ...).
+# The Host column is not carried, and neither is Sessions from the pairs tab (it only counts sessions where the event fired,
+# so it is not a rate denominator; the rate uses GA4_Landing_Page_Sessions). The first column of each stays 'date' so the
+# partial-week rule below (tabs named GA4_*) covers them too.
+def path_only(v):
+    s = text(v).split('?')[0].split('#')[0] or '/'
+    # A few GA4 "pages" are broken email links (for example /&user=name@...&sig=...) and can hold a staff email address.
+    # Never publish those: a real path on the site has no @, = or & in it.
+    return '(unrecognised link)' if re.search(r'[@=&]', s) else s
+
+
+def conv_attribution(t):
     out = []
     for r in t.rows:
         d = iso(t.get(r, 'Week Start Date'))
         if not d:
             continue
-        out.append([d, text(t.get(r, 'Page Path')), text(t.get(r, 'Event Name')), num(t.get(r, 'Event Count')), num(t.get(r, 'Sessions on Page'))])
-    return table(['date', 'pagePath', 'eventName', 'eventCount', 'sessionsOnPage'], out)
+        out.append([d, text(t.get(r, 'Event Name')), text(t.get(r, 'Session Default Channel Group')), text(t.get(r, 'Channel (adjusted)')),
+                    text(t.get(r, 'Session Source / Medium')), text(t.get(r, 'Session Campaign')),
+                    path_only(t.get(r, 'Landing Page (path + query)')), num(t.get(r, 'Key Events')), num(t.get(r, 'Sessions'))])
+    return table(['date', 'eventName', 'rawChannel', 'channel', 'sourceMedium', 'campaign', 'landingPage', 'keyEvents', 'sessions'], out)
+
+
+def conv_first_touch(t):
+    out = []
+    for r in t.rows:
+        d = iso(t.get(r, 'Week Start Date'))
+        if not d:
+            continue
+        out.append([d, text(t.get(r, 'Event Name')), text(t.get(r, 'First User Default Channel Group')), text(t.get(r, 'Channel (adjusted)')),
+                    text(t.get(r, 'First User Source / Medium')), text(t.get(r, 'First User Campaign')),
+                    num(t.get(r, 'Key Events')), num(t.get(r, 'Users'))])
+    return table(['date', 'eventName', 'rawChannel', 'channel', 'sourceMedium', 'campaign', 'keyEvents', 'users'], out)
+
+
+def conv_pairs(t):
+    out = []
+    for r in t.rows:
+        d = iso(t.get(r, 'Week Start Date'))
+        if not d:
+            continue
+        out.append([d, path_only(t.get(r, 'Landing Page (path, query stripped)')), text(t.get(r, 'Event Name')), num(t.get(r, 'Key Events'))])
+    return table(['date', 'landingPage', 'eventName', 'keyEvents'], out)
+
+
+def conv_landing_sessions(t):
+    out = []
+    for r in t.rows:
+        d = iso(t.get(r, 'Week Start Date'))
+        if not d:
+            continue
+        out.append([d, path_only(t.get(r, 'Landing Page (path, query stripped)')), num(t.get(r, 'Sessions')), num(t.get(r, 'Users'))])
+    return table(['date', 'landingPage', 'sessions', 'users'], out)
 
 
 OBJECTIVES = {'LINK_CLICKS': 'Traffic', 'OUTCOME_LEADS': 'Leads', 'OUTCOME_TRAFFIC': 'Traffic', 'OUTCOME_AWARENESS': 'Awareness',
@@ -181,9 +228,14 @@ def mcp(t):
 
 BUILDERS = {
     'GA4_Executive_Overview': ga_overview, 'GA4_Traffic_Acquisition': ga_traffic, 'GA4_Page_Engagement': ga_pages,
-    'GA4_Isolated_Conversions': ga_conversions, 'Paid Media': paid, 'Email_Marketing_Data': email,
+    'GA4_Conversion_Attribution': conv_attribution, 'GA4_Conversion_First_Touch': conv_first_touch,
+    'GA4_Conversion_Landing_Pairs': conv_pairs, 'GA4_Landing_Page_Sessions': conv_landing_sessions,
+    'Paid Media': paid, 'Email_Marketing_Data': email,
     'In_Person_Outreach_Log': outreach, 'MCP_Enrollment_Data': mcp,
 }
+# GA4_Isolated_Conversions (event + page it fired on) is no longer synced: the redesigned Conversions tab replaced it. The sheet tab stays (Paul).
+
+
 def latest(tab):
     """Newest date that is not in the future (a typo like 2026-12-05 must not make a tab look fresh)."""
     i = tab['cols'].index('date') if 'date' in tab['cols'] else tab['cols'].index('enrollmentDate')

@@ -206,6 +206,48 @@
   .kpi-mini .val { font-size:24px; font-weight:800; color:var(--ink); margin-top:6px; }
   .kpi-mini .sub { font-size:12px; color:var(--ink-3); margin-top:4px; }
 
+  /* Conversions: what brought people to each conversion */
+  .conv-controls { display:flex; flex-wrap:wrap; align-items:center; gap:12px 18px; margin-bottom:20px; }
+  .conv-controls .seg { display:inline-flex; gap:6px; flex-wrap:wrap; }
+  .conv-controls .hint { font-size:12px; color:var(--ink-3); flex:1; min-width:260px; line-height:1.5; }
+  .sample-badge { font-size:11px; font-weight:700; letter-spacing:.04em; padding:3px 10px; border-radius:60px; display:inline-flex; align-items:center; gap:6px;
+    background:rgba(255,193,0,0.14); color:var(--amber); border:1px dashed rgba(255,193,0,0.45); white-space:nowrap; }
+  .conv-flag { display:flex; gap:14px; align-items:flex-start; padding:14px 18px; border-radius:12px; margin-bottom:20px; font-size:13px; line-height:1.55; }
+  .conv-flag > i { margin-top:3px; font-size:15px; }
+  .conv-flag.warn { background:rgba(255,193,0,0.08); border:1px solid rgba(255,193,0,0.28); color:var(--amber); }
+  .conv-flag.ok { background:rgba(63,224,165,0.08); border:1px solid rgba(63,224,165,0.25); color:var(--mint); }
+  .conv-flag b { color:var(--ink); font-weight:700; }
+  .conv-flag .sub { color:var(--ink-3); display:block; margin-top:4px; font-size:12px; font-weight:400; font-style:normal; line-height:1.5; }
+  .kpi-mini .sub.gap { color:#ffb27a; font-weight:600; }
+  .sample-badge.live { background:rgba(63,224,165,0.12); color:var(--mint); border:1px solid rgba(63,224,165,0.35); }
+  #convSourceTable td:nth-child(2) { white-space:nowrap; min-width:150px; }
+  #convSourceTable td.lp-cell { max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #convChannelBody td:first-child, #convLandingBody td:first-child { white-space:nowrap; }
+  .host { color:var(--ink-3); font-weight:500; }
+  .path { color:var(--ink); font-weight:600; }
+  .chan-dot { display:inline-block; width:9px; height:9px; border-radius:3px; margin-right:8px; vertical-align:middle; }
+  .num-cell { text-align:right; white-space:nowrap; }
+  .breakdown-table th.num-cell { text-align:right; }
+  .breakdown-table .gapcell { color:#ffb27a; }
+  .na-note { color:var(--ink-3); font-style:italic; }
+  .matrix { font-size:13px; }
+  .matrix { min-width:960px; }
+  .matrix th:first-child { min-width:240px; }
+  .matrix th { vertical-align:bottom; min-width:62px; overflow-wrap:anywhere; padding-right:8px; line-height:1.3; }
+  .matrix td.cell { text-align:center; font-weight:600; border-left:1px solid var(--line); padding:10px 6px; min-width:64px; }
+  .matrix td.cell.zero { color:var(--ink-3); font-weight:400; }
+  .matrix .rate { display:block; font-size:12px; color:var(--ink-3); font-weight:500; }
+  .lowvol { color:var(--ink-3); }
+  .view-explain { display:grid; grid-template-columns:1fr 1fr; gap:10px; flex:1; min-width:300px; }
+  .view-explain > div { font-size:12px; line-height:1.5; color:var(--ink-3); padding:8px 12px; border-radius:10px; border:1px solid var(--line); }
+  .view-explain > div b { display:block; color:var(--ink-2); font-size:12px; margin-bottom:2px; }
+  .view-explain > div.on { color:var(--ink-2); border-color:var(--line-2); background:rgba(255,255,255,0.05); }
+  .view-explain > div.on b { color:var(--ink); }
+  #conversionsKpiGrid { grid-template-columns:repeat(4,1fr); }
+  #conversionsKpiGrid .lbl { white-space:normal; word-break:break-word; min-height:36px; }
+  .w1100 #conversionsKpiGrid { grid-template-columns:repeat(2,1fr); }
+  .w640 #conversionsKpiGrid { grid-template-columns:1fr; }
+
   .footer-row { margin-top:8px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--ink-3);
     border-top:1px solid var(--line); padding-top:18px; }
 
@@ -341,6 +383,7 @@
     </div>
     <span class="freshness" id="tabFreshness"></span>
   </div>
+  <p class="card-note" id="dateWeekNote" style="display:none;margin:-2px 0 14px;">Conversion data is weekly. Weeks run Monday to Sunday and are shown by the week's Monday. A week is included when its Monday falls inside the dates you pick.</p>
 
   <div class="filter-select-row" id="selectRow">
     <label class="fgroup" data-tabs="overview paid"><span class="filter-select-label">Platform</span><select class="tag-select" id="filterPlatform"></select></label>
@@ -428,21 +471,52 @@
     </div>
   </div>
 
-  <!-- CONVERSIONS -->
+  <!-- CONVERSIONS (redesigned: what brought people to each conversion) -->
   <div class="tab-section" id="tab-conversions" role="tabpanel" aria-labelledby="tabbtn-conversions">
-    <div class="kpi-mini-grid" id="conversionsKpiGrid"></div>
-    <div class="chart-card" style="margin-bottom:24px;">
-      <div class="card-title"><h3><i class="fas fa-chart-column" aria-hidden="true"></i>Top pages for key events</h3><span class="meta" id="conversionsRangeLabel"></span></div>
-      <div class="chart-box" style="height:300px;"><canvas id="conversionsBarChart"></canvas><div class="chart-empty"></div></div>
+    <div class="conv-controls">
+      <div class="seg" role="group" aria-label="Attribution view">
+        <button class="filter-tag active" type="button" data-convview="session" aria-pressed="true"><i class="fas fa-route" aria-hidden="true"></i>Session</button>
+        <button class="filter-tag" type="button" data-convview="first" aria-pressed="false"><i class="fas fa-flag" aria-hidden="true"></i>First touch</button>
+      </div>
+      <div class="view-explain">
+        <div data-explain="session" class="on"><b>Session</b>What brought this visit: the channel, source, campaign and landing page of the visit that converted.</div>
+        <div data-explain="first"><b>First touch</b>How the person first found us: user-level, so it can predate this visit by weeks. No landing page in this view.</div>
+      </div>
+      <span class="sample-badge data-badge" title=""><i class="fas fa-flask" aria-hidden="true"></i><span>Sample data</span></span>
     </div>
-    <div class="platform-card">
-      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table" aria-hidden="true"></i>Conversion rate by page</h3></div>
-      <p class="metric-sub" style="margin:-6px 0 14px;">Conversion rate is event count divided by sessions on that page, kept separate for each page so one busy page doesn't skew the rest.</p>
-      <div class="table-scroll"><table class="breakdown-table">
-        <thead><tr><th>Page path</th><th>Event name</th><th>Event count</th><th>Sessions on page</th><th>Conversion rate</th></tr></thead>
-        <tbody id="conversionsTableBody"></tbody>
+
+    <div class="conv-flag warn" id="convFlag" role="note"></div>
+    <div class="kpi-mini-grid" id="conversionsKpiGrid"></div>
+
+    <div class="row-duo">
+      <div class="chart-card">
+        <div class="card-title"><h3><i class="fas fa-diagram-project" aria-hidden="true"></i>Conversions by <span id="convChannelWord">session</span> channel group</h3><span class="meta"><span id="conversionsRangeLabel"></span> <span class="seg" style="margin-left:10px;"><button class="filter-tag active" type="button" data-chartmode="count" style="min-height:30px;padding:0 12px;font-size:12px;">Counts</button><button class="filter-tag" type="button" data-chartmode="share" style="min-height:30px;padding:0 12px;font-size:12px;">Share of each conversion</button></span></span></div>
+        <div class="chart-box" style="height:300px;"><canvas id="conversionsBarChart"></canvas><div class="chart-empty"></div></div>
+      </div>
+      <div class="platform-card">
+        <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-list-ol" aria-hidden="true"></i>Channel groups</h3><span class="sample-badge data-badge short"><span>Sample data</span></span></div>
+        <table class="breakdown-table"><thead><tr><th>Channel group</th><th class="num-cell">Conversions</th><th class="num-cell">Share</th></tr></thead><tbody id="convChannelBody"></tbody></table>
+      </div>
+    </div>
+
+    <div class="platform-card" style="margin-bottom:24px;">
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table" aria-hidden="true"></i>What brought people to each conversion</h3><span class="sample-badge data-badge short"><span>Sample data</span></span></div>
+      <div class="search-bar"><i class="fas fa-magnifying-glass" aria-hidden="true"></i><input type="text" id="convSearch" placeholder="Search conversion, source, campaign, or landing page" aria-label="Search conversion sources"></div>
+      <div class="table-scroll"><table class="breakdown-table" id="convSourceTable">
+        <thead id="convSourceHead"></thead>
+        <tbody id="convSourceBody"></tbody>
       </table></div>
-      <p class="card-note" id="conversionsNote"></p>
+      <p class="card-note" id="convSourceNote"></p>
+    </div>
+
+    <div class="platform-card">
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-trophy" aria-hidden="true"></i>Top 10 landing pages and the conversions they led to</h3><span class="sample-badge data-badge short"><span>Sample data</span></span></div>
+      <p class="metric-sub" style="margin:-6px 0 14px;">Landing page is where the session started, so this table always uses the session view. Each cell is the number of conversions from sessions that started on that page (path only, subdomain not shown). The rate is those conversions divided by all sessions that started there, with both counts shown.</p>
+      <div class="table-scroll"><table class="breakdown-table matrix">
+        <thead id="convLandingHead"></thead>
+        <tbody id="convLandingBody"></tbody>
+      </table></div>
+      <p class="card-note" id="convLandingNote"></p>
     </div>
   </div>
 
@@ -610,7 +684,7 @@ function categorizeCourse(rawCourseName){
 }
 
 /* =========================================================================================
-   PART 2 — KEY EVENTS CONFIGURATION ENGINE  (Tab: GA4_Isolated_Conversions)
+   PART 2 — KEY EVENTS CONFIGURATION ENGINE
    ========================================================================================= */
 const DASHBOARD_CONFIG = {
   primaryKeyEvents: ['program_enrollment_submit', 'newsletter_signup', 'mcp_registration_complete', 'form_submit_allgoals'],
@@ -732,24 +806,86 @@ MOCK.GA4_Page_Engagement = (() => {
   return rows;
 })();
 
-// --- GA4_Isolated_Conversions ---
-MOCK.GA4_Isolated_Conversions = (() => {
-  const EVENTS = ['program_enrollment_submit','newsletter_signup','contact_form_submit','brochure_download','event_rsvp'];
-  const rows = [];
-  let id = 0;
-  for (let i = MOCK_DAYS; i >= 0; i -= 2) {
-    const d = daysAgo(i);
-    const n = randInt(id+400, 1, 3);
-    for (let j = 0; j < n; j++) {
-      id++;
-      const page = pick(PAGES, id+2);
-      const eventName = pick(EVENTS, id+4);
-      const sessionsOnPage = randInt(id+6, 20, 260);
-      const eventCount = Math.round(sessionsOnPage * (0.02 + seeded(id+8)*0.16));
-      rows.push({ date: toISODate(d), pagePath: page, eventName, eventCount, sessionsOnPage });
-    }
+// --- Conversion attribution (sample data for the fallback only: all numbers are made up) ----------------------------
+// PROVISIONAL CONFIG. Lucas has not yet confirmed the conversion list or the labels: change CONV_EVENTS (one array) to change both.
+const CONV_EVENTS = [
+  { event:'mcp_registration_complete',   label:'MCP Registration' },
+  { event:'contact_us',                  label:'Contact Us' },
+  { event:'steam_registration_complete', label:'Summer STEAM Registration' }
+];
+const CONV_GAP_THRESHOLD_SESSION = 30;      // % of conversions from Direct + Unassigned that triggers the tracking-gap banner, Session view. Set by Lucas Blanco (final).
+const CONV_GAP_THRESHOLD_FIRST_TOUCH = 40; // same, First touch view. PROVISIONAL: first touch runs higher; Lucas Blanco has not picked a number.
+const CONV_LOW_VOLUME_MIN = 10;  // rates built on fewer conversions than this are greyed. Provisional.
+// Tab names are the sheet tab names (and the keys in data.json). Column names are the data.json field names written by the build/sync step.
+// Sheet headers (Paul's tabs): see build_preview_data.py. Mock rows below use these field names as keys.
+const CONV_TABS = {
+  attribution:     { tab:'GA4_Conversion_Attribution',   f:{ week:'date', event:'eventName', rawChannel:'rawChannel', channel:'channel', sourceMedium:'sourceMedium', campaign:'campaign', landing:'landingPage', count:'keyEvents', sessions:'sessions' } },
+  first:           { tab:'GA4_Conversion_First_Touch',   f:{ week:'date', event:'eventName', rawChannel:'rawChannel', channel:'channel', sourceMedium:'sourceMedium', campaign:'campaign', count:'keyEvents', users:'users' } },
+  pairs:           { tab:'GA4_Conversion_Landing_Pairs', f:{ week:'date', landing:'landingPage', event:'eventName', count:'keyEvents' } },   // top 20 pairs per week
+  landingSessions: { tab:'GA4_Landing_Page_Sessions',    f:{ week:'date', landing:'landingPage', sessions:'sessions', users:'users' } }          // all sessions per landing page
+};
+const CONV_OTHER = { event:'__other', label:'Other key events' };   // every key event not in CONV_EVENTS (form_submission, regular_newsletter_signup ...) is grouped here
+const CONV_CHANNELS = ['Organic Search','Direct','Referral','Email','AI Assistant','Peachjar','Flyer','Unassigned'];   // "Channel (adjusted)"
+// per adjusted channel: [raw GA4 channel group, source / medium, campaign, weight]
+const CONV_SRC = {
+  'Organic Search': [['Organic Search','google / organic','(organic)',76],['Organic Search','bing / organic','(organic)',16],['Organic Search','duckduckgo / organic','(organic)',8]],
+  'Direct':         [['Direct','(direct) / (none)','(direct)',100]],
+  'Referral':       [['Referral','hillsboroughcounty.org / referral','(referral)',45],['Referral','tampalibrary.org / referral','(referral)',33],['Referral','211tampabay.org / referral','(referral)',22]],
+  'Email':          [['Email','hubspot / email','Lead generation',40],['Email','hubspot / email','mcp',40],['Email','newsletter / email','(not set)',20]],
+  'AI Assistant':   [['AI Assistant','chatgpt.com / referral','(referral)',55],['AI Assistant','perplexity / (not set)','(not set)',45]],
+  'Peachjar':       [['Unassigned','peachjar / (not set)','(not set)',100]],
+  'Flyer':          [['Unassigned','flyer / (not set)','(not set)',55],['Unassigned','flyer / print','In-Person Enrollment',45]],
+  'Unassigned':     [['Unassigned','(not set) / (not set)','(not set)',100]]
+};
+const CONV_W_SESSION = { // by conversion: weight of each adjusted channel for the session that converted
+  mcp_registration_complete:   { 'Organic Search':28, 'Direct':29, 'Referral':12, 'Email':15, 'AI Assistant':3, 'Peachjar':5, 'Flyer':4, 'Unassigned':4 },
+  contact_us:                  { 'Organic Search':40, 'Direct':27, 'Referral':15, 'Email':5, 'AI Assistant':4, 'Peachjar':2, 'Flyer':2, 'Unassigned':5 },
+  steam_registration_complete: { 'Organic Search':15, 'Direct':20, 'Referral':5, 'Email':35, 'AI Assistant':0, 'Peachjar':15, 'Flyer':8, 'Unassigned':2 } };
+const CONV_W_FIRST = { 'Organic Search':17, 'Direct':52, 'Referral':6, 'Email':4, 'AI Assistant':2, 'Peachjar':6, 'Flyer':6, 'Unassigned':7 };
+const CONV_PER_WEEK = { mcp_registration_complete:42, contact_us:9, steam_registration_complete:1.2 };   // dummy volumes, roughly the real tens per week
+const CONV_LANDINGS = [ // [path, weight of conversions]
+  ['/learn-in-florida',26],['/',22],['/myredefiners-portal',16],['/contact-us',14],['/successful-registration-mcp',11],
+  ['/programs/esol-for-adults',9],['/events',6],['/summer-steam',5],['/about',4],['/donate',3]];
+function convWeighted(items, seed, wOf){
+  const total = items.reduce((s, it) => s + wOf(it), 0); let x = seeded(seed) * total;
+  for (const it of items) { x -= wOf(it); if (x <= 0) return it; }
+  return items[items.length - 1];
+}
+(() => {
+  const A = CONV_TABS.attribution.f, F = CONV_TABS.first.f, P = CONV_TABS.pairs.f;
+  const monday = d => { const x = new Date(d); x.setHours(0,0,0,0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x; };
+  const sess = new Map(), first = new Map(), combo = new Map(), pairs = new Map();
+  let id = 9100;
+  for (let w = 30; w >= 0; w--) {
+    const wk = toISODate(new Date(monday(NOW).getTime() - w * 7 * 86400000));
+    CONV_EVENTS.forEach(({ event: ev }) => {
+      const exp = CONV_PER_WEEK[ev] * (0.75 + seeded(++id) * 0.5);
+      const n = Math.floor(exp) + (seeded(++id) < exp - Math.floor(exp) ? 1 : 0);
+      for (let k = 0; k < n; k++) {
+        const ch = convWeighted(CONV_CHANNELS, ++id, c => CONV_W_SESSION[ev][c]);
+        const [raw, sm, camp] = convWeighted(CONV_SRC[ch], ++id, s => s[3]);
+        const lp = convWeighted(CONV_LANDINGS, ++id, l => l[1] * (ch === 'Direct' && l[0] === '/' ? 3 : 1) * (ev === 'contact_us' && l[0] === '/contact-us' ? 3 : 1)
+          * (ev === 'mcp_registration_complete' && l[0] === '/learn-in-florida' ? 1.6 : 1) * (ch === 'Email' && l[0] === '/myredefiners-portal' ? 2 : 1))[0];
+        const k1 = [wk, ev, raw, ch, sm, camp, lp].join('|'); sess.set(k1, (sess.get(k1) || 0) + 1);
+        const kc = [wk, raw, sm, camp, lp].join('|'); combo.set(kc, (combo.get(kc) || 0) + 1);
+        const kp = [wk, lp, ev].join('|'); pairs.set(kp, (pairs.get(kp) || 0) + 1);
+        let fch = ch, fr = raw, fsm = sm, fcamp = camp;       // a third of the time first touch is the same as the session
+        if (seeded(++id) > 0.3) { fch = convWeighted(CONV_CHANNELS, ++id, c => CONV_W_FIRST[c]); [fr, fsm, fcamp] = convWeighted(CONV_SRC[fch], ++id, s => s[3]); }
+        const k2 = [wk, ev, fr, fch, fsm, fcamp].join('|'); first.set(k2, (first.get(k2) || 0) + 1);
+      }
+    });
   }
-  return rows;
+  // Sessions column: all sessions for that week + channel + source + campaign + landing page (same value on each conversion's row)
+  const comboSessions = new Map(); [...combo].forEach(([k, n], i) => comboSessions.set(k, Math.round(n * (6 + seeded(500 + i) * 14))));
+  MOCK[CONV_TABS.attribution.tab] = [...sess].sort().map(([k, n]) => { const p = k.split('|');
+    return { [A.week]:p[0], [A.event]:p[1], [A.rawChannel]:p[2], [A.channel]:p[3], [A.sourceMedium]:p[4], [A.campaign]:p[5], [A.landing]:p[6], [A.count]:n, [A.sessions]:comboSessions.get([p[0], p[2], p[4], p[5], p[6]].join('|')) }; });
+  MOCK[CONV_TABS.first.tab] = [...first].sort().map(([k, n]) => { const p = k.split('|');
+    return { [F.week]:p[0], [F.event]:p[1], [F.rawChannel]:p[2], [F.channel]:p[3], [F.sourceMedium]:p[4], [F.campaign]:p[5], [F.count]:n, [F.users]:n }; });
+  MOCK[CONV_TABS.pairs.tab] = [...pairs].sort().map(([k, n]) => { const p = k.split('|'); return { [P.week]:p[0], [P.landing]:p[1], [P.event]:p[2], [P.count]:n }; });
+  // all sessions per landing page and week (mock: roughly 8 to 16 sessions per conversion)
+  const LS = CONV_TABS.landingSessions.f, ls = new Map();
+  pairs.forEach((n, k) => { const [wk, lp] = k.split('|'); const kk = wk + '|' + lp; ls.set(kk, (ls.get(kk) || 0) + n); });
+  MOCK[CONV_TABS.landingSessions.tab] = [...ls].sort().map(([k, n], i) => { const [wk, lp] = k.split('|'); const ss = Math.round(n * (8 + seeded(900 + i) * 8)); return { [LS.week]:wk, [LS.landing]:lp, [LS.sessions]:ss, [LS.users]:Math.round(ss * 0.9) }; });
 })();
 
 // --- Paid Media ---
@@ -878,7 +1014,7 @@ MOCK.MCP_Enrollment_Data = (() => {
   return rows;
 })();
 
-const TAB_KEYS = ['GA4_Executive_Overview','GA4_Traffic_Acquisition','GA4_Page_Engagement','GA4_Isolated_Conversions',
+const TAB_KEYS = ['GA4_Executive_Overview','GA4_Traffic_Acquisition','GA4_Page_Engagement',...Object.values(CONV_TABS).map(t => t.tab),
   'Paid Media','Email_Marketing_Data','Digital_Ads_and_Email_Outreach','In_Person_Outreach_Log','MCP_Enrollment_Data'];
 
 // DATA is the live working set. It starts as a deep-ish copy of MOCK and is
@@ -891,7 +1027,7 @@ TAB_KEYS.forEach(k => DATA[k] = MOCK[k]);
    next to this page. No Google credentials or sheet links live in this file.
    ========================================================================================= */
 const CONFIG = { dataUrl: 'data.json', fetchTimeoutMs: 10000 };
-const LIVE_KEYS = ['GA4_Executive_Overview','GA4_Traffic_Acquisition','GA4_Page_Engagement','GA4_Isolated_Conversions',
+const LIVE_KEYS = ['GA4_Executive_Overview','GA4_Traffic_Acquisition','GA4_Page_Engagement',...Object.values(CONV_TABS).map(t => t.tab),
   'Paid Media','Email_Marketing_Data','In_Person_Outreach_Log','MCP_Enrollment_Data'];
 let liveMeta = null;       // the parsed data.json, when it loaded
 let GRAN = 'day';          // sample data is daily; the live sheet is weekly
@@ -921,10 +1057,16 @@ async function loadLiveData(){
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), CONFIG.fetchTimeoutMs);
   try {
+    // The standalone file carries data.json inside the page (<script id="inlineData">), so it needs no server and no fetch.
+    const inline = document.getElementById('inlineData');
+    let payload;
+    if (inline) { clearTimeout(timer); payload = JSON.parse(inline.textContent); }
+    else {
     const res = await fetch(CONFIG.dataUrl, { signal: controller.signal, cache: 'no-cache' });
     clearTimeout(timer);
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    const payload = await res.json();
+    payload = await res.json();
+    }
     LIVE_KEYS.forEach(k => { if (!payload.tabs || !payload.tabs[k]) throw new Error('data.json is missing ' + k); });
     LIVE_KEYS.forEach(k => { DATA[k] = expandTable(payload.tabs[k]); });
     DATA.Digital_Ads_and_Email_Outreach = [];   // not drawn, and it must not keep sample rows next to live ones
@@ -956,7 +1098,7 @@ function paintDataStatus(){
   document.querySelectorAll('[data-gran]').forEach(n => { n.textContent = GRAN === 'week' ? 'week' : 'day'; });
 }
 
-const FRESH_KEY = { overview:'GA4_Executive_Overview', traffic:'GA4_Traffic_Acquisition', content:'GA4_Page_Engagement', conversions:'GA4_Isolated_Conversions',
+const FRESH_KEY = { overview:'GA4_Executive_Overview', traffic:'GA4_Traffic_Acquisition', content:'GA4_Page_Engagement', conversions:'GA4_Conversion_Attribution',
   paid:'Paid Media', email:'Email_Marketing_Data', outreach:'In_Person_Outreach_Log' };
 function paintFreshness(){
   const node = el('tabFreshness');
@@ -1102,6 +1244,7 @@ function fiscalYearsInData(){
 function updateGlobalFilterVisibility(){
   const tab = state.activeTab;
   el('dateFilterRow').style.display = tab === 'mcp' ? 'none' : 'flex';
+  el('dateWeekNote').style.display = tab === 'conversions' ? 'block' : 'none';
   let any = false;
   document.querySelectorAll('#selectRow .fgroup').forEach(g => {
     const show = g.dataset.tabs.split(' ').includes(tab);
@@ -1155,6 +1298,9 @@ function wireFilters(){
   bind('filterLocation','location'); bind('filterPlatform','platform'); bind('filterEmailType','emailType');
   bind('filterObjective','objective'); bind('filterCrmCampaign','crmCampaign');
   bind('filterSubscription','subscription'); bind('filterFiscalYear','fiscalYear');
+  document.querySelectorAll('[data-chartmode]').forEach(b => b.addEventListener('click', () => { state.convChartMode = b.dataset.chartmode; renderConversions(); }));
+  document.querySelectorAll('[data-convview]').forEach(b => b.addEventListener('click', () => { state.convView = b.dataset.convview; renderConversions(); }));
+  el('convSearch').addEventListener('input', (e) => { state.convSearch = e.target.value.toLowerCase(); renderConversions(); });
   el('trafficSearch').addEventListener('input', (e) => { state.trafficSearch = e.target.value.toLowerCase(); renderTraffic(); });
 
   const tabs = [...document.querySelectorAll('.tab')];
@@ -1269,10 +1415,12 @@ function highlightsFor(){
   const topCh = Object.entries(byCh).sort((a, b) => b[1] - a[1])[0];
   if (topCh && chTotal > 0) out.push(`<strong>${esc(topCh[0])}</strong> brings the most traffic, at ${fmtRate(rate(topCh[1], chTotal, 100), 0)} of sessions.`);
 
-  const conv = {}; DATA.GA4_Isolated_Conversions.filter(r => inRange(r.date)).forEach(r => {
-    const c = conv[r.pagePath] || (conv[r.pagePath] = { e: 0, s: 0 }); c.e += num(r.eventCount); c.s += num(r.sessionsOnPage); });
-  const best = Object.entries(conv).filter(([, v]) => v.s >= 100).map(([p, v]) => [p, rate(v.e, v.s, 100)]).sort((a, b) => b[1] - a[1])[0];
-  if (best) out.push(`<strong>${esc(best[0])}</strong> converts best, at ${fmtRate(best[1])} of its sessions.`);
+  // The biggest source we can trace. Direct and Unassigned are left out on purpose: they are the sources we cannot trace.
+  const ca = CONV_TABS.attribution.f, cc = {}; let cTotal = 0;
+  DATA[CONV_TABS.attribution.tab].filter(r => inRange(r[ca.week])).forEach(r => { const n = num(r[ca.count]); cTotal += n;
+    if (!['Direct', 'Unassigned'].includes(r[ca.channel])) cc[r[ca.channel]] = (cc[r[ca.channel]] || 0) + n; });
+  const topConv = Object.entries(cc).sort((a, b) => b[1] - a[1])[0];
+  if (topConv && cTotal > 0) out.push(`<strong>${esc(chanName(topConv[0]))}</strong> is the biggest traceable source of conversions: ${fmtInt(topConv[1])} of ${fmtInt(cTotal)}.`);
 
   const paid = DATA['Paid Media'].filter(r => inRange(r.date));
   const plat = {}; paid.forEach(r => { const p = plat[r.platform] || (plat[r.platform] = { s: 0, c: 0 }); p.s += num(r.spend); p.c += num(r.linkClicks); });
@@ -1368,32 +1516,142 @@ function renderContent(){
 }
 
 /* =========================================================================================
-   PART 11 — CONVERSIONS
+   PART 11 — CONVERSIONS  (redesigned: what brought people to each conversion)
+   Session view = what brought this visit. First touch = how the person first found us (user-level, can predate the visit).
+   Landing page exists only for sessions, so the landing-page table always reads the session data.
+   Config (conversion list, thresholds, tab and column names) is at the top of the MOCK block: CONV_EVENTS, CONV_GAP_THRESHOLD_SESSION, CONV_GAP_THRESHOLD_FIRST_TOUCH, CONV_LOW_VOLUME_MIN, CONV_TABS.
    ========================================================================================= */
-function renderConversions(){
-  const rows = DATA.GA4_Isolated_Conversions.filter(r => inRange(r.date));
-  el('conversionsRangeLabel').textContent = rangeLabel();
-  const byEvent = {};
-  rows.forEach(r => { byEvent[r.eventName] = (byEvent[r.eventName] || 0) + num(r.eventCount); });
-  el('conversionsKpiGrid').innerHTML = Object.keys(byEvent).map(name => {
-    const primary = DASHBOARD_CONFIG.primaryKeyEvents.includes(name);
-    return `<div class="kpi-mini"><div class="lbl">${primary ? '<i class="fas fa-star" style="color:var(--amber);font-size:12px;margin-right:6px;" title="Primary key event" aria-label="Primary key event"></i>' : ''}${esc(name)}</div>
-      <div class="val">${fmtInt(byEvent[name])}</div><div class="sub">key events in range</div></div>`;
-  }).join('') || `<div class="empty-state"><p class="big">No key events in this range.</p><p class="small">Try widening your date filter.</p></div>`;
+const CHAN_COLOR = { 'Organic Search':'#FFC100', 'Direct':'#7C9094', 'Referral':'#8EC9B8', 'Email':'#DFF0EE', 'AI Assistant':'#2FA8D0',
+  'Peachjar':'#FF9A00', 'Flyer':'#3FE0A5', 'peachjar':'#FF9A00', 'flyer':'#3FE0A5', 'Unassigned':'#FF4D00', 'Paid Social':'#E86A92', 'Organic Social':'#F2A65A', 'Cross-network':'#B07CC6',
+  'sms':'#7BDFF2', 'SMS':'#7BDFF2', 'Organic Shopping':'#C2D86B', 'Paid Other':'#5C6BC0' };   // one fixed colour per channel, so a channel never changes colour between views or date ranges
+const CHAN_NAME = { peachjar:'Peachjar', flyer:'Flyer', sms:'SMS' };   // adjusted channels that are really a source name
+const chanName = c => CHAN_NAME[c] || c;
+const chanColor = c => CHAN_COLOR[c] || '#888';
+const GAP_CHANNELS = ['Direct','Unassigned'];
+state.convView = 'session'; state.convSearch = ''; state.convChartMode = 'count';
+const convEvents = () => [...CONV_EVENTS, CONV_OTHER];
+const evKey = ev => CONV_EVENTS.some(e => e.event === ev) ? ev : CONV_OTHER.event;
+const convLabel = ev => (convEvents().find(e => e.event === ev) || { label:ev }).label;
+const convLabelHtml = ev => `${esc(convLabel(ev))}<span class="host" style="display:block;font-size:12px;">${esc(ev)}</span>`;
+// weekly rows: a week counts when any of its 7 days falls in the selected range
+function paintConvBadges(){
+  const live = !!liveMeta, wk = live && liveMeta.latest && liveMeta.latest[CONV_TABS.attribution.tab] ? parseDay(liveMeta.latest[CONV_TABS.attribution.tab]) : null;
+  const long = wk ? 'Live data · latest week starting ' + wk.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : 'Sample data';
+  document.querySelectorAll('.data-badge').forEach(b => {
+    b.classList.toggle('live', live);
+    b.querySelector('i')?.setAttribute('class', live ? 'fas fa-circle-check' : 'fas fa-flask');
+    b.querySelector('span').textContent = b.classList.contains('short') ? (live ? 'Live data' : 'Sample data') : long;
+    b.title = live ? 'Read from data.json, built from the GA4_Conversion_* tabs' : 'data.json could not be loaded: made-up numbers';
+  });
+}
+// Same rule as the other weekly tabs: a week counts when its Monday falls inside the selected dates.
+const convInRange = weekStart => inRange(weekStart);
+function convView(){
+  if (state.convView === 'first') { const f = CONV_TABS.first.f; return { rows:DATA[CONV_TABS.first.tab], f, word:'first-touch', first:true }; }
+  const f = CONV_TABS.attribution.f; return { rows:DATA[CONV_TABS.attribution.tab], f, word:'session', first:false };
+}
+const lowVol = n => n < CONV_LOW_VOLUME_MIN;
 
-  const byPage = {};
-  rows.forEach(r => { byPage[r.pagePath] = (byPage[r.pagePath] || 0) + num(r.eventCount); });
-  const top = Object.entries(byPage).sort((a, b) => b[1] - a[1]).slice(0, 8);
+function renderConversions(){
+  paintConvBadges();
+  const v = convView(), f = v.f, first = v.first;
+  const rows = v.rows.filter(r => convInRange(r[f.week])).map(r => ({ ...r, [f.event]: evKey(r[f.event]) }));
+  el('conversionsRangeLabel').textContent = rangeLabel();
+  el('convChannelWord').textContent = v.word;
+  document.querySelectorAll('[data-convview]').forEach(b => { const on = b.dataset.convview === state.convView; b.classList.toggle('active', on); b.setAttribute('aria-pressed', on); });
+  document.querySelectorAll('[data-explain]').forEach(b => b.classList.toggle('on', b.dataset.explain === state.convView));
+
+  const total = rows.reduce((s, r) => s + num(r[f.count]), 0);
+  const byEvent = {}, gapByEvent = {}, byChan = {};
+  convEvents().forEach(e => { byEvent[e.event] = 0; gapByEvent[e.event] = 0; });
+  rows.forEach(r => {
+    const c = num(r[f.count]), ch = r[f.channel];
+    byEvent[r[f.event]] += c; byChan[ch] = (byChan[ch] || 0) + c;
+    if (GAP_CHANNELS.includes(ch)) gapByEvent[r[f.event]] += c;
+  });
+  const direct = byChan['Direct'] || 0, unas = byChan['Unassigned'] || 0, gap = direct + unas, gapPct = safeDiv(gap, total) * 100;
+
+  // Only shown when Direct + Unassigned reaches the (provisional) watch line; nothing is shown otherwise.
+  const thr = first ? CONV_GAP_THRESHOLD_FIRST_TOUCH : CONV_GAP_THRESHOLD_SESSION;
+  const flag = el('convFlag'), warn = gapPct >= thr && total > 0;
+  flag.style.display = warn ? 'flex' : 'none';
+  flag.className = 'conv-flag warn';
+  flag.innerHTML = !warn ? '' :
+    `<i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+     <div><b>${fmtPct(gapPct, 0)} of conversions can't be traced to a source.</b> Marketing tags every link it shares. But other teams sometimes share materials without approval, or build links with missing tracking. Those conversions show up as Direct or Unassigned.
+     <span class="sub">${fmtInt(gap)} of ${fmtInt(total)} conversions have no clear source. We flag this at ${thr}%${first ? ' (provisional)' : ''}.</span></div>`;
+
+  el('conversionsKpiGrid').innerHTML = convEvents().map(({ event: name }) => {
+    const primary = DASHBOARD_CONFIG.primaryKeyEvents.includes(name), g = gapByEvent[name], n = byEvent[name];
+    return `<div class="kpi-mini"><div class="lbl">${primary ? '<i class="fas fa-star" style="color:var(--amber);font-size:12px;margin-right:6px;" title="Primary key event" aria-label="Primary key event"></i>' : ''}${esc(convLabel(name))}<span class="host" style="display:block;font-weight:500;font-size:12px;">${name === CONV_OTHER.event ? 'form_submission, newsletter signup, others' : esc(name)}</span></div>
+      <div class="val">${fmtInt(n)}</div><div class="sub">conversions in range</div>
+      <div class="sub ${n && g / n * 100 >= thr ? 'gap' : ''}">${fmtInt(g)} from Direct/Unassigned${n ? ` (${fmtPct(g / n * 100, 0)})` : ''}</div></div>`;
+  }).join('');
+
+  const chans = Object.keys(byChan).sort((a, b) => byChan[b] - byChan[a]);
+  const share = state.convChartMode === 'share';
+  document.querySelectorAll('[data-chartmode]').forEach(b => b.classList.toggle('active', b.dataset.chartmode === state.convChartMode));
+  const evs = convEvents();
+  const counts = chans.map(c => evs.map(e => rows.filter(r => r[f.event] === e.event && r[f.channel] === c).reduce((s, r) => s + num(r[f.count]), 0)));
   makeChart('conversionsBarChart', {
     type: 'bar',
-    data: { labels: top.map(s => s[0]), datasets: [{ label:'Key events', data: top.map(s => s[1]), backgroundColor: C.amber, ...barStyle }] },
-    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false, scales: clippedLabels(baseScales(true)), plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ title: items => items[0].label } } } }
+    data: { labels: evs.map(e => e.label),
+      datasets: chans.map((c, ci) => ({ label:chanName(c), backgroundColor:chanColor(c), borderRadius:2, borderSkipped:false, maxBarThickness:34, counts:counts[ci],
+        data: counts[ci].map((n, ei) => share ? safeDiv(n, byEvent[evs[ei].event]) * 100 : n) })) },
+    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      scales: clippedLabels({ x:{ stacked:true, grid:{ color:gridColor }, border:{ display:false }, beginAtZero:true, max: share ? 100 : undefined, ticks:{ callback: v => share ? v + '%' : v } }, y:{ stacked:true, grid:{ display:false }, border:{ display:false } } }),
+      plugins:{ legend: { position:'bottom', ...legendCfg() },
+        tooltip:{ mode:'nearest', intersect:true, callbacks:{ label: ctx => { const n = ctx.dataset.counts[ctx.dataIndex]; return `${ctx.dataset.label}: ${fmtInt(n)}${share ? ` (${fmtPct(ctx.parsed.x, 0)})` : ''}`; } } } } }
   });
 
-  el('conversionsTableBody').innerHTML = rows.slice(0, 200).map(r =>
-    `<tr><td>${esc(r.pagePath)}</td><td>${esc(r.eventName)}</td><td>${fmtInt(r.eventCount)}</td><td>${fmtInt(r.sessionsOnPage)}</td><td>${fmtRate(rate(r.eventCount, r.sessionsOnPage, 100), 2)}</td></tr>`
-  ).join('') || `<tr><td colspan="5" class="muted">No conversions in this range.</td></tr>`;
-  el('conversionsNote').textContent = rows.length > 200 ? `Showing the first 200 of ${fmtInt(rows.length)} rows.` : '';
+  el('convChannelBody').innerHTML = chans.map(c => {
+    const n = byChan[c] || 0, isGap = GAP_CHANNELS.includes(c);
+    return `<tr><td><span class="chan-dot" style="background:${chanColor(c)}"></span>${esc(chanName(c))}</td><td class="num-cell ${isGap && n ? 'gapcell' : ''}">${fmtInt(n)}</td><td class="num-cell">${fmtPct(safeDiv(n, total) * 100, 0)}</td></tr>`;
+  }).join('');
+
+  const agg = new Map();
+  rows.forEach(r => {
+    const key = [r[f.event], r[f.channel], r[f.sourceMedium], r[f.campaign], first ? '' : r[f.landing]].join('|');
+    const a = agg.get(key) || { ev:r[f.event], ch:r[f.channel], sm:r[f.sourceMedium], camp:r[f.campaign], lp:r[f.landing], n:0 };
+    a.n += num(r[f.count]); agg.set(key, a);
+  });
+  const evOrder = convEvents().map(e => e.event);
+  let list = [...agg.values()].sort((a, b) => evOrder.indexOf(a.ev) - evOrder.indexOf(b.ev) || b.n - a.n);
+  const q = state.convSearch;
+  if (q) list = list.filter(a => [convLabel(a.ev), a.ev, a.ch, chanName(a.ch), a.sm, a.camp, a.lp].join(' ').toLowerCase().includes(q));
+  const fullCount = list.length;
+  if (!q) { const seen = {}; list = list.filter(a => (seen[a.ev] = (seen[a.ev] || 0) + 1) <= 6); }
+  const evTotal = {}; rows.forEach(r => { evTotal[r[f.event]] = (evTotal[r[f.event]] || 0) + num(r[f.count]); });
+  el('convSourceHead').innerHTML = `<tr><th>Conversion</th><th>Channel</th><th>Source / medium</th><th>Campaign (UTM)</th>${first ? '' : '<th>Landing page (session start)</th>'}<th class="num-cell">Conversions</th><th class="num-cell">Share of this conversion</th></tr>`;
+  el('convSourceBody').innerHTML = list.slice(0, 60).map(a => {
+    const isGap = GAP_CHANNELS.includes(a.ch);
+    return `<tr><td>${convLabelHtml(a.ev)}</td><td><span class="chan-dot" style="background:${chanColor(a.ch)}"></span>${esc(chanName(a.ch))}</td>
+      <td>${esc(a.sm)}</td><td>${esc(a.camp)}</td>${first ? '' : `<td class="lp-cell" title="${esc(a.lp)}"><span class="path">${esc(a.lp)}</span></td>`}
+      <td class="num-cell ${isGap ? 'gapcell' : ''}">${fmtInt(a.n)}</td><td class="num-cell ${lowVol(evTotal[a.ev]) ? 'lowvol' : ''}">${fmtPct(safeDiv(a.n, evTotal[a.ev]) * 100, 0)} <span class="host">(${fmtInt(a.n)} of ${fmtInt(evTotal[a.ev])})</span></td></tr>`;
+  }).join('') || `<tr><td colspan="${first ? 6 : 7}" class="muted">No conversions match in this range.</td></tr>`;
+  el('convSourceNote').textContent = (list.length < fullCount ? `Showing the top 6 sources per conversion (${fmtInt(fullCount)} combinations in all; search to see the rest). ` : '') +
+    'Orange numbers are Direct or Unassigned. Channels are adjusted: a source with no medium, such as Peachjar or Flyer, shows under its own name instead of Unassigned. ' +
+    `Shares for a conversion with fewer than ${CONV_LOW_VOLUME_MIN} conversions are greyed (provisional).` +
+    (first ? ' Landing page is not shown for first touch: Google Analytics keeps no landing page for a person\'s first-ever visit.' : '');
+
+  // landing page -> conversion (session scoped, path only). Rate = conversions (pairs tab) / all sessions that started on the page (landing sessions tab), same weeks.
+  const P = CONV_TABS.pairs.f, LS = CONV_TABS.landingSessions.f;
+  const lp = new Map();
+  DATA[CONV_TABS.pairs.tab].filter(r => convInRange(r[P.week])).forEach(r => {
+    const e = evKey(r[P.event]), a = lp.get(r[P.landing]) || { path:r[P.landing], total:0, ev:{} };
+    a.total += num(r[P.count]); a.ev[e] = (a.ev[e] || 0) + num(r[P.count]); lp.set(r[P.landing], a); });
+  const sessions = {};
+  DATA[CONV_TABS.landingSessions.tab].filter(r => convInRange(r[LS.week])).forEach(r => { sessions[r[LS.landing]] = (sessions[r[LS.landing]] || 0) + num(r[LS.sessions]); });
+  const top = [...lp.values()].sort((a, b) => b.total - a.total).slice(0, 10);
+  const maxCell = Math.max(1, ...top.flatMap(a => Object.values(a.ev)));
+  el('convLandingHead').innerHTML = `<tr><th>Landing page</th><th class="num-cell">Total</th><th class="num-cell" style="min-width:150px">Conversion rate (conversions of sessions)</th>${convEvents().map(e => `<th class="num-cell" style="text-align:center">${esc(e.label)}</th>`).join('')}</tr>`;
+  el('convLandingBody').innerHTML = top.map(a => {
+    const s = sessions[a.path] || 0;
+    return `<tr><td><span class="path">${esc(a.path)}</span></td><td class="num-cell"><b>${fmtInt(a.total)}</b></td>
+      <td class="num-cell ${lowVol(a.total) || a.total > s ? 'lowvol' : ''}" ${a.total > s ? 'title="More conversions than sessions: this page is where the conversion itself happens, or one session fired the event more than once. A rate is not meaningful here."' : ''}>${!s ? '--' : a.total > s ? 'n/a' : fmtPct(a.total / s * 100, 1)} <span class="host">(${fmtInt(a.total)} of ${fmtInt(s)})</span></td>${convEvents().map(e => { const n = a.ev[e.event] || 0;
+      return `<td class="cell ${n ? '' : 'zero'}" style="${n ? `background:rgba(47,168,208,${(0.08 + 0.4 * n / maxCell).toFixed(2)})` : ''}">${n || '·'}</td>`; }).join('')}</tr>`;
+  }).join('') || `<tr><td colspan="${convEvents().length + 3}" class="muted">No conversions in this range.</td></tr>`;
+  el('convLandingNote').textContent = `Ranked by total conversions. Paths only: Google Analytics gives the host of the conversion event, not of the page the session started on. Rates built on fewer than ${CONV_LOW_VOLUME_MIN} conversions are greyed (provisional). "n/a" means more conversions than sessions, which happens on pages where the conversion itself takes place (thank-you pages, the contact page) or when one session fires the event twice.`;
 }
 
 /* =========================================================================================
@@ -1610,7 +1868,7 @@ function renderMcpCategoryGrid(){
     return `<div class="category-block" data-cat="${slug}">
       <div class="category-card">
         <div class="cat-title"><h4>${esc(cat.category)}</h4><div class="cat-title-right">${deltaBadge}<span class="cat-total">${fmtInt(catTotal)}</span></div></div>
-        <p class="cat-sub">${previousLabel ? `${esc(previousLabel)} vs. ${esc(currentFY)}` : esc(currentFY || 'No fiscal year data')} · share by course group</p>
+        <p class="cat-sub">${previousLabel ? `${esc(previousLabel)} vs. ${esc(currentFY)}` : esc(currentFY || 'No fiscal year data')} · by course group</p>
         <div class="cat-chart-wrap">${chartBlock}</div>
       </div>
       <div class="completion-card"><div class="cc-head"><span class="lbl">Completion rate</span><span class="rate">${fmtRate(rate(catCompleted, catTotal, 100))}</span></div>
@@ -1622,23 +1880,16 @@ function renderMcpCategoryGrid(){
     if (!canvas) return;
     const cur = currentRows.filter(r => r.category === cat.category), prev = previousRows.filter(r => r.category === cat.category);
     const labels = previousLabel ? [previousLabel, currentFY] : [currentFY];
-    canvas.setAttribute('role', 'img'); canvas.setAttribute('aria-label', `${cat.category}: share of enrollments by course group, ${labels.join(' vs. ')}`);
-    // Raw counts per bar (one entry per label); the bars are drawn as shares so every bar stacks to 100%.
-    const counts = cat.groups.map(g => previousLabel
-      ? [prev.filter(r => r.group === g).length, cur.filter(r => r.group === g).length]
-      : [cur.filter(r => r.group === g).length]);
-    const totals = labels.map((_, i) => counts.reduce((sum, c) => sum + c[i], 0));
+    canvas.setAttribute('role', 'img'); canvas.setAttribute('aria-label', `${cat.category}: enrollments by course group, ${labels.join(' vs. ')}`);
     if (charts[`mcpCatChart_${slug}`]) charts[`mcpCatChart_${slug}`].destroy();
     charts[`mcpCatChart_${slug}`] = new Chart(canvas, {
       type: 'bar',
       data: { labels, datasets: cat.groups.map((g, gi) => ({ label: g,
-        data: counts[gi].map((n, i) => totals[i] ? n / totals[i] * 100 : 0), counts: counts[gi],
+        data: previousLabel ? [prev.filter(r => r.group === g).length, cur.filter(r => r.group === g).length] : [cur.filter(r => r.group === g).length],
         backgroundColor: SEG_COLORS[gi % SEG_COLORS.length], borderColor: C.surface, borderWidth: 2, borderRadius: 3 })) },
       options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
-        scales: { x:{ stacked:true, display:false, min:0, max:100 }, y:{ stacked:true, grid:{ display:false }, border:{ display:false }, ticks:{ color:'rgba(223,240,238,0.82)', font:{ size:12, weight:'600' } } } },
-        plugins: { legend:{ display:false }, tooltip:{ callbacks:{
-          label: c => `${c.dataset.label}: ${fmtInt(c.dataset.counts[c.dataIndex])} (${c.parsed.x.toFixed(1)}%)`,
-          footer: items => `Total ${items[0].label}: ${fmtInt(totals[items[0].dataIndex])} enrollments` } } } }
+        scales: { x:{ stacked:true, display:false }, y:{ stacked:true, grid:{ display:false }, border:{ display:false }, ticks:{ color:'rgba(223,240,238,0.82)', font:{ size:12, weight:'600' } } } },
+        plugins: { legend:{ display:false }, tooltip:{ callbacks:{ label: c => `${c.dataset.label}: ${c.parsed.x}` } } } }
     });
     const legendEl = el(`mcpCatLegend_${slug}`);
     if (legendEl) legendEl.innerHTML = cat.groups.map((g, gi) => {
