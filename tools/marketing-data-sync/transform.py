@@ -213,6 +213,25 @@ def drop_partial_ga_week(tabs):
     return last
 
 
+EMAIL_RE = re.compile(r'[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)+')
+
+
+def scrub_emails(tabs):
+    """data.json is public, so no email address may reach it. Some GA4 "pages" are broken email links (a path like
+    /&user=name@...&sig=...) that carry a person's address. Any text cell with an address is cleaned: a page path
+    becomes '(unrecognised link)', any other field has the address replaced by '(email hidden)'. Returns how many cells changed."""
+    changed = 0
+    for tab in tabs.values():
+        cols = tab['cols']
+        path_cols = {i for i, c in enumerate(cols) if c in ('pagePath', 'landingPage')}
+        for row in tab['rows']:
+            for i, v in enumerate(row):
+                if isinstance(v, str) and '@' in v and EMAIL_RE.search(v):
+                    row[i] = '(unrecognised link)' if i in path_cols else EMAIL_RE.sub('(email hidden)', v)
+                    changed += 1
+    return changed
+
+
 def build(raw_dir, mcp_tab='MCP_Enrollment_Data'):
     tabs = {}
     for name, fn in BUILDERS.items():
@@ -222,6 +241,9 @@ def build(raw_dir, mcp_tab='MCP_Enrollment_Data'):
         if not rows or len(rows) < 2:
             raise ValueError(f'{name}: no data rows')
         tabs[name] = fn(Tab(rows))
+    scrubbed = scrub_emails(tabs)
+    if scrubbed:
+        print(f'removed an email address from {scrubbed} cell(s) before writing (data.json is public)')
     raw_ga_latest = latest(tabs['GA4_Executive_Overview'])   # before any partial week is dropped, so the stale-data check compares like with like
     partial = drop_partial_ga_week(tabs)
     today = dt.date.today()

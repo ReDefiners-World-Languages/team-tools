@@ -3,7 +3,7 @@
 Keeps `dashboards/marketing-funnel-performance/data.json` current from the Google Sheet **Marketing_Unified_Database_Backend**
 (work copy, file id `1Tq22vT4v6AIW0U7WIGq5hdrG0Af1pWhFJgBvRdGNxX4`). Runs on weekday mornings as a Claude scheduled task on Lucas's Mac.
 
-`data.json` is public (GitHub Pages). `transform.py` only keeps fields the dashboard draws. Never sync `Summer_STEAM_Feedback`
+`data.json` is public (GitHub Pages). `transform.py` only keeps fields the dashboard draws. It also removes any email address it finds in any text cell (a few GA4 "pages" are broken email links) before writing, and prints how many cells it cleaned. Never sync `Summer_STEAM_Feedback`
 (parent names, emails and phone numbers), staff "Created By" names, free-text notes or subject lines.
 
 ## Steps
