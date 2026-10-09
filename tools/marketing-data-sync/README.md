@@ -11,7 +11,7 @@ Keeps `dashboards/marketing-funnel-performance/data.json` current from the Googl
 1. **Fetch (Composio workbench).** Read each tab in full with `GOOGLESHEETS_VALUES_GET` (range = the tab name in single quotes, no
    start/end rows: a bounded range is ignored and repeats rows). Tabs: `GA4_Executive_Overview`, `GA4_Traffic_Acquisition`,
    `GA4_Page_Engagement`, `GA4_Conversion_Attribution`, `GA4_Conversion_First_Touch`, `GA4_Conversion_Landing_Pairs`,
-   `GA4_Landing_Page_Sessions`, `GA4_Funnel_Entry_To_Conversion`, `GA4_Funnel_Entry_To_Conversion_Daily`, `Paid Media`, `Email_Marketing_Data`, `In_Person_Outreach_Log`, `MCP_Enrollment_Data_SF`. Always pass `account="Work Sheets"` to `run_composio_tool` (two Google Sheets accounts are connected and the call fails without it). Save each as `/mnt/files/raw/<tab>.json` (the `values` list), zip them, call
+   `GA4_Landing_Page_Sessions`, `GA4_Funnel_Entry_To_Conversion`, `GA4_Funnel_Entry_To_Conversion_Daily`, `GA4_Outreach_Traffic`, `Paid Media`, `Email_Marketing_Data`, `In_Person_Outreach_Log`, `MCP_Enrollment_Data_SF`. Always pass `account="Work Sheets"` to `run_composio_tool` (two Google Sheets accounts are connected and the call fails without it). Save each as `/mnt/files/raw/<tab>.json` (the `values` list), zip them, call
    `upload_local_file`, and use the returned `s3_url`. Row counts on Oct 5, 2026: 180, 8184, 16905, 735, 313, 374, 1572, 510, 346, 423, 5674 (they only grow).
    The Drive connector truncates big tabs; do not use it for this.
 2. **Download and transform (local).**
@@ -54,6 +54,19 @@ Sessions, Sessions Reaching Portal and Sessions With MCP Registration. `data.jso
 - Both tabs are optional in `transform.py` (`OPTIONAL_TABS`): a pull without them still writes `data.json` and the page says the funnel is not synced yet. Add them to the fetch list in step 1.
 - The Conversions tab uses the daily tab for "Last 7 days" and "This week so far", and the weekly tab for every other range. Course groupings (`CONV_COURSES`, `CONV_ADULT_PAGES`) are in `index.html`.
 - Course registrations come from `MCP_Enrollment_Data_SF` (Salesforce), never from Google Analytics, and are shown without instructor names.
+
+## Outreach tab (activity log and outreach traffic)
+
+The Outreach tab reads two tabs: `In_Person_Outreach_Log` (what staff did) and `GA4_Outreach_Traffic` (written by Paul: weekly visits tagged to flyers, table
+signs, banners, car tags, folders, bench ads and Peachjar, 898 rows for 31 weeks on Oct 9, 2026). `data.json` carries the traffic as
+`date, group, source, campaign, utmContent, landingPage, sessions, engagedSessions, users, registered`.
+- **Tab names, headers and the Outreach Group classification belong to Paul.** The dashboard never re-derives a group from source; the display colours and labels are in `OUTREACH_GROUPS` in `index.html`.
+- `GA4_Outreach_Traffic` is optional in `transform.py` (`OPTIONAL_TABS`): a pull without it still writes `data.json` and the tab says the traffic is not synced yet. It is weekly (`GA4_` prefix), so the partial-week rule and the weekly anchor rule cover it.
+- Session Medium is not carried: it is "(not set)" for printed materials, which is normal. Landing pages are path only, like the Conversions tabs.
+- **Activity log:** a blank Meaningful Conversations or Flyers Distributed cell is carried as `null` ("not logged yet"), not 0, so the page can leave those rows out of ratios.
+  Staff "Created By" names are never carried. Long spellings of the big partner sites ("Children's Board Family Resource Center Central Tampa") are mapped to the short
+  name (`tidy_location`), then locations seen fewer than 3 times in the whole log are folded into "Other locations" (free text can hold names or addresses).
+- Outreach traffic is a floor, not a total (QR codes and bio links without a source tag land in Direct or lnk.bio), and the same visits are counted on the Conversions tab: the two must not be added.
 
 ## Enrollment tab
 
