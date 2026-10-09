@@ -55,6 +55,17 @@ Sessions, Sessions Reaching Portal and Sessions With MCP Registration. `data.jso
 - The Conversions tab uses the daily tab for "Last 7 days" and "This week so far", and the weekly tab for every other range. Course groupings (`CONV_COURSES`, `CONV_ADULT_PAGES`) are in `index.html`.
 - Course registrations come from `MCP_Enrollment_Data_SF` (Salesforce), never from Google Analytics, and are shown without instructor names.
 
+## Teacher names (Enrollments tab, "Top 10 teachers by completion rate")
+
+`data.json` and the GitHub Pages site are public, so **no teacher name may reach this repo or the browser**. The sheet's `Class: Instructor`
+column is read by `transform.py` only to rank teachers, and is never written out:
+
+- `classInstructor` is not a column of `MCP_Enrollment_Data` in `data.json`. Enrollment rows carry no teacher key of any kind (not an id, not a hash), so a ranking cannot be joined to a class name or cohort.
+- `mcpTeacherRanking` holds the Top 10 for `all` fiscal years and for each fiscal year as `[completed, total]` pairs, best first (rate = completed / total, ties go to more enrollments, minimum 3 enrollments). The page labels them "Teacher 1" to "Teacher 10" from their position only.
+- `build()` ends with a check (`names_in`): if any instructor name from the sheet appears anywhere in the output, the sync stops with an error instead of writing it. Fix the source of the leak; do not remove the check.
+- The raw pull in `/tmp/mkt-raw` does contain the names (it is the sheet as it is). It stays on the Mac and is never committed.
+- If the Top 10 should ever use another sheet field (an id or a masked column), ask Lucas Blanco first; changes to Paul's columns need his approval.
+
 ## Outreach tab (activity log and outreach traffic)
 
 The Outreach tab reads two tabs: `In_Person_Outreach_Log` (what staff did) and `GA4_Outreach_Traffic` (written by Paul: weekly visits tagged to flyers, table
