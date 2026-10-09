@@ -238,6 +238,31 @@
   .matrix td.cell.zero { color:var(--ink-3); font-weight:400; }
   .matrix .rate { display:block; font-size:12px; color:var(--ink-3); font-weight:500; }
   .lowvol { color:var(--ink-3); }
+  .conv-sec { margin:30px 0 14px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-3); }
+  .conv-sec:first-child { margin-top:0; }
+  .conv-fresh { padding:14px 18px; border-radius:12px; margin-bottom:20px; font-size:13px; line-height:1.6; color:var(--ink-2); background:var(--card); border:1px solid var(--line-2); }
+  .conv-fresh b { color:var(--ink); }
+  .conv-fresh .line + .line { margin-top:6px; }
+  .fun-step { display:grid; grid-template-columns:220px 1fr; gap:6px 18px; align-items:center; margin-bottom:12px; }
+  .fun-step .nm { font-size:13px; font-weight:700; color:var(--ink); }
+  .fun-step .nm .host { display:block; font-size:12px; font-weight:500; line-height:1.4; }
+  .fun-track { display:flex; align-items:center; gap:12px; }
+  .fun-bar { height:34px; border-radius:8px; min-width:4px; flex:none; }
+  .fun-val { font-size:20px; font-weight:800; color:var(--ink); white-space:nowrap; }
+  .fun-val.lowvol { color:var(--ink-3); }
+  .fun-val .host { font-size:12px; margin-left:6px; }
+  .w640 .fun-step { grid-template-columns:1fr; }
+  .sub-h { font-size:13px; font-weight:700; color:var(--ink); margin:22px 0 10px; }
+  .databar { display:inline-block; height:8px; border-radius:4px; background:var(--mint); vertical-align:middle; margin-left:8px; min-width:2px; opacity:.85; }
+  .linkbtn { background:none; border:none; padding:0; font:inherit; font-weight:700; color:var(--orange); cursor:pointer; text-align:left; text-decoration:underline; text-underline-offset:3px; }
+  .indent { padding-left:22px !important; }
+  .muted-row td { color:var(--ink-3); }
+  .conv-stats { display:grid; grid-template-columns:1fr 1fr; gap:10px 28px; flex:1; }
+  .conv-stats .big { display:block; font-size:26px; font-weight:800; color:var(--ink); line-height:1.2; }
+  .conv-stats .big.untagged { color:#ffb27a; }
+  .conv-stats b { display:block; margin:2px 0; }
+  .w640 .conv-stats { grid-template-columns:1fr; }
+  .conv-flag .sub-line { display:block; grid-column:1 / -1; color:var(--ink-3); font-size:12px; }
   .view-explain { display:grid; grid-template-columns:1fr 1fr; gap:10px; flex:1; min-width:300px; }
   .view-explain > div { font-size:12px; line-height:1.5; color:var(--ink-3); padding:8px 12px; border-radius:10px; border:1px solid var(--line); }
   .view-explain > div b { display:block; color:var(--ink-2); font-size:12px; margin-bottom:2px; }
@@ -473,14 +498,50 @@
 
   <!-- CONVERSIONS (redesigned: what brought people to each conversion) -->
   <div class="tab-section" id="tab-conversions" role="tabpanel" aria-labelledby="tabbtn-conversions">
+    <div class="conv-fresh" id="convFresh" role="note"></div>
+
+    <h3 class="conv-sec">1 · Funnel: from visit to registration</h3>
+    <div class="platform-card" id="funnelCard" style="margin-bottom:24px;">
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-filter" aria-hidden="true"></i>Where do people drop off?</h3><span class="sample-badge data-badge short"><span>Sample data</span></span></div>
+      <div class="filter-select-row">
+        <div class="fgroup"><label class="filter-select-label" for="funnelSelect">Show</label><select class="tag-select" id="funnelSelect"></select></div>
+        <span class="host" id="funnelSource" style="font-size:12px;"></span>
+      </div>
+      <div id="funnelBody"></div>
+      <p class="metric-sub" id="funnelPortalLine" style="margin-top:6px;"></p>
+      <h4 class="sub-h">Week by week (all weeks in the tab, not only the dates picked above)</h4>
+      <div class="table-scroll"><table class="breakdown-table">
+        <thead><tr><th>Week starting</th><th class="num-cell">Sessions</th><th class="num-cell">Reached the portal</th><th class="num-cell">Registered (MCP)</th></tr></thead>
+        <tbody id="funnelWeekBody"></tbody>
+      </table></div>
+      <p class="card-note" id="funnelNote"></p>
+    </div>
+
+    <h3 class="conv-sec">2 · Courses</h3>
+    <div class="platform-card" style="margin-bottom:24px;">
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-graduation-cap" aria-hidden="true"></i>Course pages, registrations and emails, side by side</h3><span class="sample-badge data-badge short"><span>Sample data</span></span></div>
+      <p class="metric-sub" style="margin:-6px 0 14px;">Website numbers come from Google Analytics and follow the dates picked above. Registrations come from Salesforce and cover the whole fiscal year, not the dates picked. <b>These are two different systems and will not match:</b> Google Analytics counts visits, Salesforce has one record per registration, and Google Analytics does not know which course a person registered for. Click a course name to see its funnel above.</p>
+      <div class="table-scroll"><table class="breakdown-table" id="courseTable">
+        <thead id="courseHead"></thead>
+        <tbody id="courseBody"></tbody>
+      </table></div>
+      <p class="card-note" id="courseNote"></p>
+      <h4 class="sub-h">Other courses (Salesforce only)</h4>
+      <div class="table-scroll"><table class="breakdown-table">
+        <thead id="courseOtherHead"></thead>
+        <tbody id="courseOtherBody"></tbody>
+      </table></div>
+    </div>
+
+    <h3 class="conv-sec">3 · Channels: what brought people to each conversion</h3>
     <div class="conv-controls">
       <div class="seg" role="group" aria-label="Attribution view">
         <button class="filter-tag active" type="button" data-convview="session" aria-pressed="true"><i class="fas fa-route" aria-hidden="true"></i>Session</button>
         <button class="filter-tag" type="button" data-convview="first" aria-pressed="false"><i class="fas fa-flag" aria-hidden="true"></i>First touch</button>
       </div>
       <div class="view-explain">
-        <div data-explain="session" class="on"><b>Session</b>What brought this visit: the channel, source, campaign and landing page of the visit that converted.</div>
-        <div data-explain="first"><b>First touch</b>How the person first found us: user-level, so it can predate this visit by weeks. No landing page in this view.</div>
+        <div data-explain="session" class="on"><b>Session</b>Answers: "Which channel brought the visit in which this person registered?" Shows the channel, source, campaign and landing page of that visit.</div>
+        <div data-explain="first"><b>First touch</b>Answers: "Where did this person first hear about us, even weeks before they registered?" Counts people, not visits, and has no landing page.</div>
       </div>
       <span class="sample-badge data-badge" title=""><i class="fas fa-flask" aria-hidden="true"></i><span>Sample data</span></span>
     </div>
@@ -509,7 +570,8 @@
       <p class="card-note" id="convSourceNote"></p>
     </div>
 
-    <div class="platform-card">
+    <h3 class="conv-sec">4 · Landing pages</h3>
+    <div class="platform-card" style="margin-bottom:24px;">
       <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-trophy" aria-hidden="true"></i>Top 10 landing pages and the conversions they led to</h3><span class="sample-badge data-badge short"><span>Sample data</span></span></div>
       <p class="metric-sub" style="margin:-6px 0 14px;">Landing page is where the session started, so this table always uses the session view. Each cell is the number of conversions from sessions that started on that page (path only, subdomain not shown). The rate is those conversions divided by all sessions that started there, with both counts shown.</p>
       <div class="table-scroll"><table class="breakdown-table matrix">
@@ -517,6 +579,26 @@
         <tbody id="convLandingBody"></tbody>
       </table></div>
       <p class="card-note" id="convLandingNote"></p>
+      <p class="metric-sub" id="convNotRanked" style="margin-top:12px;"></p>
+    </div>
+
+    <div class="platform-card" style="margin-bottom:24px;">
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-graduation-cap" aria-hidden="true"></i>Course and class pages</h3><span class="sample-badge data-badge short"><span>Sample data</span></span></div>
+      <div class="table-scroll"><table class="breakdown-table">
+        <thead><tr><th>Page</th><th class="num-cell">Sessions</th><th class="num-cell">Reached the portal</th><th class="num-cell">Registered (MCP)</th></tr></thead>
+        <tbody id="coursePagesBody"></tbody>
+      </table></div>
+      <p class="card-note" id="coursePagesNote"></p>
+    </div>
+
+    <h3 class="conv-sec">5 · Emails sent in this period</h3>
+    <div class="platform-card">
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-envelope" aria-hidden="true"></i>Emails as context</h3><span class="sample-badge data-badge short"><span>Sample data</span></span></div>
+      <div class="table-scroll"><table class="breakdown-table">
+        <thead><tr><th>Sent</th><th>Email</th><th class="num-cell">Delivered</th><th class="num-cell">Opens</th><th class="num-cell">Clicks</th></tr></thead>
+        <tbody id="emailStripBody"></tbody>
+      </table></div>
+      <p class="card-note" id="emailStripNote"></p>
     </div>
   </div>
 
@@ -1021,6 +1103,9 @@ const TAB_KEYS = ['GA4_Executive_Overview','GA4_Traffic_Acquisition','GA4_Page_E
 // overwritten tab-by-tab if/when the Phase 2 live sheet fetch succeeds.
 const DATA = {};
 TAB_KEYS.forEach(k => DATA[k] = MOCK[k]);
+// Funnel by entry page (written by Paul). There is no sample version: without data.json these stay empty and the tab says so.
+const FUNNEL_TABS = { weekly:'GA4_Funnel_Entry_To_Conversion', daily:'GA4_Funnel_Entry_To_Conversion_Daily' };   // fields: date, landingPage, sessions, reachedPortal, registered
+DATA[FUNNEL_TABS.weekly] = []; DATA[FUNNEL_TABS.daily] = [];
 /* =========================================================================================
    PART 4B — LIVE DATA (data.json, written by tools/marketing-data-sync) AND DATA STATUS
    The sync reads Marketing_Unified_Database_Backend, strips it to the fields drawn here, and commits data.json
@@ -1040,7 +1125,7 @@ function newestDataDay(payload){
   Object.entries(payload.latest || {}).forEach(([tab, day]) => {
     const d = parseDay(day);
     if (!d) return;
-    const weekly = payload.granularity === 'week' && (tab.startsWith('GA4_') || tab === 'Paid Media');
+    const weekly = payload.granularity === 'week' && ((tab.startsWith('GA4_') && tab !== FUNNEL_TABS.daily) || tab === 'Paid Media');
     const end = new Date(d.getTime() + (weekly ? 6 * DAY : 0));
     if (!best || end > best) best = end;
   });
@@ -1069,6 +1154,7 @@ async function loadLiveData(){
     }
     LIVE_KEYS.forEach(k => { if (!payload.tabs || !payload.tabs[k]) throw new Error('data.json is missing ' + k); });
     LIVE_KEYS.forEach(k => { DATA[k] = expandTable(payload.tabs[k]); });
+    Object.values(FUNNEL_TABS).forEach(k => { DATA[k] = payload.tabs[k] ? expandTable(payload.tabs[k]) : []; });   // optional: older data.json files do not have them
     DATA.Digital_Ads_and_Email_Outreach = [];   // not drawn, and it must not keep sample rows next to live ones
     GRAN = payload.granularity || 'day';
     const anchor = newestDataDay(payload);
@@ -1300,6 +1386,8 @@ function wireFilters(){
   bind('filterSubscription','subscription'); bind('filterFiscalYear','fiscalYear');
   document.querySelectorAll('[data-chartmode]').forEach(b => b.addEventListener('click', () => { state.convChartMode = b.dataset.chartmode; renderConversions(); }));
   document.querySelectorAll('[data-convview]').forEach(b => b.addEventListener('click', () => { state.convView = b.dataset.convview; renderConversions(); }));
+  el('funnelSelect').addEventListener('change', (e) => { state.funnelSel = e.target.value; renderConversions(); });
+  el('tab-conversions').addEventListener('click', (e) => { const b = e.target.closest('[data-fsel]'); if (!b) return; state.funnelSel = b.dataset.fsel; renderConversions(); el('funnelCard').scrollIntoView({ block:'start' }); });
   el('convSearch').addEventListener('input', (e) => { state.convSearch = e.target.value.toLowerCase(); renderConversions(); });
   el('trafficSearch').addEventListener('input', (e) => { state.trafficSearch = e.target.value.toLowerCase(); renderTraffic(); });
 
@@ -1528,6 +1616,10 @@ const CHAN_NAME = { peachjar:'Peachjar', flyer:'Flyer', sms:'SMS' };   // adjust
 const chanName = c => CHAN_NAME[c] || c;
 const chanColor = c => CHAN_COLOR[c] || '#888';
 const GAP_CHANNELS = ['Direct','Unassigned'];
+// "Untagged" = Direct + Unassigned + referral sources that are really our own links (they should carry UTMs). Direct is shown on its own too:
+// part of it is real (people typing the portal address, bookmarks), so Untagged overstates nothing but Direct alone understates the tagging gap.
+const UNTAGGED_SOURCES = /^(lnk\.bio|3\.basecamp\.com)\b/i;
+const isUntagged = (ch, sm) => GAP_CHANNELS.includes(ch) || UNTAGGED_SOURCES.test(String(sm || ''));
 state.convView = 'session'; state.convSearch = ''; state.convChartMode = 'count';
 const convEvents = () => [...CONV_EVENTS, CONV_OTHER];
 const evKey = ev => CONV_EVENTS.some(e => e.event === ev) ? ev : CONV_OTHER.event;
@@ -1563,29 +1655,35 @@ function renderConversions(){
 
   const total = rows.reduce((s, r) => s + num(r[f.count]), 0);
   const byEvent = {}, gapByEvent = {}, byChan = {};
-  convEvents().forEach(e => { byEvent[e.event] = 0; gapByEvent[e.event] = 0; });
+  const directByEvent = {};
+  convEvents().forEach(e => { byEvent[e.event] = 0; gapByEvent[e.event] = 0; directByEvent[e.event] = 0; });
   rows.forEach(r => {
     const c = num(r[f.count]), ch = r[f.channel];
     byEvent[r[f.event]] += c; byChan[ch] = (byChan[ch] || 0) + c;
-    if (GAP_CHANNELS.includes(ch)) gapByEvent[r[f.event]] += c;
+    if (isUntagged(ch, r[f.sourceMedium])) gapByEvent[r[f.event]] += c;
+    if (ch === 'Direct') directByEvent[r[f.event]] += c;
   });
-  const direct = byChan['Direct'] || 0, unas = byChan['Unassigned'] || 0, gap = direct + unas, gapPct = safeDiv(gap, total) * 100;
+  const direct = byChan['Direct'] || 0;
+  const gap = Object.values(gapByEvent).reduce((x, y) => x + y, 0), gapPct = safeDiv(gap, total) * 100, directPct = safeDiv(direct, total) * 100;
 
-  // Only shown when Direct + Unassigned reaches the (provisional) watch line; nothing is shown otherwise.
+  // Two numbers instead of one: Untagged (should have had tracking) and Direct (partly real). The banner turns amber at the watch line.
   const thr = first ? CONV_GAP_THRESHOLD_FIRST_TOUCH : CONV_GAP_THRESHOLD_SESSION;
   const flag = el('convFlag'), warn = gapPct >= thr && total > 0;
-  flag.style.display = warn ? 'flex' : 'none';
-  flag.className = 'conv-flag warn';
-  flag.innerHTML = !warn ? '' :
+  flag.style.display = total > 0 ? 'flex' : 'none';
+  flag.className = 'conv-flag ' + (warn ? 'warn' : 'ok');
+  flag.innerHTML = total <= 0 ? '' :
     `<i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
-     <div><b>${fmtPct(gapPct, 0)} of conversions can't be traced to a source.</b> Marketing tags every link it shares. But other teams sometimes share materials without approval, or build links with missing tracking. Those conversions show up as Direct or Unassigned.
-     <span class="sub">${fmtInt(gap)} of ${fmtInt(total)} conversions have no clear source. We flag this at ${thr}%${first ? ' (provisional)' : ''}.</span></div>`;
+     <div class="conv-stats">
+       <div><span class="big untagged">${fmtPct(gapPct, 0)}</span><b>Untagged</b>${fmtInt(gap)} of ${fmtInt(total)} conversions came from Direct, Unassigned, or our own links without tracking (lnk.bio, 3.basecamp.com). Marketing tags the links it shares, so this is the part we can fix.</div>
+       <div><span class="big">${fmtPct(directPct, 0)}</span><b>Direct</b>${fmtInt(direct)} of ${fmtInt(total)} conversions (already counted in Untagged). Partly real: people who type the portal address or use a bookmark. Not all of it is a tagging problem.</div>
+       <span class="sub-line">The banner turns amber at ${thr}% untagged${first ? ' (provisional for First touch)' : ''}.</span>
+     </div>`;
 
   el('conversionsKpiGrid').innerHTML = convEvents().map(({ event: name }) => {
     const primary = DASHBOARD_CONFIG.primaryKeyEvents.includes(name), g = gapByEvent[name], n = byEvent[name];
     return `<div class="kpi-mini"><div class="lbl">${primary ? '<i class="fas fa-star" style="color:var(--amber);font-size:12px;margin-right:6px;" title="Primary key event" aria-label="Primary key event"></i>' : ''}${esc(convLabel(name))}<span class="host" style="display:block;font-weight:500;font-size:12px;">${name === CONV_OTHER.event ? 'form_submission, newsletter signup, others' : esc(name)}</span></div>
       <div class="val">${fmtInt(n)}</div><div class="sub">conversions in range</div>
-      <div class="sub ${n && g / n * 100 >= thr ? 'gap' : ''}">${fmtInt(g)} from Direct/Unassigned${n ? ` (${fmtPct(g / n * 100, 0)})` : ''}</div></div>`;
+      <div class="sub ${n && g / n * 100 >= thr ? 'gap' : ''}">${fmtInt(g)} untagged${n ? ` (${fmtPct(g / n * 100, 0)})` : ''} · ${fmtInt(directByEvent[name])} direct</div></div>`;
   }).join('');
 
   const chans = Object.keys(byChan).sort((a, b) => byChan[b] - byChan[a]);
@@ -1604,9 +1702,11 @@ function renderConversions(){
         tooltip:{ mode:'nearest', intersect:true, callbacks:{ label: ctx => { const n = ctx.dataset.counts[ctx.dataIndex]; return `${ctx.dataset.label}: ${fmtInt(n)}${share ? ` (${fmtPct(ctx.parsed.x, 0)})` : ''}`; } } } } }
   });
 
-  el('convChannelBody').innerHTML = chans.map(c => {
+  const chanRows = chans.includes('Organic Social') ? chans : [...chans, 'Organic Social'];
+  el('convChannelBody').innerHTML = chanRows.map(c => {
     const n = byChan[c] || 0, isGap = GAP_CHANNELS.includes(c);
-    return `<tr><td><span class="chan-dot" style="background:${chanColor(c)}"></span>${esc(chanName(c))}</td><td class="num-cell ${isGap && n ? 'gapcell' : ''}">${fmtInt(n)}</td><td class="num-cell">${fmtPct(safeDiv(n, total) * 100, 0)}</td></tr>`;
+    const socialNote = c === 'Organic Social' ? '<span class="host" style="display:block;font-size:12px;white-space:normal;max-width:300px;line-height:1.4;">Looks low until our social posts carry UTMs (utm_medium=social): until then those clicks hide in Direct.</span>' : '';
+    return `<tr><td><span class="chan-dot" style="background:${chanColor(c)}"></span>${esc(chanName(c))}${socialNote}</td><td class="num-cell ${isGap && n ? 'gapcell' : ''}">${fmtInt(n)}</td><td class="num-cell">${fmtPct(safeDiv(n, total) * 100, 0)}</td></tr>`;
   }).join('');
 
   const agg = new Map();
@@ -1624,17 +1724,18 @@ function renderConversions(){
   const evTotal = {}; rows.forEach(r => { evTotal[r[f.event]] = (evTotal[r[f.event]] || 0) + num(r[f.count]); });
   el('convSourceHead').innerHTML = `<tr><th>Conversion</th><th>Channel</th><th>Source / medium</th><th>Campaign (UTM)</th>${first ? '' : '<th>Landing page (session start)</th>'}<th class="num-cell">Conversions</th><th class="num-cell">Share of this conversion</th></tr>`;
   el('convSourceBody').innerHTML = list.slice(0, 60).map(a => {
-    const isGap = GAP_CHANNELS.includes(a.ch);
+    const isGap = isUntagged(a.ch, a.sm);
     return `<tr><td>${convLabelHtml(a.ev)}</td><td><span class="chan-dot" style="background:${chanColor(a.ch)}"></span>${esc(chanName(a.ch))}</td>
       <td>${esc(a.sm)}</td><td>${esc(a.camp)}</td>${first ? '' : `<td class="lp-cell" title="${esc(a.lp)}"><span class="path">${esc(a.lp)}</span></td>`}
       <td class="num-cell ${isGap ? 'gapcell' : ''}">${fmtInt(a.n)}</td><td class="num-cell ${lowVol(evTotal[a.ev]) ? 'lowvol' : ''}">${fmtPct(safeDiv(a.n, evTotal[a.ev]) * 100, 0)} <span class="host">(${fmtInt(a.n)} of ${fmtInt(evTotal[a.ev])})</span></td></tr>`;
   }).join('') || `<tr><td colspan="${first ? 6 : 7}" class="muted">No conversions match in this range.</td></tr>`;
   el('convSourceNote').textContent = (list.length < fullCount ? `Showing the top 6 sources per conversion (${fmtInt(fullCount)} combinations in all; search to see the rest). ` : '') +
-    'Orange numbers are Direct or Unassigned. Channels are adjusted: a source with no medium, such as Peachjar or Flyer, shows under its own name instead of Unassigned. ' +
+    'Orange numbers are untagged: Direct, Unassigned, or our own links such as lnk.bio. Channels are adjusted: a source with no medium, such as Peachjar or Flyer, shows under its own name instead of Unassigned. ' +
     `Shares for a conversion with fewer than ${CONV_LOW_VOLUME_MIN} conversions are greyed (provisional).` +
     (first ? ' Landing page is not shown for first touch: Google Analytics keeps no landing page for a person\'s first-ever visit.' : '');
 
   // landing page -> conversion (session scoped, path only). Rate = conversions (pairs tab) / all sessions that started on the page (landing sessions tab), same weeks.
+  // Pages where the visit starts on the portal, or where the conversion itself happens, are not ranked (they sit near 100% by construction).
   const P = CONV_TABS.pairs.f, LS = CONV_TABS.landingSessions.f;
   const lp = new Map();
   DATA[CONV_TABS.pairs.tab].filter(r => convInRange(r[P.week])).forEach(r => {
@@ -1642,16 +1743,181 @@ function renderConversions(){
     a.total += num(r[P.count]); a.ev[e] = (a.ev[e] || 0) + num(r[P.count]); lp.set(r[P.landing], a); });
   const sessions = {};
   DATA[CONV_TABS.landingSessions.tab].filter(r => convInRange(r[LS.week])).forEach(r => { sessions[r[LS.landing]] = (sessions[r[LS.landing]] || 0) + num(r[LS.sessions]); });
-  const top = [...lp.values()].sort((a, b) => b.total - a.total).slice(0, 10);
+  const fwk = funnelByPath(DATA[FUNNEL_TABS.weekly].filter(r => convInRange(r.date)));   // weekly funnel, so it matches the weekly pairs and sessions tabs
+  const top = [...lp.values()].filter(a => !CONV_NOT_RANKED.includes(a.path)).sort((a, b) => b.total - a.total).slice(0, 10);
   const maxCell = Math.max(1, ...top.flatMap(a => Object.values(a.ev)));
-  el('convLandingHead').innerHTML = `<tr><th>Landing page</th><th class="num-cell">Total</th><th class="num-cell" style="min-width:150px">Conversion rate (conversions of sessions)</th>${convEvents().map(e => `<th class="num-cell" style="text-align:center">${esc(e.label)}</th>`).join('')}</tr>`;
+  el('convLandingHead').innerHTML = `<tr><th>Landing page</th><th class="num-cell">Total</th><th class="num-cell" style="min-width:150px">Conversion rate (conversions of sessions)</th><th class="num-cell" style="min-width:150px">Reached the portal (of sessions)</th>${convEvents().map(e => `<th class="num-cell" style="text-align:center">${esc(e.label)}</th>`).join('')}</tr>`;
   el('convLandingBody').innerHTML = top.map(a => {
-    const s = sessions[a.path] || 0;
+    const s = sessions[a.path] || 0, fp = fwk.get(a.path);
     return `<tr><td><span class="path">${esc(a.path)}</span></td><td class="num-cell"><b>${fmtInt(a.total)}</b></td>
-      <td class="num-cell ${lowVol(a.total) || a.total > s ? 'lowvol' : ''}" ${a.total > s ? 'title="More conversions than sessions: this page is where the conversion itself happens, or one session fired the event more than once. A rate is not meaningful here."' : ''}>${!s ? '--' : a.total > s ? 'n/a' : fmtPct(a.total / s * 100, 1)} <span class="host">(${fmtInt(a.total)} of ${fmtInt(s)})</span></td>${convEvents().map(e => { const n = a.ev[e.event] || 0;
+      <td class="num-cell ${lowVol(a.total) || a.total > s ? 'lowvol' : ''}" ${a.total > s ? 'title="More conversions than sessions: one session fired the event more than once. A rate is not meaningful here."' : ''}>${!s ? '--' : a.total > s ? 'n/a' : fmtPct(a.total / s * 100, 1)} <span class="host">(${fmtInt(a.total)} of ${fmtInt(s)})</span></td>
+      <td class="num-cell ${fp && lowVol(fp.p) ? 'lowvol' : ''}">${fp ? `${fmtInt(fp.p)} <span class="host">(${rateText(fp.p, fp.s)})</span>` : '--'}</td>${convEvents().map(e => { const n = a.ev[e.event] || 0;
       return `<td class="cell ${n ? '' : 'zero'}" style="${n ? `background:rgba(47,168,208,${(0.08 + 0.4 * n / maxCell).toFixed(2)})` : ''}">${n || '·'}</td>`; }).join('')}</tr>`;
-  }).join('') || `<tr><td colspan="${convEvents().length + 3}" class="muted">No conversions in this range.</td></tr>`;
-  el('convLandingNote').textContent = `Ranked by total conversions. Paths only: Google Analytics gives the host of the conversion event, not of the page the session started on. Rates built on fewer than ${CONV_LOW_VOLUME_MIN} conversions are greyed (provisional). "n/a" means more conversions than sessions, which happens on pages where the conversion itself takes place (thank-you pages, the contact page) or when one session fires the event twice.`;
+  }).join('') || `<tr><td colspan="${convEvents().length + 4}" class="muted">No conversions in this range.</td></tr>`;
+  el('convLandingNote').textContent = `Ranked by total conversions. Paths only: Google Analytics gives the host of the conversion event, not of the page the session started on. Rates built on fewer than ${CONV_LOW_VOLUME_MIN} events are greyed (provisional). "Reached the portal" comes from the funnel tab, so it needs that tab to be synced.`;
+  const nr = CONV_NOT_RANKED.map(p => { const a = lp.get(p), n = a ? a.total : 0, ss = sessions[p] || 0;
+    return `<b>${esc(p)}</b> (${p === '/contact-us' || p === '/successful-registration-mcp' ? 'where the conversion happens' : 'starts on the portal'}): ${fmtInt(ss)} sessions, ${fmtInt(n)} conversions`; });
+  el('convNotRanked').innerHTML = `Not ranked above, because the visit starts on the portal or the conversion happens on the page itself (rates there are close to 100% by construction): ${nr.join(' · ')}.`;
+
+  renderFunnel(); renderCourses(); renderCoursePages(fwk); renderEmailStrip(); renderConvFresh();
+}
+
+/* ---- Funnel, course view and emails (Conversions tab) --------------------------------------------------------------
+   Funnel data comes from Paul's tabs GA4_Funnel_Entry_To_Conversion (weekly) and _Daily. Both list the top 50 entry pages plus any page with a
+   portal visit or registration, so a sum of their rows is NOT the site total and is never called that here. */
+const CONV_PORTAL_PAGES = ['/myredefiners-portal', '/successful-registration-mcp'];   // visit starts on the portal / the confirmation page
+const CONV_CONVERSION_PAGES = ['/successful-registration-mcp', '/contact-us'];         // the conversion happens on the page itself
+const CONV_NOT_RANKED = [...new Set([...CONV_PORTAL_PAGES, ...CONV_CONVERSION_PAGES])];
+const CONV_FY = 'FY26-27';   // fiscal year shown for Salesforce registrations
+// Courses (confirmed by Paul's brief, 2026-10-09). English Youth Club no longer runs and is not listed. `sf` matches Class: Course in Salesforce,
+// `email` matches the email name. Youth Clubs is a total row over its three members.
+const CONV_COURSES = [
+  { id:'ess', label:'English for School Success', paths:['/english-school-success', '/es/ingles-para-exito-escolar'], sf:/^English for School Success/i, email:/\bESS\b/ },
+  { id:'youth', label:'Youth Clubs (all three)', members:['spanish-yc', 'arabic-yc', 'chinese-yc'], email:/youth/i },
+  { id:'spanish-yc', label:'Spanish Youth Club', paths:['/spanish-youth-club'], sf:/^Spanish Youth Club/i, member:true },
+  { id:'arabic-yc', label:'Arabic Youth Club', paths:['/arabic-youth-club'], sf:/^Arabic Youth Club/i, member:true },
+  { id:'chinese-yc', label:'Chinese Youth Club', paths:['/chinese-youth-club'], sf:/^Chinese Youth Club/i, member:true },
+  { id:'legacy-yc', label:'Legacy: old summer Youth Club registration page', paths:['/youth-club-registration'], legacy:true }
+];
+// Adult course and class pages, for the "Course and class pages" table. PROVISIONAL: picked from the page names seen in Google Analytics, to be confirmed.
+const CONV_ADULT_PAGES = ['/adult-english-classes', '/adult-online-english-classes', '/adult-spanish-classes', '/adult-spanish-professionals', '/adult-arabic-classes', '/adult-chinese-classes',
+  '/lets-learn-english', '/lets-learn-spanish', '/lets-learn-arabic', '/lets-learn-mandarin', '/lets-learn-registration', '/conversation-adults-registration',
+  '/es/aprendamos-ingles', '/es/clase-ingles-adultos', '/es/clases-ingles-en-linea-adultos'];
+const CONV_STATUSES = ['Pre-Registered', 'Registered', 'Enrolled', 'Suspended'];
+state.funnelSel = 'all';
+const courseById = id => CONV_COURSES.find(c => c.id === id);
+const coursePaths = c => c.members ? c.members.flatMap(m => courseById(m).paths) : c.paths;
+const courseSfTest = c => { const list = c.members ? c.members.map(m => courseById(m).sf) : [c.sf]; return name => list.some(re => re && re.test(name || '')); };
+const rateText = (n, d) => !d ? '--' : n > d ? 'n/a' : fmtPct(n / d * 100, 1);
+// raw count first, then the rate in grey brackets; the rate is greyed when it rests on fewer than CONV_LOW_VOLUME_MIN events
+const countRate = (n, d) => `<span class="${lowVol(n) ? 'lowvol' : ''}">${fmtInt(n)}</span> <span class="host ${lowVol(n) ? 'lowvol' : ''}">(${rateText(n, d)}${lowVol(n) && n ? ', few events' : ''})</span>`;
+const fsum = rows => rows.reduce((a, r) => ({ s:a.s + num(r.sessions), p:a.p + num(r.reachedPortal), m:a.m + num(r.registered) }), { s:0, p:0, m:0 });
+function funnelByPath(rows){
+  const m = new Map();
+  rows.forEach(r => { const a = m.get(r.landingPage) || { s:0, p:0, m:0 }; a.s += num(r.sessions); a.p += num(r.reachedPortal); a.m += num(r.registered); m.set(r.landingPage, a); });
+  return m;
+}
+// last 7 days uses the daily tab (fresher); every other range uses the weekly tab, counting a week when its Monday is inside the range
+function funnelSource(){
+  const daily = state.rangeDays === 7 && DATA[FUNNEL_TABS.daily].length > 0;
+  return { daily, rows: daily ? DATA[FUNNEL_TABS.daily].filter(r => inRange(r.date)) : DATA[FUNNEL_TABS.weekly].filter(r => convInRange(r.date)) };
+}
+function funnelPred(sel){
+  if (sel === 'web') return p => !CONV_PORTAL_PAGES.includes(p);
+  if (sel.startsWith('course:')) { const ps = coursePaths(courseById(sel.slice(7)) || { paths:[] }); return p => ps.includes(p); }
+  if (sel.startsWith('page:')) { const p0 = sel.slice(5); return p => p === p0; }
+  return () => true;
+}
+function funnelLabel(sel){
+  if (sel === 'all') return 'all listed entry pages'; if (sel === 'web') return 'website pages only';
+  if (sel.startsWith('course:')) return (courseById(sel.slice(7)) || { label:sel }).label; return sel.slice(5);
+}
+const fmtLongDay = d => d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+
+function renderConvFresh(){
+  const node = el('convFresh');
+  if (!liveMeta) { node.innerHTML = '<div class="line"><b>Sample data.</b> data.json could not be loaded, so none of these numbers are real.</div>'; return; }
+  const wk = liveMeta.latest && liveMeta.latest[CONV_TABS.attribution.tab] ? parseDay(liveMeta.latest[CONV_TABS.attribution.tab]) : null;
+  const end = wk ? new Date(wk.getTime() + 6 * DAY) : null;
+  let html = end ? `<div class="line"><b>Complete weeks through ${fmtLongDay(end)}.</b> This week's partial data is not included in the weekly figures and channel tables below.</div>` : '';
+  const days = DATA[FUNNEL_TABS.daily].map(r => r.date).sort();
+  if (days.length) {
+    const last = parseDay(days[days.length - 1]), monday = new Date(last.getTime() - ((last.getDay() + 6) % 7) * DAY);
+    if (!end || last > end) {
+      const t = fsum(DATA[FUNNEL_TABS.daily].filter(r => inSpan(r.date, monday, last)));
+      const label = last.getDay() === 0 ? 'Newest week (daily data, not yet in the weekly tabs)' : 'This week so far';
+      html += `<div class="line"><b>${label}</b> (${fmtShort(monday)} to ${fmtShort(last)}, complete days only): ${fmtInt(t.s)} sessions, ${fmtInt(t.p)} reached the portal, ${fmtInt(t.m)} registered (MCP). From the daily funnel tab, which runs 2–3% above the weekly one.</div>`;
+    }
+  } else html += '<div class="line">The daily funnel tab is not in data.json yet, so "this week so far" is not shown.</div>';
+  node.innerHTML = html;
+}
+
+function renderFunnel(){
+  const hasData = DATA[FUNNEL_TABS.weekly].length > 0;
+  const src = funnelSource();
+  // page choices: the busiest entry pages in the picked dates, plus the current choice if it is not among them
+  const pages = [...funnelByPath(src.rows).entries()].sort((a, b) => b[1].s - a[1].s).slice(0, 40).map(e => e[0]);
+  if (state.funnelSel.startsWith('page:') && !pages.includes(state.funnelSel.slice(5))) pages.push(state.funnelSel.slice(5));
+  const opt = (v, t) => `<option value="${esc(v)}"${v === state.funnelSel ? ' selected' : ''}>${esc(t)}</option>`;
+  el('funnelSelect').innerHTML = opt('all', 'All entry pages (listed)') + opt('web', 'Website pages only (not the portal or confirmation page)') +
+    `<optgroup label="Courses">${CONV_COURSES.map(c => opt('course:' + c.id, (c.member ? '– ' : '') + c.label)).join('')}</optgroup>` +
+    `<optgroup label="One page (busiest first)">${pages.map(p => opt('page:' + p, p + (CONV_PORTAL_PAGES.includes(p) ? '  (starts on the portal / confirmation)' : ''))).join('')}</optgroup>`;
+  el('funnelSource').textContent = hasData ? `${rangeLabel()} · ${src.daily ? 'daily tab (last 7 days)' : 'weekly tab, weeks starting in these dates'}` : '';
+  if (!hasData) {
+    el('funnelBody').innerHTML = '<p class="metric-sub">The funnel tabs are not in data.json yet. They appear after the next data sync (GA4_Funnel_Entry_To_Conversion and its _Daily version). Sample data has no funnel.</p>';
+    el('funnelPortalLine').textContent = ''; el('funnelWeekBody').innerHTML = ''; el('funnelNote').textContent = ''; return;
+  }
+  const pred = funnelPred(state.funnelSel), t = fsum(src.rows.filter(r => pred(r.landingPage)));
+  const steps = [
+    { nm:'Sessions', sub:'Visits that started on ' + funnelLabel(state.funnelSel), n:t.s, color:'#2FA8D0', rate:'' },
+    { nm:'Reached the portal', sub:'Opened engage.redefinerswl.org (log in, sign up or register)', n:t.p, color:'#3FE0A5', rate:`${rateText(t.p, t.s)} of sessions` },
+    { nm:'Registered (MCP)', sub:'Saw the confirmation page, event mcp_registration_complete', n:t.m, color:'#FFC100', rate:`${rateText(t.m, t.p)} of portal sessions · ${rateText(t.m, t.s)} of all sessions` }
+  ];
+  el('funnelBody').innerHTML = steps.map((st, i) => {
+    const w = t.s ? Math.max(1, Math.min(100, st.n / t.s * 100)) : 0, low = i > 0 && lowVol(st.n);
+    return `<div class="fun-step"><div class="nm">${i + 1}. ${esc(st.nm)}<span class="host">${esc(st.sub)}</span></div>
+      <div class="fun-track"><div class="fun-bar" style="width:${(w * 0.62).toFixed(1)}%;background:${st.color};"></div><div class="fun-val ${low ? 'lowvol' : ''}">${fmtInt(st.n)}<span class="host">${esc(st.rate)}${low && st.n ? ' · few events, rate is unreliable' : ''}</span></div></div></div>`;
+  }).join('');
+  const portalRows = src.rows.filter(r => CONV_PORTAL_PAGES.includes(r.landingPage)), pt = fsum(portalRows);
+  el('funnelPortalLine').innerHTML = pt.s ? `Visits that start on the portal or the confirmation page (<b>/myredefiners-portal</b>, <b>/successful-registration-mcp</b>) are people who skipped the website: ${fmtInt(pt.s)} sessions, ${fmtInt(pt.p)} reached the portal, ${fmtInt(pt.m)} registered. They sit near 100% by construction, so they are ${state.funnelSel === 'all' ? 'included in the numbers above; choose "Website pages only" to take them out' : state.funnelSel === 'web' ? 'left out of the numbers above' : 'not part of this choice'}.` : '';
+
+  // weekly trend (weekly tab, all weeks, same page choice)
+  const byWeek = new Map();
+  DATA[FUNNEL_TABS.weekly].filter(r => pred(r.landingPage)).forEach(r => { const a = byWeek.get(r.date) || { s:0, p:0, m:0 }; a.s += num(r.sessions); a.p += num(r.reachedPortal); a.m += num(r.registered); byWeek.set(r.date, a); });
+  const maxS = Math.max(1, ...[...byWeek.values()].map(a => a.s));
+  el('funnelWeekBody').innerHTML = [...byWeek.entries()].sort().map(([wk, a]) =>
+    `<tr><td>${fmtShort(parseDay(wk))}</td><td class="num-cell">${fmtInt(a.s)}</td><td class="num-cell">${countRate(a.p, a.s)}<span class="databar" style="width:${(a.p / maxS * 90).toFixed(0)}px"></span></td><td class="num-cell">${countRate(a.m, a.s)}</td></tr>`).join('') || '<tr><td colspan="4" class="muted">No sessions for this choice.</td></tr>';
+  el('funnelNote').innerHTML = `Rates in brackets are shares of that week's sessions. Greyed when built on fewer than ${CONV_LOW_VOLUME_MIN} events (provisional). A week with no registrations is not a failure: registration was closed between summer and fall, so there were almost none from late July to mid-September.<br>
+    <b>These are not site totals.</b> Each week lists the top 50 entry pages plus any page with a portal visit or registration, so the sum is a bit below the true number of visits. The daily tab runs 2–3% above the weekly one.<br>
+    <b>Not covered:</b> many people skip the website and go straight to the portal (Peachjar, the bio link, flyers, Google search, email). They only show up as portal starts. Someone who browses now and registers on a later visit is credited to the later visit's entry page, so pages that mainly create awareness are undercounted.`;
+}
+
+function renderCourses(){
+  const src = funnelSource(), byPath = funnelByPath(src.rows), hasF = DATA[FUNNEL_TABS.weekly].length > 0;
+  const fy = DATA.MCP_Enrollment_Data.filter(r => fyOf(r) === CONV_FY);
+  const emails = DATA.Email_Marketing_Data.filter(r => inRange(r.date) && r.emailType === 'REGULAR');
+  const sfCount = c => { const test = courseSfTest(c), o = { n:0, other:0 }; CONV_STATUSES.forEach(s => o[s] = 0);
+    fy.filter(r => test(r.classCourse)).forEach(r => { if (CONV_STATUSES.includes(r.status)) { o[r.status]++; o.n++; } else o.other++; }); return o; };
+  const emailAgg = re => { const rows = emails.filter(r => re.test(r.emailName || '')); return { n:rows.length, d:rows.reduce((s, r) => s + num(r.delivered), 0), o:rows.reduce((s, r) => s + num(r.opens), 0), c:rows.reduce((s, r) => s + num(r.clicks), 0) }; };
+  const emailCell = e => e.n ? `${fmtInt(e.n)} sent · ${fmtInt(e.d)} delivered · ${fmtInt(e.o)} opens · ${fmtInt(e.c)} clicks` : '<span class="host">none in these dates</span>';
+  el('courseHead').innerHTML = `<tr><th>Course</th><th class="num-cell">Course-page sessions</th><th class="num-cell">Reached the portal</th><th>Registrations in Salesforce, ${CONV_FY}</th><th>Emails in these dates</th></tr>`;
+  const rows = CONV_COURSES.map(c => {
+    const ps = coursePaths(c), t = ps.reduce((a, p) => { const x = byPath.get(p) || { s:0, p:0 }; return { s:a.s + x.s, p:a.p + x.p }; }, { s:0, p:0 });
+    const sf = c.legacy ? null : sfCount(c);
+    const sfCell = !sf ? '<span class="host">n/a (old page, no Salesforce course)</span>' : `<b>${fmtInt(sf.n)}</b> <span class="host">${CONV_STATUSES.map(s => `${s} ${sf[s]}`).join(' · ')}${sf.other ? ` · other ${sf.other}` : ''}</span>`;
+    const emCell = c.email ? emailCell(emailAgg(c.email)) : c.member ? '<span class="host">in the Youth Clubs row</span>' : '<span class="host">none</span>';
+    return `<tr class="${c.legacy ? 'muted-row' : ''}"><td class="${c.member ? 'indent' : ''}"><button class="linkbtn" type="button" data-fsel="course:${c.id}">${esc(c.label)}</button><span class="host" style="display:block;font-size:12px;">${ps.map(esc).join(' + ')}</span></td>
+      <td class="num-cell">${hasF ? fmtInt(t.s) : '--'}</td><td class="num-cell">${hasF ? countRate(t.p, t.s) : '--'}</td><td>${sfCell}</td><td>${emCell}</td></tr>`;
+  });
+  const fam = emailAgg(/families/i);
+  rows.push(`<tr class="muted-row"><td>Families emails<span class="host" style="display:block;font-size:12px;">not matched to a single course</span></td><td class="num-cell">--</td><td class="num-cell">--</td><td><span class="host">--</span></td><td>${emailCell(fam)}</td></tr>`);
+  el('courseBody').innerHTML = rows.join('');
+  el('courseNote').textContent = `Course-page sessions and portal visits: ${src.daily ? 'daily tab' : 'weekly tab'}, ${rangeLabel()}, entry pages only (people who first land elsewhere and open a course page later are not counted). Rates are greyed when built on fewer than ${CONV_LOW_VOLUME_MIN} events (provisional). Salesforce counts are for ${CONV_FY} to date and are not limited to the dates picked. Emails are matched by name ("ESS", "Youth", "Families") and only count one-off sends in these dates.`;
+
+  // other courses: everything in Salesforce this fiscal year that is not one of the courses above
+  const known = CONV_COURSES.filter(c => c.sf).map(c => c.sf);
+  const other = new Map();
+  fy.filter(r => !known.some(re => re.test(r.classCourse || ''))).forEach(r => { const k = r.classCourse || '(no course)', o = other.get(k) || { n:0 }; CONV_STATUSES.forEach(s => o[s] = o[s] || 0); if (CONV_STATUSES.includes(r.status)) { o[r.status]++; o.n++; } other.set(k, o); });
+  el('courseOtherHead').innerHTML = `<tr><th>Course</th><th class="num-cell">Total</th>${CONV_STATUSES.map(s => `<th class="num-cell">${s}</th>`).join('')}</tr>`;
+  el('courseOtherBody').innerHTML = [...other.entries()].sort((a, b) => b[1].n - a[1].n).map(([k, o]) => `<tr><td>${esc(k)}</td><td class="num-cell"><b>${fmtInt(o.n)}</b></td>${CONV_STATUSES.map(s => `<td class="num-cell">${fmtInt(o[s])}</td>`).join('')}</tr>`).join('') ||
+    `<tr><td colspan="${CONV_STATUSES.length + 2}" class="muted">No other ${CONV_FY} registrations in Salesforce yet.</td></tr>`;
+}
+
+function renderCoursePages(fwk){
+  const paths = [...new Set([...CONV_COURSES.flatMap(c => c.paths || []), ...CONV_ADULT_PAGES])];
+  const list = paths.map(path => ({ path, ...(fwk.get(path) || { s:0, p:0, m:0 }) })).sort((a, b) => b.s - a.s);
+  const has = DATA[FUNNEL_TABS.weekly].length > 0;
+  el('coursePagesBody').innerHTML = !has ? '<tr><td colspan="4" class="muted">The funnel tabs are not in data.json yet.</td></tr>' :
+    list.map(a => { const legacy = CONV_COURSES.some(c => c.legacy && c.paths.includes(a.path));
+      return `<tr class="${legacy ? 'muted-row' : ''}"><td><span class="path">${esc(a.path)}</span>${legacy ? '<span class="host" style="display:block;font-size:12px;">legacy summer path</span>' : ''}</td><td class="num-cell">${fmtInt(a.s)}</td><td class="num-cell">${countRate(a.p, a.s)}</td><td class="num-cell">${countRate(a.m, a.s)}</td></tr>`; }).join('');
+  el('coursePagesNote').textContent = `Weekly funnel tab, ${rangeLabel()}, sessions that started on the page. Rates greyed when built on fewer than ${CONV_LOW_VOLUME_MIN} events (provisional). Course pages: English for School Success (English and Spanish pages), the three Youth Clubs and the old Youth Club path. Adult pages are provisional: chosen from the page names in Google Analytics, not yet confirmed. A page with no sessions was not among the top 50 entry pages that week and had no portal visit or registration.`;
+}
+
+function renderEmailStrip(){
+  const rows = DATA.Email_Marketing_Data.filter(r => inRange(r.date) && r.emailType === 'REGULAR').sort((a, b) => a.date < b.date ? 1 : -1);
+  el('emailStripBody').innerHTML = rows.slice(0, 12).map(r => `<tr><td>${fmtShort(parseDay(r.date))}</td><td>${esc(r.emailName)}</td><td class="num-cell">${fmtInt(r.delivered)}</td><td class="num-cell">${fmtInt(r.opens)}</td><td class="num-cell">${fmtInt(r.clicks)}</td></tr>`).join('') ||
+    '<tr><td colspan="5" class="muted">No one-off emails were sent in these dates.</td></tr>';
+  el('emailStripNote').textContent = `One-off sends only (automated emails send all the time). Email sends help explain spikes in visits and registrations.${rows.length > 12 ? ` Showing the latest 12 of ${rows.length}.` : ''}`;
 }
 
 /* =========================================================================================
