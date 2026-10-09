@@ -752,7 +752,7 @@
     </div>
     <div class="mcp-category-grid" id="mcpCategoryGrid"></div>
     <div class="platform-card">
-      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-award" aria-hidden="true"></i>Top 10 teachers by completion rate</h3><span class="meta">Minimum 3 enrollments in the filter</span></div>
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-award" aria-hidden="true"></i>Top 10 teachers by completion rate</h3><span class="meta">Names masked. Minimum 3 enrollments in the filter</span></div>
       <div class="teacher-board" id="teacherBoard"></div>
     </div>
   </div>
@@ -867,7 +867,7 @@ const OUTREACH_LOCATIONS = ['Tampa Family Center','Brandon Library','Riverview C
 const FISCAL_YEARS = ['FY23-24', 'FY24-25', 'FY25-26'];
 const FY_DAY_RANGES = { 'FY23-24': [500, 800], 'FY24-25': [150, 499], 'FY25-26': [0, 150] };
 const STATUSES = ['Enrolled','Completed','Withdrawn','Waitlisted'];
-const INSTRUCTORS = ['M. Alvarez','R. Chen','L. Hasan','D. Okafor','S. Delgado','P. Novak','A. Ibrahim','K. Zhang','J. Ferreira','T. Osei','N. Marchetti','C. Reyes'];
+const SAMPLE_TEACHER_COUNT = 12;   // sample teachers are only numbers: no names exist anywhere in this page or in data.json
 const COURSE_VARIANTS = [': Beginner', ': Intermediate', ': Advanced', ' - Morning Cohort', ' - Evening Cohort', ''];
 
 function genDailySeries(days, seedBase, base, growth, noiseFrac){
@@ -1132,8 +1132,17 @@ MOCK.In_Person_Outreach_Log = (() => {
 })();
 
 // --- MCP_Enrollment_Data ---
+// The Top 10 teachers view is ranked when data.json is built (tools/marketing-data-sync) and arrives as anonymous
+// [completed, total] pairs, best first. The sample data follows the same rule: rows carry no teacher at all.
+const TEACHER_MIN_ENROLLMENTS = 3, TEACHER_TOP_N = 10;
+function rankTeachers(byTeacher){
+  return Object.values(byTeacher).filter(v => v.total >= TEACHER_MIN_ENROLLMENTS)
+    .sort((a, b) => b.completed / b.total - a.completed / a.total || b.total - a.total)
+    .slice(0, TEACHER_TOP_N).map(v => [v.completed, v.total]);
+}
 MOCK.MCP_Enrollment_Data = (() => {
   const rows = [];
+  const teacherTally = {};
   let id = 0;
   ALL_GROUPS.forEach((g) => {
     FISCAL_YEARS.forEach((fy) => {
@@ -1150,12 +1159,17 @@ MOCK.MCP_Enrollment_Data = (() => {
           classCourse: courseName,
           classProgramCohort: fy,
           className: `${g.group.split(' ')[0]} ${fy} Section ${randInt(id+1011,1,3)}`,
-          classInstructor: pick(INSTRUCTORS, id+1013),
           location: pick(LOCATIONS, id+1015)
+        });
+        const t = randInt(id+1013, 1, SAMPLE_TEACHER_COUNT), row = rows[rows.length - 1];
+        [ 'all', fy ].forEach(key => {
+          const g = ((teacherTally[key] = teacherTally[key] || {})[t] = teacherTally[key][t] || { total:0, completed:0 });
+          g.total++; if (row.status === 'Completed') g.completed++;
         });
       }
     });
   });
+  MOCK.MCP_Teacher_Ranking = Object.fromEntries(Object.entries(teacherTally).map(([key, by]) => [key, rankTeachers(by)]));
   return rows;
 })();
 
@@ -1166,6 +1180,7 @@ const TAB_KEYS = ['GA4_Executive_Overview','GA4_Traffic_Acquisition','GA4_Page_E
 // overwritten tab-by-tab if/when the Phase 2 live sheet fetch succeeds.
 const DATA = {};
 TAB_KEYS.forEach(k => DATA[k] = MOCK[k]);
+DATA.MCP_Teacher_Ranking = MOCK.MCP_Teacher_Ranking;   // { 'all': [[completed, total], ...], 'FY25-26': [...] }, best first, no names
 // Funnel by entry page (written by Paul). There is no sample version: without data.json these stay empty and the tab says so.
 const FUNNEL_TABS = { weekly:'GA4_Funnel_Entry_To_Conversion', daily:'GA4_Funnel_Entry_To_Conversion_Daily' };   // fields: date, landingPage, sessions, reachedPortal, registered
 DATA[FUNNEL_TABS.weekly] = []; DATA[FUNNEL_TABS.daily] = [];
@@ -1222,6 +1237,7 @@ async function loadLiveData(){
     LIVE_KEYS.forEach(k => { DATA[k] = expandTable(payload.tabs[k]); });
     Object.values(FUNNEL_TABS).forEach(k => { DATA[k] = payload.tabs[k] ? expandTable(payload.tabs[k]) : []; });   // optional: older data.json files do not have them
     DATA[OUTREACH_TAB] = payload.tabs[OUTREACH_TAB] ? expandTable(payload.tabs[OUTREACH_TAB]) : [];
+    DATA.MCP_Teacher_Ranking = payload.mcpTeacherRanking || {};   // ranked at build time; the page never sees a teacher name
     DATA.Digital_Ads_and_Email_Outreach = [];   // not drawn, and it must not keep sample rows next to live ones
     GRAN = payload.granularity || 'day';
     const anchor = newestDataDay(payload);
@@ -2378,7 +2394,7 @@ function renderMcp(){
   el('mcpCompletionSub').textContent = total ? `${fmtInt(completed)} of ${fmtInt(total)} completed, including provisional` : 'No enrollments in this filter';
   renderMcpFyCompareChart();
   renderMcpCategoryGrid();
-  renderTeacherBoard(rows);
+  renderTeacherBoard();
 }
 
 function renderMcpFyCompareChart(){
@@ -2479,16 +2495,13 @@ function equalizeMcpCards(){
   });
 }
 
-function renderTeacherBoard(rows){
-  const by = {};
-  rows.forEach(r => { const t = by[r.classInstructor] || (by[r.classInstructor] = { total:0, completed:0 }); t.total++; if (r.status === 'Completed') t.completed++; });
-  const ranked = Object.entries(by).filter(([, v]) => v.total >= 3)
-    .map(([name, v]) => ({ name, total:v.total, completed:v.completed, rate: rate(v.completed, v.total, 100) }))
-    .sort((a, b) => b.rate - a.rate || b.total - a.total).slice(0, 10);
-  el('teacherBoard').innerHTML = ranked.map((t, i) => `<div class="teacher-row">
-      <div class="teacher-rank ${i < 3 ? 'top' : ''}">${i + 1}</div><div class="teacher-name">${esc(t.name)}</div>
+// Teachers arrive already ranked and without names (see DATA.MCP_Teacher_Ranking), so the label comes from the rank alone.
+function renderTeacherBoard(){
+  const ranked = (DATA.MCP_Teacher_Ranking[state.fiscalYear] || []).map(([completed, total], i) => ({ rank:i + 1, completed, total, rate: rate(completed, total, 100) }));
+  el('teacherBoard').innerHTML = ranked.map(t => `<div class="teacher-row">
+      <div class="teacher-rank ${t.rank <= 3 ? 'top' : ''}">${t.rank}</div><div class="teacher-name">Teacher ${t.rank}</div>
       <div class="teacher-meta">${fmtInt(t.completed)}/${fmtInt(t.total)} completed</div><div class="teacher-rate">${fmtRate(t.rate)}</div></div>`).join('')
-    || `<div class="cat-empty">Not enough data in this filter. Each instructor needs at least 3 enrollments to rank.</div>`;
+    || `<div class="cat-empty">Not enough data in this filter. Each teacher needs at least ${TEACHER_MIN_ENROLLMENTS} enrollments to rank.</div>`;
 }
 
 /* =========================================================================================

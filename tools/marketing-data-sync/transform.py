@@ -8,11 +8,14 @@ Salesforce tab is complete; the shrink check below refuses it while it has fewer
 
 RAW_DIR holds one <tab name>.json per tab: the sheet's values as a list of rows, header row first.
 This file is public, so the output only carries the fields the dashboard draws. Never add personal data:
-feedback forms, parent contacts, staff "Created By" names and free-text notes stay out on purpose.
+feedback forms, parent contacts, teacher names, staff "Created By" names and free-text notes stay out on purpose.
+Teacher names in particular: the Top 10 teachers view is ranked here (teacher_ranking) and published as anonymous
+[completed, total] pairs; the build stops if any instructor name from the sheet is found in the output.
 The check at the end refuses to overwrite good data with a short or stale pull (exit code 2).
 """
 import json, os, re, sys, datetime as dt
 from collections import Counter
+from fractions import Fraction
 
 MIN_LOCATION_ACTIVITIES = 3   # rarer outreach locations are folded into "Other locations" (free text, can name people)
 
@@ -265,21 +268,66 @@ def outreach_traffic(t):
     return table(['date', 'group', 'source', 'campaign', 'utmContent', 'landingPage', 'sessions', 'engagedSessions', 'users', 'registered'], out)
 
 
+def mcp_status(t, r):
+    status = text(t.get(r, 'Status'))
+    return 'Completed' if status == 'Provisionally Completed' else status   # counted as completed; the dashboard says so
+
+
+def mcp_fiscal_year(t, r):
+    cohort = text(t.get(r, 'Class: Program Cohort'))
+    if 'Class: Fiscal Year' in t.header:          # the Salesforce tab carries the fiscal year directly
+        return text(t.get(r, 'Class: Fiscal Year'))
+    m = re.search(r'FY\d{2}-\d{2}', cohort)       # the export does not, so read it off the cohort ("FY24-25 Q2")
+    return m.group(0) if m else ''
+
+
 def mcp(t):
+    # The sheet's "Class: Instructor" column is NOT carried: data.json is public and teacher names must never reach it.
     out = []
     for r in t.rows:
-        status = text(t.get(r, 'Status'))
-        if status == 'Provisionally Completed':
-            status = 'Completed'          # counted as completed; the dashboard says so
+        out.append([iso(t.get(r, 'Class: Created Date')), mcp_status(t, r), text(t.get(r, 'Class: Course')),
+                    text(t.get(r, 'Class: Program Cohort')), text(t.get(r, 'Class: Class Name')), mcp_fiscal_year(t, r)])
+    return table(['enrollmentDate', 'status', 'classCourse', 'classProgramCohort', 'className', 'fiscalYear'], out)
+
+
+TEACHER_MIN_ENROLLMENTS = 3   # a teacher needs at least this many enrollments in the filter to be ranked
+TEACHER_TOP_N = 10
+
+
+def teacher_ranking(t):
+    """Top teachers by completion rate, for "all" fiscal years and for each fiscal year, with NO names and NO teacher ids.
+    The instructor column is read here and only ever leaves this function as [completed, total] pairs, best first;
+    the dashboard labels them "Teacher 1", "Teacher 2" ... from their position. No per-row teacher key is published, so the
+    ranking cannot be joined back to a class name or a cohort. Same rule the dashboard used before: rate = completed / total,
+    ties broken by more enrollments, teachers under TEACHER_MIN_ENROLLMENTS left out."""
+    # 'Class: Instructor' absent (older export): publish nothing rather than fail the whole sync.
+    if 'Class: Instructor' not in t.header:
+        return {}
+    groups = {}
+    for r in t.rows:
+        name = text(t.get(r, 'Class: Instructor'))
+        if not name:
+            continue
         cohort = text(t.get(r, 'Class: Program Cohort'))
-        if 'Class: Fiscal Year' in t.header:          # the Salesforce tab carries the fiscal year directly
-            fy = text(t.get(r, 'Class: Fiscal Year'))
-        else:                                         # the export does not, so read it off the cohort ("FY24-25 Q2")
-            m = re.search(r'FY\d{2}-\d{2}', cohort)
-            fy = m.group(0) if m else ''
-        out.append([iso(t.get(r, 'Class: Created Date')), status, text(t.get(r, 'Class: Course')), cohort,
-                    text(t.get(r, 'Class: Class Name')), text(t.get(r, 'Class: Instructor')), fy])
-    return table(['enrollmentDate', 'status', 'classCourse', 'classProgramCohort', 'className', 'classInstructor', 'fiscalYear'], out)
+        m = re.search(r'FY\d{2}-\d{2}', cohort, re.I)
+        fy = (mcp_fiscal_year(t, r) or (m.group(0) if m else cohort)).upper()   # the key the dashboard's filter uses (fyOf)
+        done = mcp_status(t, r) == 'Completed'
+        for key in ('all', fy):
+            g = groups.setdefault(key, {}).setdefault(name, [0, 0])
+            g[1] += 1
+            g[0] += 1 if done else 0
+    ranking = {}
+    for key, by_name in groups.items():
+        pairs = [tuple(v) for v in by_name.values() if v[1] >= TEACHER_MIN_ENROLLMENTS]
+        pairs.sort(key=lambda v: (-Fraction(v[0], v[1]), -v[1]))
+        ranking[key] = [list(v) for v in pairs[:TEACHER_TOP_N]]
+    return dict(sorted(ranking.items()))
+
+
+def instructor_names(t):
+    if 'Class: Instructor' not in t.header:
+        return set()
+    return {text(t.get(r, 'Class: Instructor')) for r in t.rows if len(text(t.get(r, 'Class: Instructor'))) >= 4}
 
 
 BUILDERS = {
@@ -348,6 +396,12 @@ def scrub_emails(tabs):
     return changed
 
 
+def names_in(payload, names):
+    """Last line of defence: how many of the sheet's instructor names appear anywhere in what is about to be written."""
+    blob = json.dumps(payload, ensure_ascii=False)
+    return sum(1 for n in names if n in blob)
+
+
 def build(raw_dir, mcp_tab='MCP_Enrollment_Data'):
     tabs = {}
     for name, fn in BUILDERS.items():
@@ -359,7 +413,11 @@ def build(raw_dir, mcp_tab='MCP_Enrollment_Data'):
             rows = json.load(f)
         if not rows or len(rows) < 2:
             raise ValueError(f'{name}: no data rows')
-        tabs[name] = fn(Tab(rows))
+        tab = Tab(rows)
+        tabs[name] = fn(tab)
+        if name == 'MCP_Enrollment_Data':
+            ranking = teacher_ranking(tab)
+            names = instructor_names(tab)
     scrubbed = scrub_emails(tabs)
     if scrubbed:
         print(f'removed an email address from {scrubbed} cell(s) before writing (data.json is public)')
@@ -374,7 +432,7 @@ def build(raw_dir, mcp_tab='MCP_Enrollment_Data'):
             weekly = (name.startswith('GA4_') and name not in DAILY_TABS) or name == 'Paid Media'
             ends.append(dt.date.fromisoformat(newest) + dt.timedelta(days=6 if weekly else 0))
     anchor = min(today, max(ends)) if ends else today
-    return {
+    payload = {
         'generatedAt': dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
         'source': 'Marketing_Unified_Database_Backend (Google Sheet), synced by tools/marketing-data-sync',
         'mcpTab': mcp_tab,
@@ -385,7 +443,12 @@ def build(raw_dir, mcp_tab='MCP_Enrollment_Data'):
         'latest': {k: latest(v) for k, v in tabs.items()},
         'counts': {k: len(v['rows']) for k, v in tabs.items()},
         'tabs': tabs,
+        'mcpTeacherRanking': ranking,
     }
+    leaked = names_in(payload, names)
+    if leaked:
+        raise ValueError(f'{leaked} teacher name(s) are present in the output; refusing to write them to the public data.json')
+    return payload
 
 
 def check(new, previous):
