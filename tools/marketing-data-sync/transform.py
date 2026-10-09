@@ -155,6 +155,22 @@ def conv_landing_sessions(t):
     return table(['date', 'landingPage', 'sessions', 'users'], out)
 
 
+# Funnel by entry page (two tabs written by Paul): Sessions -> Sessions Reaching Portal -> Sessions With MCP Registration.
+# Weekly rows are the top 50 pages per week plus any page with a portal visit or registration, so column sums are a bit below the
+# true site total. The daily tab has the same shape (first column "Date") for the last 90 complete days. Neither is a site total.
+def funnel(date_header):
+    def build(t):
+        out = []
+        for r in t.rows:
+            d = iso(t.get(r, date_header))
+            if not d:
+                continue
+            out.append([d, path_only(t.get(r, 'Landing Page (path, query stripped)')), num(t.get(r, 'Sessions')),
+                        num(t.get(r, 'Sessions Reaching Portal')), num(t.get(r, 'Sessions With MCP Registration'))])
+        return table(['date', 'landingPage', 'sessions', 'reachedPortal', 'registered'], out)
+    return build
+
+
 OBJECTIVES = {'LINK_CLICKS': 'Traffic', 'OUTCOME_LEADS': 'Leads', 'OUTCOME_TRAFFIC': 'Traffic', 'OUTCOME_AWARENESS': 'Awareness',
               'OUTCOME_ENGAGEMENT': 'Engagement', 'OUTCOME_SALES': 'Sales', 'REACH': 'Awareness', 'POST_ENGAGEMENT': 'Engagement'}
 
@@ -230,10 +246,17 @@ BUILDERS = {
     'GA4_Executive_Overview': ga_overview, 'GA4_Traffic_Acquisition': ga_traffic, 'GA4_Page_Engagement': ga_pages,
     'GA4_Conversion_Attribution': conv_attribution, 'GA4_Conversion_First_Touch': conv_first_touch,
     'GA4_Conversion_Landing_Pairs': conv_pairs, 'GA4_Landing_Page_Sessions': conv_landing_sessions,
+    'GA4_Funnel_Entry_To_Conversion': funnel('Week Start Date'), 'GA4_Funnel_Entry_To_Conversion_Daily': funnel('Date'),
     'Paid Media': paid, 'Email_Marketing_Data': email,
     'In_Person_Outreach_Log': outreach, 'MCP_Enrollment_Data': mcp,
 }
 # GA4_Isolated_Conversions (event + page it fired on) is no longer synced: the redesigned Conversions tab replaced it. The sheet tab stays (Paul).
+
+
+# Tabs that may be missing from a pull (added after the first version of the sync): they are skipped, not an error, and the
+# dashboard says the funnel is not synced yet. DAILY_TABS hold one row per day, not per week, whatever their name starts with.
+OPTIONAL_TABS = {'GA4_Funnel_Entry_To_Conversion', 'GA4_Funnel_Entry_To_Conversion_Daily'}
+DAILY_TABS = {'GA4_Funnel_Entry_To_Conversion_Daily'}
 
 
 def latest(tab):
@@ -260,7 +283,7 @@ def drop_partial_ga_week(tabs):
     if median <= 0 or by_week[last] >= 0.35 * median:
         return None
     for name, tab in tabs.items():
-        if name.startswith('GA4_'):
+        if name.startswith('GA4_') and name not in DAILY_TABS:
             tab['rows'] = [r for r in tab['rows'] if r[0] != last]
     return last
 
@@ -288,6 +311,9 @@ def build(raw_dir, mcp_tab='MCP_Enrollment_Data'):
     tabs = {}
     for name, fn in BUILDERS.items():
         source = mcp_tab if name == 'MCP_Enrollment_Data' else name
+        if name in OPTIONAL_TABS and not os.path.exists(os.path.join(raw_dir, source + '.json')):
+            print(f'{name}: not in this pull, skipped')
+            continue
         with open(os.path.join(raw_dir, source + '.json')) as f:
             rows = json.load(f)
         if not rows or len(rows) < 2:
@@ -304,7 +330,7 @@ def build(raw_dir, mcp_tab='MCP_Enrollment_Data'):
     for name, tab in tabs.items():
         newest = latest(tab)
         if newest:
-            weekly = name.startswith('GA4_') or name == 'Paid Media'
+            weekly = (name.startswith('GA4_') and name not in DAILY_TABS) or name == 'Paid Media'
             ends.append(dt.date.fromisoformat(newest) + dt.timedelta(days=6 if weekly else 0))
     anchor = min(today, max(ends)) if ends else today
     return {
@@ -324,6 +350,8 @@ def build(raw_dir, mcp_tab='MCP_Enrollment_Data'):
 def check(new, previous):
     problems = []
     for name in BUILDERS:
+        if name in OPTIONAL_TABS and name not in new['counts']:
+            continue
         if new['counts'].get(name, 0) == 0:
             problems.append(f'{name} is empty')
     if previous:
