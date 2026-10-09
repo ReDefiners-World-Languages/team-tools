@@ -275,6 +275,19 @@
   .w1100 #conversionsKpiGrid { grid-template-columns:repeat(2,1fr); }
   .w640 #conversionsKpiGrid { grid-template-columns:1fr; }
 
+  /* Outreach: traffic from printed and physical materials */
+  details.ou-details > summary { cursor:pointer; list-style:none; display:flex; align-items:center; gap:8px; min-height:44px; font-size:14px; }
+  details.ou-details > summary::-webkit-details-marker { display:none; }
+  details.ou-details > summary::before { content:'\25B8'; color:var(--mist); display:inline-block; width:14px; transition:transform .15s; }
+  details.ou-details[open] > summary::before { transform:rotate(90deg); }
+  .ou-sum i { color:var(--mist); opacity:.7; margin-right:10px; }
+  .spark { vertical-align:middle; }
+  tr.ou-sel td { background:rgba(255,116,0,0.10); }
+  tr.ou-total td { font-weight:700; border-top:1px solid var(--line-2); }
+  .ou-problem { color:#ffb27a; font-weight:600; }
+  .ou-more { margin-top:12px; }
+  .ou-dim { color:var(--ink-3); }
+
   .footer-row { margin-top:8px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px; color:var(--ink-3);
     border-top:1px solid var(--line); padding-top:18px; }
 
@@ -640,16 +653,89 @@
 
   <!-- OUTREACH -->
   <div class="tab-section" id="tab-outreach" role="tabpanel" aria-labelledby="tabbtn-outreach">
+    <div class="conv-fresh" id="ouFresh" role="note"></div>
+
+    <h3 class="conv-sec">1 · Summary</h3>
+    <h4 class="sub-h" style="margin-top:0;">What we did <span class="host">· activity log, entered by staff</span></h4>
     <div class="metric-grid five">
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Outreach activities</span><i class="fas fa-map-marker-alt" aria-hidden="true"></i></div><div class="metric-value" id="ouActivities">--</div><p class="metric-sub">Visits, tables and events logged</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Flyers distributed</span><i class="fas fa-note-sticky" aria-hidden="true"></i></div><div class="metric-value" id="ouFlyers">--</div><p class="metric-sub">Handed out in person</p></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Meaningful conversations</span><i class="fas fa-comments blue" aria-hidden="true"></i></div><div class="metric-value" id="ouConversations">--</div><p class="metric-sub">Real two-way exchanges</p></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Conversations per flyer</span><i class="fas fa-gauge-high orange" aria-hidden="true"></i></div><div class="metric-value" id="ouEfficiency">--</div><p class="metric-sub">Conversations ÷ flyers</p></div>
-      <div class="metric-card"><div class="metric-header"><span class="metric-label">Conversations per activity</span><i class="fas fa-percent" aria-hidden="true"></i></div><div class="metric-value" id="ouPerActivity">--</div><p class="metric-sub">Conversations ÷ activities</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Meaningful conversations</span><i class="fas fa-comments blue" aria-hidden="true"></i></div><div class="metric-value" id="ouConversations">--</div><p class="metric-sub" id="ouConversationsSub">Real two-way exchanges</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Conversations per flyer</span><i class="fas fa-gauge-high orange" aria-hidden="true"></i></div><div class="metric-value" id="ouEfficiency">--</div><p class="metric-sub">Conversations ÷ flyers, on activities with a count</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Conversations per activity</span><i class="fas fa-percent" aria-hidden="true"></i></div><div class="metric-value" id="ouPerActivity">--</div><p class="metric-sub">Conversations ÷ activities, on activities with a count</p></div>
     </div>
-    <div class="chart-card">
-      <div class="card-title"><h3><i class="fas fa-chart-column" aria-hidden="true"></i>Meaningful conversations by location and experience type</h3><span class="meta">Top 8 locations and 4 experience types</span></div>
-      <div class="chart-box" style="height:340px;"><canvas id="outreachBarChart"></canvas><div class="chart-empty"></div></div>
+    <h4 class="sub-h">What came back online <span class="host">· visits tagged to outreach materials, from Google Analytics</span></h4>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Outreach sessions</span><i class="fas fa-route blue" aria-hidden="true"></i></div><div class="metric-value" id="ouSessions">--</div><p class="metric-sub" id="ouSessionsSub">Visits that arrived through a tagged outreach link</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Engaged-session rate</span><i class="fas fa-chart-bar" aria-hidden="true"></i></div><div class="metric-value" id="ouEngRate">--</div><p class="metric-sub">Engaged sessions ÷ sessions</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Registrations from outreach</span><i class="fas fa-bullseye purple" aria-hidden="true"></i></div><div class="metric-value" id="ouRegs">--</div><p class="metric-sub">Sessions with a registration (MCP). Also counted on Conversions</p></div>
+      <div class="metric-card"><div class="metric-header"><span class="metric-label">Top outreach group</span><i class="fas fa-trophy orange" aria-hidden="true"></i></div><div class="metric-value" id="ouTopGroup">--</div><p class="metric-sub" id="ouTopGroupSub">Most sessions in these dates</p></div>
+    </div>
+    <p class="card-note" id="ouSummaryNote" style="margin:-8px 0 8px;"></p>
+
+    <h3 class="conv-sec">2 · Traffic from outreach materials</h3>
+    <div class="conv-controls">
+      <div class="seg" role="group" aria-label="Peachjar">
+        <button class="filter-tag active" type="button" id="ouPeachjarBtn" aria-pressed="true"><i class="fas fa-eye" aria-hidden="true"></i><span>Peachjar included</span></button>
+      </div>
+      <span id="ouGroupChip"></span>
+      <button class="linkbtn" type="button" data-goto="conversions">Full conversion detail <i class="fas fa-arrow-right" aria-hidden="true"></i></button>
+      <span class="sample-badge data-badge short" id="ouBadge"><span>Sample data</span></span>
+    </div>
+    <div class="chart-card" style="margin-bottom:24px;">
+      <div class="card-title"><h3><i class="fas fa-chart-column" aria-hidden="true"></i>Visits tagged to outreach materials, by week</h3><span class="meta" id="ouChartRange"></span></div>
+      <div class="chart-box" style="height:340px;"><canvas id="outreachWeeklyChart"></canvas><div class="chart-empty"></div></div>
+      <p class="card-note" id="ouChartNote"></p>
+    </div>
+    <div class="platform-card" style="margin-bottom:24px;">
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-table" aria-hidden="true"></i>By material</h3><span class="meta">Click a material to filter the tables below</span></div>
+      <div class="table-scroll"><table class="breakdown-table" id="ouGroupTable">
+        <thead><tr><th>Material</th><th class="num-cell">Sessions</th><th class="num-cell" title="Unique users per week, added up across weeks. The same person in two weeks counts twice.">User-weeks</th><th class="num-cell">Engaged-session rate</th><th class="num-cell" id="ouShareHead">Share of outreach sessions</th><th class="num-cell">Sessions with a registration</th><th>Weekly sessions</th></tr></thead>
+        <tbody id="ouGroupBody"></tbody>
+      </table></div>
+      <p class="card-note" id="ouGroupNote"></p>
+    </div>
+
+    <h3 class="conv-sec">3 · Where outreach visitors land</h3>
+    <div class="platform-card" style="margin-bottom:24px;">
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-file-lines" aria-hidden="true"></i>Landing pages</h3><span class="meta" id="ouLandingScope"></span></div>
+      <div class="table-scroll"><table class="breakdown-table" id="ouLandingTable">
+        <thead><tr><th>Landing page</th><th class="num-cell">Sessions</th><th class="num-cell">Engaged-session rate</th><th>Top material</th><th class="num-cell">Sessions with a registration</th></tr></thead>
+        <tbody id="ouLandingBody"></tbody>
+      </table></div>
+      <p class="card-note" id="ouLandingNote"></p>
+    </div>
+
+    <h3 class="conv-sec">4 · Course and event tags</h3>
+    <details class="platform-card ou-details" id="ouTagsDetails" style="margin-bottom:24px;">
+      <summary><span class="ou-sum"><i class="fas fa-tags" aria-hidden="true"></i><b>utm_content tags</b> <span class="host" id="ouTagsSummary"></span></span></summary>
+      <p class="metric-sub" style="margin:12px 0 14px;">The tag printed into each link says which course or event the piece promotes. Use it to see which printed pieces pull.</p>
+      <div class="table-scroll"><table class="breakdown-table" id="ouTagTable">
+        <thead><tr><th>Tag (utm_content)</th><th>Material</th><th class="num-cell">Sessions</th><th class="num-cell">Sessions with a registration</th><th>Campaign</th></tr></thead>
+        <tbody id="ouTagBody"></tbody>
+      </table></div>
+      <p class="card-note" id="ouTagNote"></p>
+    </details>
+
+    <h3 class="conv-sec">5 · Activity log</h3>
+    <p class="card-note" style="margin:-6px 0 14px;">The Location filter at the top changes this section and the five "What we did" cards. It does not change the online traffic above.</p>
+    <div class="row-duo even">
+      <div class="chart-card">
+        <div class="card-title"><h3><i class="fas fa-chart-column" aria-hidden="true"></i>Meaningful conversations by location and experience type</h3><span class="meta">Top 8 locations and 4 experience types</span></div>
+        <div class="chart-box" style="height:340px;"><canvas id="outreachBarChart"></canvas><div class="chart-empty"></div></div>
+      </div>
+      <div class="chart-card">
+        <div class="card-title"><h3><i class="fas fa-calendar-days" aria-hidden="true"></i>Activities by month</h3><span class="meta" id="ouMonthRange"></span></div>
+        <div class="chart-box" style="height:340px;"><canvas id="outreachMonthChart"></canvas><div class="chart-empty"></div></div>
+      </div>
+    </div>
+    <div class="platform-card">
+      <div class="card-title" style="margin-bottom:14px;"><h3><i class="fas fa-list-ol" aria-hidden="true"></i>Last 10 activities</h3><span class="meta" id="ouLastRange"></span></div>
+      <div class="table-scroll"><table class="breakdown-table" id="ouLastTable">
+        <thead><tr><th>Date</th><th>Type</th><th>Location</th><th>Program</th><th class="num-cell">Flyers</th><th class="num-cell">Conversations</th></tr></thead>
+        <tbody id="ouLastBody"></tbody>
+      </table></div>
+      <p class="card-note" id="ouLastNote"></p>
     </div>
   </div>
 
@@ -1035,6 +1121,7 @@ MOCK.In_Person_Outreach_Log = (() => {
         date: toISODate(d),
         locationOfOutreachActivity: pick(OUTREACH_LOCATIONS, id+907),
         typeOfExperience: pick(OUTREACH_TYPES, id+909),
+        program: 'Multilingual Citizens Program (MCP)',
         flyersDistributed: flyers,
         meaningfulConversations: conversations,
         appealedOpportunities: appealed
@@ -1082,6 +1169,9 @@ TAB_KEYS.forEach(k => DATA[k] = MOCK[k]);
 // Funnel by entry page (written by Paul). There is no sample version: without data.json these stay empty and the tab says so.
 const FUNNEL_TABS = { weekly:'GA4_Funnel_Entry_To_Conversion', daily:'GA4_Funnel_Entry_To_Conversion_Daily' };   // fields: date, landingPage, sessions, reachedPortal, registered
 DATA[FUNNEL_TABS.weekly] = []; DATA[FUNNEL_TABS.daily] = [];
+// Visits tagged to outreach materials (written by Paul). Also optional and with no sample version: see PART 14.
+const OUTREACH_TAB = 'GA4_Outreach_Traffic';
+DATA[OUTREACH_TAB] = [];
 /* =========================================================================================
    PART 4B — LIVE DATA (data.json, written by tools/marketing-data-sync) AND DATA STATUS
    The sync reads Marketing_Unified_Database_Backend, strips it to the fields drawn here, and commits data.json
@@ -1131,6 +1221,7 @@ async function loadLiveData(){
     LIVE_KEYS.forEach(k => { if (!payload.tabs || !payload.tabs[k]) throw new Error('data.json is missing ' + k); });
     LIVE_KEYS.forEach(k => { DATA[k] = expandTable(payload.tabs[k]); });
     Object.values(FUNNEL_TABS).forEach(k => { DATA[k] = payload.tabs[k] ? expandTable(payload.tabs[k]) : []; });   // optional: older data.json files do not have them
+    DATA[OUTREACH_TAB] = payload.tabs[OUTREACH_TAB] ? expandTable(payload.tabs[OUTREACH_TAB]) : [];
     DATA.Digital_Ads_and_Email_Outreach = [];   // not drawn, and it must not keep sample rows next to live ones
     GRAN = payload.granularity || 'day';
     const anchor = newestDataDay(payload);
@@ -1165,7 +1256,8 @@ const FRESH_KEY = { overview:'GA4_Executive_Overview', traffic:'GA4_Traffic_Acqu
 function paintFreshness(){
   const node = el('tabFreshness');
   const key = FRESH_KEY[state.activeTab];
-  if (!liveMeta || !key || !liveMeta.latest || !liveMeta.latest[key]) { node.textContent = ''; return; }
+  // The Outreach tab has two sources with different dates, so it explains them itself (ouFresh) instead of one "newest data" line.
+  if (state.activeTab === 'outreach' || !liveMeta || !key || !liveMeta.latest || !liveMeta.latest[key]) { node.textContent = ''; return; }
   const d = parseDay(liveMeta.latest[key]);
   node.textContent = 'Newest data in this tab: ' + d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
 }
@@ -1306,7 +1398,10 @@ function fiscalYearsInData(){
 function updateGlobalFilterVisibility(){
   const tab = state.activeTab;
   el('dateFilterRow').style.display = tab === 'mcp' ? 'none' : 'flex';
-  el('dateWeekNote').style.display = tab === 'conversions' ? 'block' : 'none';
+  const weekNote = el('dateWeekNote');
+  if (!weekNote.dataset.conv) weekNote.dataset.conv = weekNote.textContent;
+  weekNote.textContent = tab === 'outreach' ? 'Online traffic is weekly. Weeks run Monday to Sunday and are shown by the week\'s Monday. A week is included when its Monday falls inside the dates you pick. The activity log is by day.' : weekNote.dataset.conv;
+  weekNote.style.display = (tab === 'conversions' || tab === 'outreach') ? 'block' : 'none';
   let any = false;
   document.querySelectorAll('#selectRow .fgroup').forEach(g => {
     const show = g.dataset.tabs.split(' ').includes(tab);
@@ -1365,6 +1460,15 @@ function wireFilters(){
   el('funnelSelect').addEventListener('change', (e) => { state.funnelSel = e.target.value; renderConversions(); });
   el('convCourseSelect').addEventListener('change', (e) => { state.convCourse = e.target.value; renderConversions(); });
   el('tab-conversions').addEventListener('click', (e) => { const b = e.target.closest('[data-fsel]'); if (!b) return; state.funnelSel = b.dataset.fsel; renderConversions(); el('funnelCard').scrollIntoView({ block:'start' }); });
+  el('ouPeachjarBtn').addEventListener('click', () => { state.ouPeachjar = !state.ouPeachjar; renderOutreach(); });
+  el('tab-outreach').addEventListener('click', (e) => {
+    const g = e.target.closest('[data-ougroup]');
+    if (g) { const v = g.dataset.ougroup; state.ouGroup = (v === 'all' || v === state.ouGroup) ? 'all' : v; renderOutreach(); return; }
+    const go = e.target.closest('[data-goto]');
+    if (go) { selectTab(go.dataset.goto); window.scrollTo(0, 0); return; }
+    const more = e.target.closest('[data-oumore]');
+    if (more) { state[more.dataset.oumore] = !state[more.dataset.oumore]; renderOutreach(); }
+  });
   el('convSearch').addEventListener('input', (e) => { state.convSearch = e.target.value.toLowerCase(); renderConversions(); });
   el('trafficSearch').addEventListener('input', (e) => { state.trafficSearch = e.target.value.toLowerCase(); renderTraffic(); });
 
@@ -2001,39 +2105,251 @@ function renderEmail(){
 
 /* =========================================================================================
    PART 14 — OUTREACH
+   Two sources. In_Person_Outreach_Log is what staff did: typed in by hand in Salesforce, so it lags, and a blank Meaningful
+   Conversations cell means "not logged yet", never zero. GA4_Outreach_Traffic (written by Paul) is the visit-level response: sessions
+   that arrived through a tagged outreach link. Outreach is defined by source only; Paul assigns the Outreach Group and this code never
+   re-derives it. The traffic is a floor, not a total: QR codes and bio links without a source tag land in Direct or lnk.bio.
+   The same visits are counted on the Conversions tab. Funnel, other key events and conversion rates by page stay there.
+   Fields of GA4_Outreach_Traffic: date, group, source, campaign, utmContent, landingPage, sessions, engagedSessions, users, registered.
    ========================================================================================= */
-function renderOutreach(){
-  const rows = DATA.In_Person_Outreach_Log.filter(r => inRange(r.date) && (state.location === 'all' || r.locationOfOutreachActivity === state.location));
-  const flyers = sum(rows,'flyersDistributed'), conv = sum(rows,'meaningfulConversations');
-  const none = rows.length === 0;
-  el('ouActivities').textContent = none ? '--' : fmtInt(rows.length);
-  el('ouFlyers').textContent = none ? '--' : fmtInt(flyers);
-  el('ouConversations').textContent = none ? '--' : fmtInt(conv);
-  el('ouEfficiency').textContent = rate(conv, flyers) === null ? '--' : rate(conv, flyers).toFixed(2);
-  el('ouPerActivity').textContent = rate(conv, rows.length) === null ? '--' : rate(conv, rows.length).toFixed(1);
+// How each Outreach Group is shown (the group names come from the sheet). A group missing here still appears, under its own name.
+const OUTREACH_GROUPS = {
+  'Peachjar':    { color:'#FF9A00', sources:'peachjar, my.peachjar.com' },
+  'Flyer':       { color:'#3FE0A5', sources:'flyer' },
+  'Bench ads':   { color:'#2FA8D0', sources:'bench' },
+  'Banners':     { color:'#E86A92', sources:'banner, vertical-banner, redefiners-center-banner' },
+  'Car tags':    { color:'#DFF0EE', sources:'car-tags' },
+  'Folders':     { color:'#8EC9B8', sources:'american-school-partners-folders' },
+  'Table signs': { color:'#FF4D00', sources:'table-signage' }
+};
+const OUTREACH_LOW_VOLUME_MIN = 10;      // sessions in the range below this are greyed (raw counts first). Set in Paul's brief, 2026-10-09.
+const OUTREACH_MIN_REGS_FOR_RATE = 5;    // a registration count under this is shown as a count only, never as a rate
+const OUTREACH_PAGES_SHOWN = 12, OUTREACH_TAGS_SHOWN = 25;
+state.ouGroup = 'all'; state.ouPeachjar = true; state.ouLandingAll = false; state.ouTagsAll = false;
 
+const ouColor = g => (OUTREACH_GROUPS[g] || {}).color || '#7C9094';
+const ouHas = v => v !== null && v !== undefined && v !== '';          // a blank log cell is "not logged yet"
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const mondayKey = d => toISODate(addDays(startOfDay(d), -((d.getDay() + 6) % 7)));
+const ouTrafficRows = inFn => DATA[OUTREACH_TAB].filter(r => inFn(r.date) && (state.ouPeachjar || r.group !== 'Peachjar'));
+const ouLogRows = inFn => DATA.In_Person_Outreach_Log.filter(r => inFn(r.date) && (state.location === 'all' || r.locationOfOutreachActivity === state.location));
+const ouTotals = rows => ({ s:sum(rows, 'sessions'), e:sum(rows, 'engagedSessions'), u:sum(rows, 'users'), g:sum(rows, 'registered') });
+function ouLogAgg(rows){
+  const logged = rows.filter(r => ouHas(r.meaningfulConversations));   // ratios use only activities whose count has been entered
+  return { n:rows.length, flyers:sum(rows, 'flyersDistributed'), nLogged:logged.length, conv:sum(logged, 'meaningfulConversations'), loggedFlyers:sum(logged, 'flyersDistributed') };
+}
+const ouRateText = (e, s) => s ? fmtPct(e / s * 100, 0) : '--';
+// registrations: the count always; the rate only from OUTREACH_MIN_REGS_FOR_RATE registrations up
+const ouRegCell = (g, s) => g >= OUTREACH_MIN_REGS_FOR_RATE && s ? `${fmtInt(g)} <span class="host">(${fmtPct(g / s * 100, 1)} of sessions)</span>` : fmtInt(g);
+function ouSpark(vals, color){
+  if (vals.length < 2) return '';
+  const w = 96, h = 24, max = Math.max(...vals, 1);
+  const pts = vals.map((v, i) => `${(i / (vals.length - 1) * (w - 4) + 2).toFixed(1)},${(h - 3 - v / max * (h - 6)).toFixed(1)}`).join(' ');
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Sessions per week: ${vals.join(', ')}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+}
+// Landing pages: course pages are grouped the way the Conversions tab groups them. The two conversion pages are left out of the table.
+function ouPageRow(p){
+  if (!p || p === '(not set)') return { key:'(none)', label:'No landing page recorded', sub:'Google Analytics did not record a page' };
+  if (p === '/myredefiners-portal') return { key:p, label:'Starts on the portal', sub:p };
+  if (pathToGroup.has(p)) { const g = pathToGroup.get(p); return { key:'group:' + g.id, label:g.label, sub:g.paths.join(' + ') }; }
+  if (CONV_RETIRED_PAGES.includes(p)) return { key:'retired', label:'Retired pages', sub:'links to pages we no longer use' };
+  return { key:p, label:p, sub:'' };
+}
+const ouNorm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+const ouTopKey = o => Object.entries(o).sort((a, b) => b[1] - a[1])[0];
+
+function renderOutreach(){
+  paintConvBadges();
+  const hasT = DATA[OUTREACH_TAB].length > 0, noWeeks = 'No complete week starts in these dates (traffic is weekly). Try a longer range.';
+  el('ouBadge').title = liveMeta ? 'Read from data.json, built from GA4_Outreach_Traffic and In_Person_Outreach_Log' : 'data.json could not be loaded: made-up numbers';
+  const logDates = DATA.In_Person_Outreach_Log.map(r => r.date).filter(d => { const x = parseDay(d); return x && x <= startOfDay(NOW); }).sort();
+  const logNewest = logDates.length ? parseDay(logDates[logDates.length - 1]) : null;
+  const trafficNewest = hasT ? parseDay([...DATA[OUTREACH_TAB]].map(r => r.date).sort().pop()) : null;
+
+  // ---- A. Freshness
+  let fresh = '';
+  if (!liveMeta) fresh = '<div class="line"><b>Sample data.</b> data.json could not be loaded, so none of these numbers are real.</div>';
+  else {
+    fresh = `<div class="line"><b>Activity log:</b> newest entry ${logNewest ? fmtLongDay(logNewest) : 'none yet'} (entered by staff in Salesforce, so it lags). <b>Traffic:</b> ${trafficNewest ? 'complete weeks through ' + fmtLongDay(addDays(trafficNewest, 6)) : 'not in data.json yet'}.</div>`;
+    if (logNewest && ANCHOR > addDays(logNewest, 1)) fresh += `<div class="line">The page header says data through ${fmtLongDay(ANCHOR)} because other tabs have newer data. The activity log simply has no entries after ${fmtLongDay(logNewest)} yet.</div>`;
+  }
+  el('ouFresh').innerHTML = fresh;
+
+  // ---- Data for the selected dates
+  const T = ouTrafficRows(convInRange);                       // a week counts when its Monday is inside the dates (same rule as Conversions)
+  const L = ouLogRows(inRange);
+  const weeksT = [...new Set(T.map(r => r.date))];
+  const logWeeks = L.map(r => mondayKey(parseDay(r.date))).filter(w => convInRange(w));
+  const weeks = [...new Set([...weeksT, ...logWeeks])].sort();
+  const byG = new Map();
+  T.forEach(r => { const a = byG.get(r.group) || { s:0, e:0, u:0, g:0, w:{} };
+    a.s += num(r.sessions); a.e += num(r.engagedSessions); a.u += num(r.users); a.g += num(r.registered); a.w[r.date] = (a.w[r.date] || 0) + num(r.sessions); byG.set(r.group, a); });
+  const groups = [...byG.keys()].sort((a, b) => byG.get(b).s - byG.get(a).s);
+  const tot = ouTotals(T);
+  const pSpan = T.length ? prevWeeksSpan(T) : null, PT = pSpan ? ouTrafficRows(spanFn(pSpan)) : [], pt = ouTotals(PT);
+  const TF = state.ouGroup === 'all' ? T : T.filter(r => r.group === state.ouGroup);
+
+  // ---- B. Summary cards: what we did (activity log)
+  const cmp = compareSpan(), cur = ouLogAgg(L), prv = ouLogAgg(ouLogRows(spanFn(cmp)));
+  paint([
+    { id:'ouActivities', cur:cur.n ? cur.n : null, prev:prv.n ? prv.n : null, fmt:fmtInt },
+    { id:'ouFlyers', cur:cur.n ? cur.flyers : null, prev:prv.n ? prv.flyers : null, fmt:fmtInt },
+    { id:'ouEfficiency', cur:rate(cur.conv, cur.loggedFlyers), prev:rate(prv.conv, prv.loggedFlyers), fmt:v => v.toFixed(2) },
+    { id:'ouPerActivity', cur:rate(cur.conv, cur.nLogged), prev:rate(prv.conv, prv.nLogged), fmt:v => v.toFixed(1) }
+  ]);
+  if (!cur.n) { el('ouConversations').textContent = '--'; el('ouConversationsSub').textContent = 'No activities in these dates'; setDelta('ouConversations', null, null); }
+  else if (!cur.nLogged) { el('ouConversations').textContent = 'Not logged'; el('ouConversationsSub').textContent = `No count entered yet for these ${fmtInt(cur.n)} activities`; setDelta('ouConversations', null, null); }
+  else {
+    el('ouConversations').textContent = fmtInt(cur.conv);
+    el('ouConversationsSub').textContent = cur.nLogged < cur.n ? `Counted on ${fmtInt(cur.nLogged)} of ${fmtInt(cur.n)} activities; ${fmtInt(cur.n - cur.nLogged)} not logged yet` : 'Real two-way exchanges';
+    setDelta('ouConversations', cur.conv, prv.nLogged ? prv.conv : null);
+  }
+  // ---- B. Summary cards: what came back online (traffic)
+  paint([
+    { id:'ouSessions', cur:T.length ? tot.s : null, prev:PT.length ? pt.s : null, fmt:fmtInt, span:pSpan },
+    { id:'ouEngRate', cur:rate(tot.e, tot.s, 100), prev:PT.length ? rate(pt.e, pt.s, 100) : null, fmt:v => fmtRate(v), kind:'rate', span:pSpan },
+    { id:'ouRegs', cur:T.length ? tot.g : null, prev:PT.length ? pt.g : null, fmt:fmtInt, span:pSpan }
+  ]);
+  const allSessions = sum(DATA.GA4_Executive_Overview.filter(r => convInRange(r.date)), 'sessions');
+  el('ouSessionsSub').textContent = (T.length && allSessions > 0 ? `${fmtRate(rate(tot.s, allSessions, 100))} of all sessions. ` : '') + 'Visits that arrived through a tagged link: a floor, not a total.';
+  el('ouTopGroup').textContent = groups.length ? groups[0] : '--';
+  el('ouTopGroupSub').textContent = groups.length ? `${fmtRate(rate(byG.get(groups[0]).s, tot.s, 100), 0)} of outreach sessions (${fmtInt(byG.get(groups[0]).s)})` : (hasT ? noWeeks : 'Outreach traffic is not in data.json yet');
+  const lagDays = logNewest ? Math.round((state.rangeEnd - logNewest) / DAY) : 0;
+  el('ouSummaryNote').textContent = lagDays > 7 ? `The activity log's newest entry is ${fmtLongDay(logNewest)}, ${lagDays} days before the end of these dates. The last days are still empty, so "vs. previous" on the activity cards compares a partial period with a full one. ` : '';
+
+  // ---- C. Traffic by material
+  const pb = el('ouPeachjarBtn');
+  pb.classList.toggle('active', state.ouPeachjar); pb.setAttribute('aria-pressed', state.ouPeachjar);
+  pb.querySelector('span').textContent = state.ouPeachjar ? 'Peachjar included' : 'Peachjar hidden';
+  pb.querySelector('i').setAttribute('class', state.ouPeachjar ? 'fas fa-eye' : 'fas fa-eye-slash');
+  el('ouGroupChip').innerHTML = state.ouGroup === 'all' ? '' :
+    `<button class="filter-tag active" type="button" data-ougroup="all" title="Show all materials again"><i class="fas fa-xmark" aria-hidden="true"></i>Tables below show ${esc(state.ouGroup)} only. Clear</button>`;
+  el('ouChartRange').textContent = rangeLabel();
+
+  const act = {}; L.forEach(r => { const w = mondayKey(parseDay(r.date)); act[w] = (act[w] || 0) + 1; });
+  makeChart('outreachWeeklyChart', {
+    type: 'bar',
+    data: { labels: weeks.map(w => fmtShort(parseDay(w))), datasets: hasT && T.length ? [
+      ...groups.map(g => ({ type:'bar', label:g, data:weeks.map(w => byG.get(g).w[w] || 0), backgroundColor:ouColor(g), borderColor:C.surface, borderWidth:1, borderRadius:2, borderSkipped:false, stack:'sessions', yAxisID:'y', order:2, maxBarThickness:46 })),
+      { type:'line', label:'Activities logged (right axis)', data:weeks.map(w => logNewest && parseDay(w) > logNewest ? null : (act[w] || 0)), yAxisID:'y1', order:1,
+        borderColor:'#FAF5E6', backgroundColor:'#FAF5E6', borderWidth:2, pointRadius:4, pointHoverRadius:6, tension:0, spanGaps:false }
+    ] : [] },
+    options: { responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+      scales: { x:{ stacked:true, grid:{ display:false }, border:{ color:gridColor } },
+        y:{ stacked:true, beginAtZero:true, grid:{ color:gridColor }, border:{ display:false }, title:{ display:true, text:'Sessions', color:'rgba(223,240,238,0.68)' } },
+        y1:{ position:'right', beginAtZero:true, grid:{ display:false }, border:{ display:false }, ticks:{ precision:0 }, title:{ display:true, text:'Activities', color:'rgba(223,240,238,0.68)' } } },
+      plugins:{ legend:{ position:'bottom', ...legendCfg() }, tooltip:{ filter: i => i.dataset.type === 'line' || num(i.raw) > 0 } } }
+  }, hasT ? noWeeks : 'Outreach traffic is not in data.json yet. It appears after the next data sync.');
+  el('ouChartNote').textContent = 'Bars are visits tagged to each material, by week (Monday to Sunday). The line is the number of outreach activities logged that week, on the right axis, so a flyer drop or event week shows up next to the visits. The line stops after the newest log entry. The two are shown side by side: nothing here says one caused the other.';
+
+  el('ouShareHead').textContent = state.ouPeachjar ? 'Share of outreach sessions' : 'Share of outreach sessions (Peachjar hidden)';
+  const row = (cells, cls = '') => `<tr class="${cls}">${cells}</tr>`;
+  el('ouGroupBody').innerHTML = !hasT ? '<tr><td colspan="7" class="muted">Outreach traffic is not in data.json yet.</td></tr>' : !groups.length ? `<tr><td colspan="7" class="muted">${noWeeks}</td></tr>` :
+    groups.map(g => { const a = byG.get(g), low = a.s < OUTREACH_LOW_VOLUME_MIN, c = low ? 'lowvol' : '', sel = state.ouGroup === g;
+      return row(`<td><span class="chan-dot" style="background:${ouColor(g)}"></span><button class="linkbtn" type="button" data-ougroup="${esc(g)}" aria-pressed="${sel}">${esc(g)}</button>${OUTREACH_GROUPS[g] ? `<span class="host" style="display:block;font-size:12px;">${esc(OUTREACH_GROUPS[g].sources)}</span>` : ''}</td>
+        <td class="num-cell ${c}" ${low ? 'title="Fewer than ' + OUTREACH_LOW_VOLUME_MIN + ' sessions: too few to read much into"' : ''}>${fmtInt(a.s)}</td><td class="num-cell ${c}">${fmtInt(a.u)}</td>
+        <td class="num-cell ${c}">${ouRateText(a.e, a.s)}</td><td class="num-cell ${c}">${fmtRate(rate(a.s, tot.s, 100))}</td><td class="num-cell ${c}">${ouRegCell(a.g, a.s)}</td>
+        <td>${ouSpark(weeks.map(w => a.w[w] || 0), ouColor(g))}</td>`, sel ? 'ou-sel' : '');
+    }).join('') + row(`<td>All materials shown</td><td class="num-cell">${fmtInt(tot.s)}</td><td class="num-cell">${fmtInt(tot.u)}</td><td class="num-cell">${ouRateText(tot.e, tot.s)}</td><td class="num-cell">${tot.s ? '100%' : '--'}</td><td class="num-cell">${ouRegCell(tot.g, tot.s)}</td><td></td>`, 'ou-total');
+  el('ouGroupNote').innerHTML = `Sessions are visits that arrived through a link whose source is one of those listed under each material. Printed materials carry a source but no medium, so a medium of "(not set)" is normal. <b>User-weeks</b> are unique users per week added up across weeks, so a person who visits in two weeks counts twice: it is not a count of people. Engaged-session rate is engaged sessions ÷ sessions. A registration is a session in which mcp_registration_complete fired. A registration count under ${OUTREACH_MIN_REGS_FOR_RATE} is shown as a count only, and rows under ${OUTREACH_LOW_VOLUME_MIN} sessions are greyed.<br>
+    <b>These are visits that arrived through a tagged link: a floor, not a total.</b> QR codes and bio links without a source tag land in Direct or lnk.bio, so outreach is undercounted. SMS is Marketing, not outreach, and is left out on purpose.<br>
+    <b>These visits are also counted on the Conversions tab; do not add the two.</b> The funnel, other key events and conversion rates by page are there.`;
+
+  // ---- D. Where outreach visitors land
+  el('ouLandingScope').textContent = (state.ouGroup === 'all' ? 'All materials' : state.ouGroup + ' only') + (state.ouPeachjar ? '' : ' · Peachjar hidden');
+  const lp = new Map(); let hiddenSessions = 0;
+  TF.forEach(r => {
+    if (CONV_CONVERSION_PAGES.includes(r.landingPage)) { hiddenSessions += num(r.sessions); return; }
+    const k = ouPageRow(r.landingPage), a = lp.get(k.key) || { ...k, s:0, e:0, g:0, by:{} };
+    a.s += num(r.sessions); a.e += num(r.engagedSessions); a.g += num(r.registered); a.by[r.group] = (a.by[r.group] || 0) + num(r.sessions); lp.set(k.key, a);
+  });
+  const lpList = [...lp.values()].sort((a, b) => b.s - a.s), lpShown = state.ouLandingAll ? lpList : lpList.slice(0, OUTREACH_PAGES_SHOWN);
+  el('ouLandingBody').innerHTML = !hasT ? '<tr><td colspan="5" class="muted">Outreach traffic is not in data.json yet.</td></tr>' : !lpList.length ? `<tr><td colspan="5" class="muted">${T.length ? 'No visits for this choice.' : noWeeks}</td></tr>` :
+    lpShown.map(a => { const low = a.s < OUTREACH_LOW_VOLUME_MIN, c = low ? 'lowvol' : '', top = ouTopKey(a.by);
+      return `<tr><td><span class="path">${esc(a.label)}</span>${a.sub ? `<span class="host" style="display:block;font-size:12px;">${esc(a.sub)}</span>` : ''}</td>
+        <td class="num-cell ${c}">${fmtInt(a.s)}</td><td class="num-cell ${c}">${ouRateText(a.e, a.s)}</td>
+        <td>${top ? `<span class="chan-dot" style="background:${ouColor(top[0])}"></span>${esc(top[0])}` : ''}</td><td class="num-cell ${c}">${fmtInt(a.g)}</td></tr>`; }).join('');
+  el('ouLandingNote').innerHTML = (lpList.length > OUTREACH_PAGES_SHOWN ? `<button class="linkbtn ou-more" type="button" data-oumore="ouLandingAll">${state.ouLandingAll ? 'Show fewer pages' : `Show all ${fmtInt(lpList.length)} pages`}</button><br>` : '') +
+    `The page a visit started on. Course pages are grouped as on the Conversions tab (English for School Success, the Youth Clubs, adult courses and so on). "Starts on the portal" is a visit that began on /myredefiners-portal. ` +
+    (hiddenSessions ? `${fmtInt(hiddenSessions)} sessions that started on a confirmation or contact page (/successful-registration-mcp, /contact-us) are left out: the conversion happens on those pages. ` : '') +
+    `Rows under ${OUTREACH_LOW_VOLUME_MIN} sessions are greyed. Conversion rates by page are on the Conversions tab.`;
+
+  // ---- E. Course and event tags
+  const tags = new Map(), bySource = new Map();
+  TF.forEach(r => {
+    const raw = ouHas(r.utmContent) ? r.utmContent : '(not set)', s = num(r.sessions);
+    const a = tags.get(raw) || { tag:raw, s:0, g:0, groups:{}, camps:{} };
+    a.s += s; a.g += num(r.registered); a.groups[r.group] = (a.groups[r.group] || 0) + s;
+    const ck = ouNorm(r.campaign || '(not set)') || 'notset', cv = a.camps[ck] || (a.camps[ck] = { n:0, vars:{} });
+    cv.n += s; cv.vars[r.campaign || '(not set)'] = (cv.vars[r.campaign || '(not set)'] || 0) + s;
+    tags.set(raw, a);
+    const so = bySource.get(r.source) || { s:0, tagged:0 }; so.s += s; if (raw !== '(not set)') so.tagged += s; bySource.set(r.source, so);
+  });
+  const spelled = new Map();
+  [...tags.keys()].filter(t => t !== '(not set)').forEach(t => { const k = ouNorm(t); spelled.set(k, [...(spelled.get(k) || []), t]); });
+  const twice = [...spelled.values()].filter(v => v.length > 1), twiceSet = new Set(twice.flat());
+  // Only a real gap: a source with at least OUTREACH_LOW_VOLUME_MIN visits and no utm_content on any of them (a stray single visit is not a problem).
+  const untaggedSources = [...bySource.entries()].filter(([, v]) => v.s >= OUTREACH_LOW_VOLUME_MIN && v.tagged === 0);
+  const noTag = tags.get('(not set)'), tagList = [...tags.values()].filter(a => a.tag !== '(not set)').sort((a, b) => b.s - a.s);
+  const tagShown = state.ouTagsAll ? tagList : tagList.slice(0, OUTREACH_TAGS_SHOWN), problems = twice.length + untaggedSources.length;
+  el('ouTagsSummary').textContent = !hasT ? '' : `· ${fmtInt(tagList.length)} tags in these dates${problems ? ' · ' + problems + ' to check' : ''}`;
+  const tagRow = a => { const low = a.s < OUTREACH_LOW_VOLUME_MIN, c = low ? 'lowvol' : '', cp = ouTopKey(Object.fromEntries(Object.entries(a.camps).map(([k, v]) => [k, v.n]))), cl = cp ? ouTopKey(a.camps[cp[0]].vars)[0] : '';
+    const mats = Object.entries(a.groups).sort((x, y) => y[1] - x[1]).map(([g]) => `<span class="chan-dot" style="background:${ouColor(g)}"></span>${esc(g)}`).join(' &nbsp; ');
+    return `<tr><td><span class="path">${a.tag === '(not set)' ? 'No tag set' : esc(a.tag)}</span>${twiceSet.has(a.tag) ? '<span class="ou-problem" style="display:block;font-size:12px;">Same tag spelled two ways</span>' : ''}</td>
+      <td>${mats}</td><td class="num-cell ${c}">${fmtInt(a.s)}</td><td class="num-cell ${c}">${fmtInt(a.g)}</td><td>${esc(cl)}</td></tr>`; };
+  el('ouTagBody').innerHTML = !hasT ? '<tr><td colspan="5" class="muted">Outreach traffic is not in data.json yet.</td></tr>' : !tags.size ? `<tr><td colspan="5" class="muted">${T.length ? 'No visits for this choice.' : noWeeks}</td></tr>` :
+    tagShown.map(tagRow).join('') + (noTag ? tagRow(noTag).replace('<tr>', '<tr class="muted-row">') : '');
+  el('ouTagNote').innerHTML = (tagList.length > OUTREACH_TAGS_SHOWN ? `<button class="linkbtn ou-more" type="button" data-oumore="ouTagsAll">${state.ouTagsAll ? 'Show fewer tags' : `Show all ${fmtInt(tagList.length)} tags`}</button><br>` : '') +
+    (twice.length ? `<span class="ou-problem">Spelled two ways:</span> ${twice.map(v => v.map(esc).join(' and ')).join('; ')}. ` : '') +
+    (untaggedSources.length ? `<span class="ou-problem">Sources with no tag at all:</span> ${untaggedSources.map(([s, v]) => `${esc(s)} (${fmtInt(v.s)} session${v.s === 1 ? '' : 's'})`).join(', ')}. ` : '') +
+    (!problems && tags.size ? 'Nothing to check: no tag is spelled two ways and every source carries a tag. ' : '') +
+    `"No tag set" is traffic from a tagged source whose link had no utm_content. Campaign is the one most visits carry for that tag, grouping upper and lower case together. Tags with a registration are sessions in which mcp_registration_complete fired.`;
+
+  // ---- F. Activity log
+  const rowsC = L.filter(r => ouHas(r.meaningfulConversations));   // the chart only counts activities whose conversations were logged
   const topN = (key, n, other) => {
-    const t = {}; rows.forEach(r => t[r[key]] = (t[r[key]] || 0) + num(r.meaningfulConversations));
-    const ranked = Object.entries(t).filter(([k]) => k !== other).sort((a, b) => b[1] - a[1]).map(e => e[0]).slice(0, n);
-    return ranked;
+    const t = {}; rowsC.forEach(r => t[r[key]] = (t[r[key]] || 0) + num(r.meaningfulConversations));
+    return Object.entries(t).filter(([k]) => k !== other).sort((a, b) => b[1] - a[1]).map(e => e[0]).slice(0, n);
   };
   const locs = topN('locationOfOutreachActivity', 8, 'Other locations');
   const types = topN('typeOfExperience', 4, 'Other types');
   const grouped = {};
-  rows.forEach(r => {
+  rowsC.forEach(r => {
     const l = locs.includes(r.locationOfOutreachActivity) ? r.locationOfOutreachActivity : 'All other locations';
     const t = types.includes(r.typeOfExperience) ? r.typeOfExperience : 'Other types';
     ((grouped[l] = grouped[l] || {})[t]) = (((grouped[l] || {})[t]) || 0) + num(r.meaningfulConversations);
   });
   const locLabels = Object.keys(grouped).sort((a, b) => (a === 'All other locations') - (b === 'All other locations'));
   const typeLabels = [...types, ...(Object.values(grouped).some(g => g['Other types']) ? ['Other types'] : [])];
-  const datasets = typeLabels.map((t, i) => ({ label:t, data: locLabels.map(l => grouped[l][t] || 0), backgroundColor: t === 'Other types' ? 'rgba(223,240,238,0.35)' : SERIES[i % SERIES.length], borderColor: C.surface, borderWidth: 2, borderRadius: 3 }));
   makeChart('outreachBarChart', {
-    type: 'bar', data: { labels: locLabels.map(l => clip(l, 22)), datasets },
+    type: 'bar', data: { labels: locLabels.map(l => clip(l, 22)), datasets: typeLabels.map((t, i) => ({ label:clip(t, 32), data: locLabels.map(l => grouped[l][t] || 0), backgroundColor: t === 'Other types' ? 'rgba(223,240,238,0.35)' : SERIES[i % SERIES.length], borderColor: C.surface, borderWidth: 2, borderRadius: 3 })) },
     options: { responsive:true, maintainAspectRatio:false,
       scales: { x:{ stacked:true, grid:{ display:false }, border:{ color:gridColor } }, y:{ stacked:true, grid:{ color:gridColor }, border:{ display:false } } },
       plugins: { legend: { position:'bottom', ...legendCfg() }, tooltip:{ callbacks:{ title: items => locLabels[items[0].dataIndex] } } } }
-  });
+  }, cur.n ? `Meaningful conversations are not logged yet for the ${fmtInt(cur.n)} activities in these dates (${fmtInt(cur.flyers)} flyers). Staff enter them in Salesforce after the fact. Try a longer range to see earlier activities.` : 'No activities in these dates. Try a longer range.');
+
+  const end = startOfDay(state.rangeEnd), months = [];
+  for (let i = 11; i >= 0; i--) { const d = new Date(end.getFullYear(), end.getMonth() - i, 1); months.push(toISODate(d).slice(0, 7)); }
+  const rowsM = ouLogRows(d => { const x = parseDay(d); return !!x && x <= end && toISODate(x).slice(0, 7) >= months[0]; });
+  const tc = {}; rowsM.forEach(r => tc[r.typeOfExperience] = (tc[r.typeOfExperience] || 0) + 1);
+  const mTypes = Object.entries(tc).sort((a, b) => b[1] - a[1]).map(e => e[0]).slice(0, 4);
+  const mData = {}; rowsM.forEach(r => { const t = mTypes.includes(r.typeOfExperience) ? r.typeOfExperience : 'Other types', m = r.date.slice(0, 7); ((mData[t] = mData[t] || {})[m]) = (mData[t][m] || 0) + 1; });
+  const mLabels = [...mTypes, ...(mData['Other types'] ? ['Other types'] : [])];
+  el('ouMonthRange').textContent = `12 months to ${fmtLongDay(end)}`;
+  makeChart('outreachMonthChart', {
+    type: 'bar', data: { labels: months.map(m => parseDay(m + '-01').toLocaleDateString('en-US', { month:'short', year:'2-digit' })),
+      datasets: mLabels.map((t, i) => ({ label:clip(t, 32), data: months.map(m => (mData[t] || {})[m] || 0), backgroundColor: t === 'Other types' ? 'rgba(223,240,238,0.35)' : SERIES[i % SERIES.length], borderColor: C.surface, borderWidth: 2, borderRadius: 3 })) },
+    options: { responsive:true, maintainAspectRatio:false,
+      scales: { x:{ stacked:true, grid:{ display:false }, border:{ color:gridColor } }, y:{ stacked:true, beginAtZero:true, ticks:{ precision:0 }, grid:{ color:gridColor }, border:{ display:false } } },
+      plugins: { legend: { position:'bottom', ...legendCfg() } } }
+  }, 'No activities in the 12 months to the end of these dates.');
+
+  const last = ouLogRows(d => { const x = parseDay(d); return !!x && x <= end; }).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10);
+  el('ouLastRange').textContent = `Newest first, up to ${fmtLongDay(end)}`;
+  el('ouLastBody').innerHTML = last.map(r => `<tr><td style="white-space:nowrap;">${esc(fmtLongDay(parseDay(r.date)))}</td><td>${esc(r.typeOfExperience)}</td><td>${esc(r.locationOfOutreachActivity)}</td><td>${esc(r.program || '')}</td>
+    <td class="num-cell">${ouHas(r.flyersDistributed) ? fmtInt(r.flyersDistributed) : '<span class="ou-dim">--</span>'}</td>
+    <td class="num-cell">${ouHas(r.meaningfulConversations) ? fmtInt(r.meaningfulConversations) : '<span class="ou-dim">not logged</span>'}</td></tr>`).join('') || '<tr><td colspan="6" class="muted">No activities up to this date.</td></tr>';
+  el('ouLastNote').textContent = '"Not logged" means the cell is blank: staff have not entered a count yet. That is not the same as zero, and those activities are left out of the conversation totals and ratios. Locations that appear fewer than 3 times in the whole log are grouped as "Other locations", because that field is free text and can hold names or addresses. Staff names are never shown.';
 }
 
 /* =========================================================================================

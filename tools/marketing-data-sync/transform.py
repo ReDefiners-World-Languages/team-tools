@@ -210,19 +210,59 @@ def email(t):
                   'hardBounces', 'softBounces', 'unsubscribes', 'spamReports', 'dateKind'], out)
 
 
+def num_or_none(v):
+    """A blank cell is 'not logged yet', which is not the same as 0: it stays None (null in data.json) so the dashboard can say so
+    and leave the row out of ratios. A typed 0 stays 0."""
+    s = str(v if v is not None else '').strip()
+    return None if s in ('', '-') else num(s)
+
+
+# Partner sites are typed in several ways ("CBFRC - Central Tampa", "Children's Board Family Resource Center Central Tampa"). Rare
+# locations are folded into "Other locations" below (free text can hold a person's name or a home address), so the long spellings of
+# the big partner sites are mapped to the short name first; otherwise the newest entries would all fall into "Other locations".
+def tidy_location(s):
+    place = lambda p: re.sub(r"\bTown N\.? Country\b", "Town N' Country", p.strip(), flags=re.I)
+    m = re.match(r"Children'?s Board Family Resource Center(?:\s+(?:of|at))?\s+(.+)$", s, re.I) or re.match(r"CBFRC\s+([A-Za-z' ]+)$", s)
+    if m:
+        return 'CBFRC - ' + place(m.group(1))
+    m = re.match(r"Boys and Girls Club(?:\s+(?:of|at))?\s+(.+)$", s, re.I)
+    if m:
+        return 'BGC - ' + re.sub(r'^W\.? ', 'West ', place(m.group(1)))
+    m = re.match(r"(Temple Terrace|Town N' Country) - BGC$", s)
+    if m:
+        return 'BGC - ' + m.group(1)
+    return s
+
+
 def outreach(t):
     rows = []
     for r in t.rows:
         d = iso(t.get(r, 'Date of Outreach Activity'))
         if not d:
             continue
-        rows.append([d, text(t.get(r, 'Location of Outreach Activity')) or 'Unspecified', text(t.get(r, 'Type of Experience')) or 'Other',
-                     num(t.get(r, 'Flyers Distributed')), num(t.get(r, 'Meaningful Conversations'))])
+        program = re.sub(r'\s+FY\d{2}-\d{2}$', '', text(t.get(r, 'Program')))   # "... (MCP) FY22-23" is the same program
+        rows.append([d, tidy_location(text(t.get(r, 'Location of Outreach Activity'))) or 'Unspecified', text(t.get(r, 'Type of Experience')) or 'Other',
+                     program or 'Not recorded', num_or_none(t.get(r, 'Flyers Distributed')), num_or_none(t.get(r, 'Meaningful Conversations'))])
     counts = Counter(r[1] for r in rows)
     for r in rows:
         if counts[r[1]] < MIN_LOCATION_ACTIVITIES:
             r[1] = 'Other locations'
-    return table(['date', 'locationOfOutreachActivity', 'typeOfExperience', 'flyersDistributed', 'meaningfulConversations'], rows)
+    return table(['date', 'locationOfOutreachActivity', 'typeOfExperience', 'program', 'flyersDistributed', 'meaningfulConversations'], rows)
+
+
+# Outreach traffic (written by Paul): visits tagged to printed and physical outreach materials, weekly, one row per
+# group / source / campaign / utm_content / landing page. Paul classifies the Outreach Group; the dashboard never re-derives it.
+# Session Medium is not carried: it is "(not set)" for printed materials, which is normal, and nothing draws it.
+def outreach_traffic(t):
+    out = []
+    for r in t.rows:
+        d = iso(t.get(r, 'Week Start Date'))
+        if not d:
+            continue
+        out.append([d, text(t.get(r, 'Outreach Group')), text(t.get(r, 'Session Source')), text(t.get(r, 'Session Campaign')),
+                    text(t.get(r, 'utm_content')), path_only(t.get(r, 'Landing Page')), num(t.get(r, 'Sessions')),
+                    num(t.get(r, 'Engaged Sessions')), num(t.get(r, 'Users')), num(t.get(r, 'Sessions With MCP Registration'))])
+    return table(['date', 'group', 'source', 'campaign', 'utmContent', 'landingPage', 'sessions', 'engagedSessions', 'users', 'registered'], out)
 
 
 def mcp(t):
@@ -247,6 +287,7 @@ BUILDERS = {
     'GA4_Conversion_Attribution': conv_attribution, 'GA4_Conversion_First_Touch': conv_first_touch,
     'GA4_Conversion_Landing_Pairs': conv_pairs, 'GA4_Landing_Page_Sessions': conv_landing_sessions,
     'GA4_Funnel_Entry_To_Conversion': funnel('Week Start Date'), 'GA4_Funnel_Entry_To_Conversion_Daily': funnel('Date'),
+    'GA4_Outreach_Traffic': outreach_traffic,
     'Paid Media': paid, 'Email_Marketing_Data': email,
     'In_Person_Outreach_Log': outreach, 'MCP_Enrollment_Data': mcp,
 }
@@ -255,7 +296,7 @@ BUILDERS = {
 
 # Tabs that may be missing from a pull (added after the first version of the sync): they are skipped, not an error, and the
 # dashboard says the funnel is not synced yet. DAILY_TABS hold one row per day, not per week, whatever their name starts with.
-OPTIONAL_TABS = {'GA4_Funnel_Entry_To_Conversion', 'GA4_Funnel_Entry_To_Conversion_Daily'}
+OPTIONAL_TABS = {'GA4_Funnel_Entry_To_Conversion', 'GA4_Funnel_Entry_To_Conversion_Daily', 'GA4_Outreach_Traffic'}
 DAILY_TABS = {'GA4_Funnel_Entry_To_Conversion_Daily'}
 
 
