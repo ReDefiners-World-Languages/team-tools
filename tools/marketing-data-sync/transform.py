@@ -281,13 +281,27 @@ def mcp_fiscal_year(t, r):
     return m.group(0) if m else ''
 
 
+# Class names carry a code "N.Q" (for example "ESOL Basic Living (3.2)"): N is the program year (3 = FY24-25, 4 = FY25-26,
+# 5 = FY26-27), Q is the quarter, 1 to 4. FY22-23 and FY23-24 use letters instead ("(1B)", "(2C)") and are NOT parsed here.
+# The pattern must not read part of a longer number: "10.25", "1.2.3" and "$5.2" are not codes.
+QUARTER_CODE = re.compile(r'(?<![\d.$])\d{1,2}\.([1-4])(?!\d|\.\d)')
+QUARTER_CODE_IN_PARENS = re.compile(r'\(\s*\d{1,2}\.([1-4])\s*\)')
+
+
+def class_quarter(class_name):
+    """'Q1'..'Q4' from the code in a class name, '' when there is no code or it is ambiguous (two different quarters)."""
+    found = {m.group(1) for m in QUARTER_CODE_IN_PARENS.finditer(class_name)} or {m.group(1) for m in QUARTER_CODE.finditer(class_name)}
+    return 'Q' + found.pop() if len(found) == 1 else ''
+
+
 def mcp(t):
     # The sheet's "Class: Instructor" column is NOT carried: data.json is public and teacher names must never reach it.
     out = []
     for r in t.rows:
         out.append([iso(t.get(r, 'Class: Created Date')), mcp_status(t, r), text(t.get(r, 'Class: Course')),
-                    text(t.get(r, 'Class: Program Cohort')), text(t.get(r, 'Class: Class Name')), mcp_fiscal_year(t, r)])
-    return table(['enrollmentDate', 'status', 'classCourse', 'classProgramCohort', 'className', 'fiscalYear'], out)
+                    text(t.get(r, 'Class: Program Cohort')), text(t.get(r, 'Class: Class Name')), mcp_fiscal_year(t, r),
+                    class_quarter(text(t.get(r, 'Class: Class Name')))])
+    return table(['enrollmentDate', 'status', 'classCourse', 'classProgramCohort', 'className', 'fiscalYear', 'quarter'], out)
 
 
 TEACHER_MIN_ENROLLMENTS = 3   # a teacher needs at least this many enrollments in the filter to be ranked
@@ -295,11 +309,12 @@ TEACHER_TOP_N = 10
 
 
 def teacher_ranking(t):
-    """Top teachers by completion rate, for "all" fiscal years and for each fiscal year, with NO names and NO teacher ids.
-    The instructor column is read here and only ever leaves this function as [completed, total] pairs, best first;
-    the dashboard labels them "Teacher 1", "Teacher 2" ... from their position. No per-row teacher key is published, so the
-    ranking cannot be joined back to a class name or a cohort. Same rule the dashboard used before: rate = completed / total,
-    ties broken by more enrollments, teachers under TEACHER_MIN_ENROLLMENTS left out."""
+    """Top teachers by completion rate, with NO names and NO teacher ids, for every Fiscal year x Quarter filter the
+    Enrollments tab offers: ranking[fy][quarter] with fy = "all" or "FY25-26" and quarter = "all", "Q1".."Q4" or "none"
+    (no code in the class name). The instructor column is read here and only ever leaves this function as [completed, total]
+    pairs, best first; the dashboard labels them "Teacher 1", "Teacher 2" ... from their position. No per-row teacher key
+    is published, so the ranking cannot be joined back to a class name or a cohort. Same rule the dashboard used before:
+    rate = completed / total, ties broken by more enrollments, teachers under TEACHER_MIN_ENROLLMENTS left out."""
     # 'Class: Instructor' absent (older export): publish nothing rather than fail the whole sync.
     if 'Class: Instructor' not in t.header:
         return {}
@@ -311,17 +326,19 @@ def teacher_ranking(t):
         cohort = text(t.get(r, 'Class: Program Cohort'))
         m = re.search(r'FY\d{2}-\d{2}', cohort, re.I)
         fy = (mcp_fiscal_year(t, r) or (m.group(0) if m else cohort)).upper()   # the key the dashboard's filter uses (fyOf)
+        quarter = class_quarter(text(t.get(r, 'Class: Class Name'))) or 'none'
         done = mcp_status(t, r) == 'Completed'
-        for key in ('all', fy):
-            g = groups.setdefault(key, {}).setdefault(name, [0, 0])
-            g[1] += 1
-            g[0] += 1 if done else 0
+        for fy_key in ('all', fy):
+            for q_key in ('all', quarter):
+                g = groups.setdefault((fy_key, q_key), {}).setdefault(name, [0, 0])
+                g[1] += 1
+                g[0] += 1 if done else 0
     ranking = {}
-    for key, by_name in groups.items():
+    for (fy_key, q_key), by_name in sorted(groups.items()):
         pairs = [tuple(v) for v in by_name.values() if v[1] >= TEACHER_MIN_ENROLLMENTS]
         pairs.sort(key=lambda v: (-Fraction(v[0], v[1]), -v[1]))
-        ranking[key] = [list(v) for v in pairs[:TEACHER_TOP_N]]
-    return dict(sorted(ranking.items()))
+        ranking.setdefault(fy_key, {})[q_key] = [list(v) for v in pairs[:TEACHER_TOP_N]]
+    return ranking
 
 
 def instructor_names(t):
@@ -418,6 +435,9 @@ def build(raw_dir, mcp_tab='MCP_Enrollment_Data'):
         if name == 'MCP_Enrollment_Data':
             ranking = teacher_ranking(tab)
             names = instructor_names(tab)
+            qi = tabs[name]['cols'].index('quarter')
+            unmatched = Counter(r[tabs[name]['cols'].index('fiscalYear')] for r in tabs[name]['rows'] if not r[qi])
+            print('enrollment rows with no quarter code in the class name, by fiscal year:', dict(sorted(unmatched.items())) or 'none')
     scrubbed = scrub_emails(tabs)
     if scrubbed:
         print(f'removed an email address from {scrubbed} cell(s) before writing (data.json is public)')

@@ -55,6 +55,17 @@ Sessions, Sessions Reaching Portal and Sessions With MCP Registration. `data.jso
 - The Conversions tab uses the daily tab for "Last 7 days" and "This week so far", and the weekly tab for every other range. Course groupings (`CONV_COURSES`, `CONV_ADULT_PAGES`) are in `index.html`.
 - Course registrations come from `MCP_Enrollment_Data_SF` (Salesforce), never from Google Analytics, and are shown without instructor names.
 
+## Quarter filter (Enrollments tab)
+
+The Enrollments tab filters by Fiscal year AND Quarter. The quarter is read from the **Class: Class Name** column of `MCP_Enrollment_Data_SF` (no sheet column is needed):
+
+- Class names carry a code `N.Q`, for example `ESOL Basic Living (3.2)`. `Q` (1 to 4) is the quarter. `N` is the program year (3 = FY24-25, 4 = FY25-26, 5 = FY26-27), not the fiscal year.
+- `transform.py` (`class_quarter`) writes it as the `quarter` column of `MCP_Enrollment_Data` in `data.json` (`Q1` to `Q4`, or empty). It prefers a code in parentheses, and it never reads part of a longer number (`10.25`, `1.2.3`, `$5.2`) or a name with two different codes: those stay empty.
+- Empty means "Unknown / no code": those rows are kept, are not in Q1 to Q4, and the filter shows their count. `transform.py` prints the unmatched count by fiscal year on every run.
+- FY22-23 and FY23-24 class names use a letter instead (`(1B)`, `(2C)`), so those two years have no quarter yet. FY24-25 parses for all but 18 rows; FY25-26 and FY26-27 parse fully.
+- The Top 10 teachers ranking is built per fiscal year and per quarter (`mcpTeacherRanking[fy][quarter]`, quarter = `all`, `Q1` to `Q4` or `none`), so it follows both filters and still carries no names.
+- The quarter in the class name does not always match the quarter in the cohort (`Class: Program Cohort`, "FY24-25 Q3"): in FY24-25 about 510 enrollments are in a later cohort than their code. The filter follows the class name, as asked.
+
 ## Teacher names (Enrollments tab, "Top 10 teachers by completion rate")
 
 `data.json` and the GitHub Pages site are public, so **no teacher name may reach this repo or the browser**. The sheet's `Class: Instructor`
