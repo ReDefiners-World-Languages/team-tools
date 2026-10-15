@@ -16,7 +16,7 @@ Not synced: `LinkedIn_Competitors`, `LinkedIn_Visitors_*`, `TikTok_Viewers_Daily
    `Best_Time_To_Post_Heatmap`. Save each as `/mnt/files/rawsoc/<tab>.json` (the `values` list), zip, `upload_local_file`, use the `s3_url`.
 2. **Download and transform (local).**
    ```
-   cd "/Users/lucas/Documents/Claude Code/team-tools" && git checkout main && git pull
+   cd "/Users/lucas/ClaudeCode/team-tools" && git checkout main && git pull
    mkdir -p /tmp/soc-raw && curl -sL -o /tmp/soc.zip "<s3_url>" && unzip -q -o /tmp/soc.zip -d /tmp/soc-raw
    python3 tools/social-sync/transform.py /tmp/soc-raw dashboards/social-media-analytics/data.json --previous dashboards/social-media-analytics/data.json
    ```

@@ -16,7 +16,7 @@ Keeps `dashboards/marketing-funnel-performance/data.json` current from the Googl
    The Drive connector truncates big tabs; do not use it for this.
 2. **Download and transform (local).**
    ```
-   cd "/Users/lucas/Documents/Claude Code/team-tools" && git checkout main && git pull
+   cd "/Users/lucas/ClaudeCode/team-tools" && git checkout main && git pull
    mkdir -p /tmp/mkt-raw && curl -sL -o /tmp/mkt-raw.zip "<s3_url>" && unzip -q -o /tmp/mkt-raw.zip -d /tmp/mkt-raw
    python3 tools/marketing-data-sync/transform.py /tmp/mkt-raw dashboards/marketing-funnel-performance/data.json --previous dashboards/marketing-funnel-performance/data.json --mcp-tab MCP_Enrollment_Data_SF
    ```
