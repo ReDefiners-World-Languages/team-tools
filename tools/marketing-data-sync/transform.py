@@ -307,11 +307,23 @@ def mcp(t):
 TEACHER_MIN_ENROLLMENTS = 3   # a teacher needs at least this many enrollments in the filter to be ranked
 TEACHER_TOP_N = 10
 
+# The Enrollments tab's Status filter (Lucas Blanco, 2026-10-21). Same lists as MCP_STATUS_GROUPS in index.html: keep them together.
+# "Completed" also stands for Provisionally Completed (mcp_status folds it in). Statuses outside every list only count under "all".
+# The Completed group gets no teacher ranking: every teacher would be at 100%.
+STATUS_GROUPS = {
+    'registered': {'Completed', 'Enrolled', 'Pre-Registered', 'Registered', 'Voluntary Withdrawal'},   # brought to the door
+    'service': {'Completed', 'Enrolled', 'Voluntary Withdrawal'},   # counts toward the Children's Board contract goals
+}
+
+
+def status_groups(status):
+    return ['all'] + [key for key, statuses in STATUS_GROUPS.items() if status.lower() in {x.lower() for x in statuses}]
+
 
 def teacher_ranking(t):
-    """Top teachers by completion rate, with NO names and NO teacher ids, for every Fiscal year x Quarter filter the
-    Enrollments tab offers: ranking[fy][quarter] with fy = "all" or "FY25-26" and quarter = "all", "Q1".."Q4" or "none"
-    (no code in the class name). The instructor column is read here and only ever leaves this function as [completed, total]
+    """Top teachers by completion rate, with NO names and NO teacher ids, for every Fiscal year x Quarter x Status filter the
+    Enrollments tab offers: ranking[fy][quarter][status] with fy = "all" or "FY25-26", quarter = "all", "Q1".."Q4" or "none"
+    (no code in the class name) and status = "all", "registered" or "service" (STATUS_GROUPS). The instructor column is read here and only ever leaves this function as [completed, total]
     pairs, best first; the dashboard labels them "Teacher 1", "Teacher 2" ... from their position. No per-row teacher key
     is published, so the ranking cannot be joined back to a class name or a cohort. Same rule the dashboard used before:
     rate = completed / total, ties broken by more enrollments, teachers under TEACHER_MIN_ENROLLMENTS left out."""
@@ -327,17 +339,19 @@ def teacher_ranking(t):
         m = re.search(r'FY\d{2}-\d{2}', cohort, re.I)
         fy = (mcp_fiscal_year(t, r) or (m.group(0) if m else cohort)).upper()   # the key the dashboard's filter uses (fyOf)
         quarter = class_quarter(text(t.get(r, 'Class: Class Name'))) or 'none'
-        done = mcp_status(t, r) == 'Completed'
+        status = mcp_status(t, r)
+        done = status == 'Completed'
         for fy_key in ('all', fy):
             for q_key in ('all', quarter):
-                g = groups.setdefault((fy_key, q_key), {}).setdefault(name, [0, 0])
-                g[1] += 1
-                g[0] += 1 if done else 0
+                for s_key in status_groups(status):
+                    g = groups.setdefault((fy_key, q_key, s_key), {}).setdefault(name, [0, 0])
+                    g[1] += 1
+                    g[0] += 1 if done else 0
     ranking = {}
-    for (fy_key, q_key), by_name in sorted(groups.items()):
+    for (fy_key, q_key, s_key), by_name in sorted(groups.items()):
         pairs = [tuple(v) for v in by_name.values() if v[1] >= TEACHER_MIN_ENROLLMENTS]
         pairs.sort(key=lambda v: (-Fraction(v[0], v[1]), -v[1]))
-        ranking.setdefault(fy_key, {})[q_key] = [list(v) for v in pairs[:TEACHER_TOP_N]]
+        ranking.setdefault(fy_key, {}).setdefault(q_key, {})[s_key] = [list(v) for v in pairs[:TEACHER_TOP_N]]
     return ranking
 
 

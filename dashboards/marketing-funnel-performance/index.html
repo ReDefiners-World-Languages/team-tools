@@ -154,6 +154,7 @@
   .card-title h3 i { color:var(--mist); opacity:.7; font-size:15px; margin-right:10px; }
   .card-title .meta { font-size:12px; color:var(--ink-3); }
   .card-note { font-size:12px; color:var(--ink-3); margin-top:14px; line-height:1.5; }
+  .mcp-status-note { margin:0 0 14px; }
   .chart-box { position:relative; }
   .chart-empty { position:absolute; inset:0; display:none; align-items:center; justify-content:center; text-align:center;
     color:var(--ink-3); font-size:13px; padding:16px; }
@@ -453,6 +454,7 @@
     <label class="fgroup" data-tabs="outreach"><span class="filter-select-label">Location</span><select class="tag-select" id="filterLocation"></select></label>
     <label class="fgroup" data-tabs="mcp"><span class="filter-select-label">Fiscal year</span><select class="tag-select" id="filterFiscalYear"></select></label>
     <label class="fgroup" data-tabs="mcp"><span class="filter-select-label">Quarter</span><select class="tag-select" id="filterQuarter"></select></label>
+    <label class="fgroup" data-tabs="mcp"><span class="filter-select-label">Students</span><select class="tag-select" id="filterStatus"></select></label>
   </div>
 
   <!-- OVERVIEW -->
@@ -774,6 +776,7 @@
   <!-- ENROLLMENTS -->
   <div class="tab-section" id="tab-mcp" role="tabpanel" aria-labelledby="tabbtn-mcp">
     <div id="mcpEmptyWarning" class="notice-banner danger" style="display:none;"></div>
+    <p class="card-note mcp-status-note" id="mcpStatusNote" style="display:none;"></p>
     <div class="mcp-top-grid">
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Total enrollment volume</span><i class="fas fa-users" aria-hidden="true"></i></div><div class="metric-value" id="mcpTotal">--</div><p class="metric-sub" id="mcpTotalSub">--</p></div>
       <div class="metric-card"><div class="metric-header"><span class="metric-label">Completion rate</span><i class="fas fa-circle-check" aria-hidden="true"></i></div><div class="metric-value" id="mcpCompletion">--</div><p class="metric-sub" id="mcpCompletionSub">--</p></div>
@@ -898,7 +901,7 @@ const OUTREACH_LOCATIONS = ['Tampa Family Center','Brandon Library','Riverview C
 // empty combinations, which is what drives the empty-state warning on the Enrollment tab).
 const FISCAL_YEARS = ['FY23-24', 'FY24-25', 'FY25-26'];
 const FY_DAY_RANGES = { 'FY23-24': [500, 800], 'FY24-25': [150, 499], 'FY25-26': [0, 150] };
-const STATUSES = ['Enrolled','Completed','Withdrawn','Waitlisted'];
+const STATUSES = ['Enrolled','Completed','Voluntary Withdrawal','Registered','Pre-Registered','Completed'];
 const SAMPLE_TEACHER_COUNT = 12;   // sample teachers are only numbers: no names exist anywhere in this page or in data.json
 const COURSE_VARIANTS = [': Beginner', ': Intermediate', ': Advanced', ' - Morning Cohort', ' - Evening Cohort', ''];
 
@@ -1167,6 +1170,17 @@ MOCK.In_Person_Outreach_Log = (() => {
 // The Top 10 teachers view is ranked when data.json is built (tools/marketing-data-sync) and arrives as anonymous
 // [completed, total] pairs, best first, for each fiscal year x quarter. The sample data follows the same rule: rows carry no teacher at all.
 const TEACHER_MIN_ENROLLMENTS = 3, TEACHER_TOP_N = 10;
+// The Students filter (Lucas Blanco, 2026-10-21). Same lists as STATUS_GROUPS in tools/marketing-data-sync/transform.py: keep them together.
+// The sync folds Provisionally Completed into Completed; it is listed too so the note names it. Other statuses only count under "All statuses".
+const MCP_STATUS_GROUPS = {
+  registered: { label: 'Registered', option: 'Registered (brought to the door)',
+    statuses: ['Completed','Enrolled','Pre-Registered','Registered','Provisionally Completed','Voluntary Withdrawal'] },
+  completed:  { label: 'Completed', option: 'Completed the class',
+    statuses: ['Completed','Provisionally Completed'] },
+  service:    { label: 'Service level', option: "Service level (Children's Board)",
+    statuses: ['Completed','Enrolled','Provisionally Completed','Voluntary Withdrawal'] }
+};
+const inStatusGroup = (status, key) => key === 'all' || MCP_STATUS_GROUPS[key].statuses.some(s => s.toLowerCase() === str(status).toLowerCase());
 function rankTeachers(byTeacher){
   return Object.values(byTeacher).filter(v => v.total >= TEACHER_MIN_ENROLLMENTS)
     .sort((a, b) => b.completed / b.total - a.completed / a.total || b.total - a.total)
@@ -1196,15 +1210,17 @@ MOCK.MCP_Enrollment_Data = (() => {
         });
         const t = randInt(id+1013, 1, SAMPLE_TEACHER_COUNT), row = rows[rows.length - 1];
         const q = row.quarter || 'none';
-        [ 'all', fy ].forEach(fyKey => [ 'all', q ].forEach(qKey => {
-          const bucket = ((teacherTally[fyKey] = teacherTally[fyKey] || {})[qKey] = teacherTally[fyKey][qKey] || {});
+        [ 'all', fy ].forEach(fyKey => [ 'all', q ].forEach(qKey => [ 'all', 'registered', 'service' ].filter(sKey => inStatusGroup(row.status, sKey)).forEach(sKey => {
+          const byQ = (teacherTally[fyKey] = teacherTally[fyKey] || {}), byS = (byQ[qKey] = byQ[qKey] || {});
+          const bucket = (byS[sKey] = byS[sKey] || {});
           const g = (bucket[t] = bucket[t] || { total:0, completed:0 });
           g.total++; if (row.status === 'Completed') g.completed++;
-        }));
+        })));
       }
     });
   });
-  MOCK.MCP_Teacher_Ranking = Object.fromEntries(Object.entries(teacherTally).map(([fy, byQ]) => [fy, Object.fromEntries(Object.entries(byQ).map(([q, by]) => [q, rankTeachers(by)]))]));
+  MOCK.MCP_Teacher_Ranking = Object.fromEntries(Object.entries(teacherTally).map(([fy, byQ]) => [fy, Object.fromEntries(Object.entries(byQ).map(([q, byS]) =>
+    [q, Object.fromEntries(Object.entries(byS).map(([sKey, by]) => [sKey, rankTeachers(by)]))]))]));
   return rows;
 })();
 
@@ -1215,7 +1231,7 @@ const TAB_KEYS = ['GA4_Executive_Overview','GA4_Traffic_Acquisition','GA4_Page_E
 // overwritten tab-by-tab if/when the Phase 2 live sheet fetch succeeds.
 const DATA = {};
 TAB_KEYS.forEach(k => DATA[k] = MOCK[k]);
-DATA.MCP_Teacher_Ranking = MOCK.MCP_Teacher_Ranking;   // { 'all': { 'all': [[completed, total], ...], 'Q1': [...] }, 'FY25-26': {...} }, best first, no names
+DATA.MCP_Teacher_Ranking = MOCK.MCP_Teacher_Ranking;   // { 'all': { 'all': { 'all': [[completed, total], ...], 'registered': [...], 'service': [...] }, 'Q1': {...} }, 'FY25-26': {...} }, best first, no names
 // Funnel by entry page (written by Paul). There is no sample version: without data.json these stay empty and the tab says so.
 const FUNNEL_TABS = { weekly:'GA4_Funnel_Entry_To_Conversion', daily:'GA4_Funnel_Entry_To_Conversion_Daily' };   // fields: date, landingPage, sessions, reachedPortal, registered
 DATA[FUNNEL_TABS.weekly] = []; DATA[FUNNEL_TABS.daily] = [];
@@ -1320,7 +1336,7 @@ const DAY = 86400000;
 const state = {
   rangeDays: 30, rangeStart: null, rangeEnd: null,
   platform: 'all', location: 'all', emailType: 'all', objective: 'all', crmCampaign: 'all', subscription: 'all',
-  fiscalYear: 'all', quarter: 'all', activeTab: 'overview', trafficSearch: ''
+  fiscalYear: 'all', quarter: 'all', mcpStatus: 'all', activeTab: 'overview', trafficSearch: ''
 };
 const startOfDay = d => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
 function applyPresetRange(days){
@@ -1437,8 +1453,9 @@ function buildFilterOptions(){
   fillSelect(el('filterSubscription'), uniq(DATA.Email_Marketing_Data.map(r => r.subscription)), 'All subscriptions');
   fillSelect(el('filterFiscalYear'), fiscalYearsInData(), 'All fiscal years');
   fillSelect(el('filterQuarter'), [...QUARTERS, NO_QUARTER], 'All quarters', quarterLabel);
+  fillSelect(el('filterStatus'), Object.keys(MCP_STATUS_GROUPS), 'All statuses', k => MCP_STATUS_GROUPS[k].option);
   [['filterLocation','location'],['filterPlatform','platform'],['filterEmailType','emailType'],['filterObjective','objective'],
-   ['filterCrmCampaign','crmCampaign'],['filterSubscription','subscription'],['filterFiscalYear','fiscalYear'],['filterQuarter','quarter']]
+   ['filterCrmCampaign','crmCampaign'],['filterSubscription','subscription'],['filterFiscalYear','fiscalYear'],['filterQuarter','quarter'],['filterStatus','mcpStatus']]
     .forEach(([id,key]) => keepSelection(el(id), key));
 }
 // Pulls every distinct FYxx-xx token actually present in Class: Program Cohort.
@@ -1506,7 +1523,7 @@ function wireFilters(){
   const bind = (id, key) => el(id).addEventListener('change', (e) => { state[key] = e.target.value; renderActiveTab(); });
   bind('filterLocation','location'); bind('filterPlatform','platform'); bind('filterEmailType','emailType');
   bind('filterObjective','objective'); bind('filterCrmCampaign','crmCampaign');
-  bind('filterSubscription','subscription'); bind('filterFiscalYear','fiscalYear'); bind('filterQuarter','quarter');
+  bind('filterSubscription','subscription'); bind('filterFiscalYear','fiscalYear'); bind('filterQuarter','quarter'); bind('filterStatus','mcpStatus');
   document.querySelectorAll('[data-chartmode]').forEach(b => b.addEventListener('click', () => { state.convChartMode = b.dataset.chartmode; renderConversions(); }));
   document.querySelectorAll('[data-convview]').forEach(b => b.addEventListener('click', () => { state.convView = b.dataset.convview; renderConversions(); }));
   el('funnelSelect').addEventListener('change', (e) => { state.funnelSel = e.target.value; renderConversions(); });
@@ -2450,16 +2467,18 @@ const QUARTERS = ['Q1','Q2','Q3','Q4'], NO_QUARTER = 'none';
 const quarterOf = row => QUARTERS.includes(str(row.quarter)) ? str(row.quarter) : NO_QUARTER;
 const quarterLabel = q => q === NO_QUARTER ? 'Unknown / no code' : q;
 const quarterMatches = row => state.quarter === 'all' || quarterOf(row) === state.quarter;
+const statusMatches = row => inStatusGroup(row.status, state.mcpStatus);
+const statusLabel = () => state.mcpStatus === 'all' ? '' : MCP_STATUS_GROUPS[state.mcpStatus].label;
 // Words for the current filters, used in the cards, the footer and the empty state.
 const fyScopeText = () => state.fiscalYear === 'all' ? 'All fiscal years' : state.fiscalYear;
-const mcpScopeText = () => fyScopeText() + (state.quarter === 'all' ? '' : ' \u00b7 ' + quarterLabel(state.quarter));
-function mcpRowsForFY(fy){ return DATA.MCP_Enrollment_Data.filter(r => fyOf(r) === fy && quarterMatches(r)).map(r => ({ ...r, ...categorizeCourse(r.classCourse) })); }
+const mcpScopeText = () => [fyScopeText(), state.quarter === 'all' ? '' : quarterLabel(state.quarter), statusLabel()].filter(Boolean).join(' \u00b7 ');
+function mcpRowsForFY(fy){ return DATA.MCP_Enrollment_Data.filter(r => fyOf(r) === fy && quarterMatches(r) && statusMatches(r)).map(r => ({ ...r, ...categorizeCourse(r.classCourse) })); }
 function filteredMcp(){
-  return DATA.MCP_Enrollment_Data.filter(r => (state.fiscalYear === 'all' || fyOf(r) === state.fiscalYear) && quarterMatches(r)).map(r => ({ ...r, ...categorizeCourse(r.classCourse) }));
+  return DATA.MCP_Enrollment_Data.filter(r => (state.fiscalYear === 'all' || fyOf(r) === state.fiscalYear) && quarterMatches(r) && statusMatches(r)).map(r => ({ ...r, ...categorizeCourse(r.classCourse) }));
 }
 // "Unknown / no code" shows how many enrollments in the chosen fiscal year have no quarter code, so none go missing unseen.
 function paintQuarterOptions(){
-  const inFY = DATA.MCP_Enrollment_Data.filter(r => state.fiscalYear === 'all' || fyOf(r) === state.fiscalYear);
+  const inFY = DATA.MCP_Enrollment_Data.filter(r => (state.fiscalYear === 'all' || fyOf(r) === state.fiscalYear) && statusMatches(r));
   const opt = [...el('filterQuarter').options].find(o => o.value === NO_QUARTER);
   if (opt) opt.textContent = `${quarterLabel(NO_QUARTER)} (${fmtInt(inFY.filter(r => quarterOf(r) === NO_QUARTER).length)})`;
 }
@@ -2468,8 +2487,8 @@ function renderMcp(){
   const rows = filteredMcp();
   const warnEl = el('mcpEmptyWarning');
   if (!rows.length) {
-    const none = state.fiscalYear === 'all' && state.quarter === 'all' ? 'No MCP enrollment records are available.'
-      : `No enrollments found for ${state.fiscalYear === 'all' ? 'any fiscal year' : esc(state.fiscalYear)}${state.quarter === 'all' ? '' : state.quarter === NO_QUARTER ? ' without a quarter code' : ` in ${esc(state.quarter)}`}. Try a different ${state.quarter === 'all' ? 'fiscal year' : 'fiscal year or quarter'}.`;
+    const none = state.fiscalYear === 'all' && state.quarter === 'all' && state.mcpStatus === 'all' ? 'No MCP enrollment records are available.'
+      : `No ${state.mcpStatus === 'all' ? 'enrollments' : esc(statusLabel().toLowerCase()) + ' students'} found for ${state.fiscalYear === 'all' ? 'any fiscal year' : esc(state.fiscalYear)}${state.quarter === 'all' ? '' : state.quarter === NO_QUARTER ? ' without a quarter code' : ` in ${esc(state.quarter)}`}. Try a different ${['fiscal year', state.quarter === 'all' ? '' : 'quarter', state.mcpStatus === 'all' ? '' : 'student group'].filter(Boolean).join(', ')}.`;
     warnEl.innerHTML = `<i class="fas fa-triangle-exclamation" aria-hidden="true"></i><span>${none}</span>`;
     warnEl.style.display = 'flex';
   } else warnEl.style.display = 'none';
@@ -2479,7 +2498,12 @@ function renderMcp(){
   paintQuarterOptions();
   el('mcpTotalSub').textContent = mcpScopeText();
   el('mcpCompletion').textContent = fmtRate(rate(completed, total, 100));
-  el('mcpCompletionSub').textContent = total ? `${fmtInt(completed)} of ${fmtInt(total)} completed, including provisional` : 'No enrollments in this filter';
+  el('mcpCompletionSub').textContent = !total ? 'No enrollments in this filter'
+    : state.mcpStatus === 'completed' ? `All ${fmtInt(total)} completed students, including provisional`
+    : `${fmtInt(completed)} of ${fmtInt(total)} ${state.mcpStatus === 'all' ? '' : statusLabel().toLowerCase() + ' students '}completed, including provisional`;
+  const note = el('mcpStatusNote'), grp = MCP_STATUS_GROUPS[state.mcpStatus];
+  note.style.display = grp ? 'block' : 'none';
+  if (grp) note.textContent = `${grp.label} counts these statuses: ${grp.statuses.join(', ')}.`;
   renderMcpFyCompareChart();
   renderMcpCategoryGrid();
   renderTeacherBoard();
@@ -2487,8 +2511,8 @@ function renderMcp(){
 
 function renderMcpFyCompareChart(){
   const fys = fiscalYearsInData();
-  const totals = fys.map(fy => DATA.MCP_Enrollment_Data.filter(r => fyOf(r) === fy && quarterMatches(r)).length);   // the Quarter filter applies to every bar
-  el('mcpFyCompareTitle').lastElementChild.textContent = 'Enrollment volume by fiscal year' + (state.quarter === 'all' ? '' : ', ' + quarterLabel(state.quarter));
+  const totals = fys.map(fy => DATA.MCP_Enrollment_Data.filter(r => fyOf(r) === fy && quarterMatches(r) && statusMatches(r)).length);   // the Quarter and Students filters apply to every bar
+  el('mcpFyCompareTitle').lastElementChild.textContent = 'Enrollment volume by fiscal year' + [state.quarter === 'all' ? '' : quarterLabel(state.quarter), statusLabel()].filter(Boolean).map(t => ', ' + t).join('');
   const hi = state.fiscalYear === 'all' ? fys[fys.length - 1] : state.fiscalYear;
   makeChart('mcpFyCompareChart', {
     type: 'bar',
@@ -2530,7 +2554,7 @@ function renderMcpCategoryGrid(){
     return `<div class="category-block" data-cat="${slug}">
       <div class="category-card">
         <div class="cat-title"><h4>${esc(cat.category)}</h4><div class="cat-title-right">${deltaBadge}<span class="cat-total">${fmtInt(catTotal)}</span></div></div>
-        <p class="cat-sub">${previousLabel ? `${esc(previousLabel)} vs. ${esc(currentFY)}` : esc(currentFY || 'No fiscal year data')}${state.quarter === 'all' ? '' : ` · ${esc(quarterLabel(state.quarter))}`} · share by course group</p>
+        <p class="cat-sub">${previousLabel ? `${esc(previousLabel)} vs. ${esc(currentFY)}` : esc(currentFY || 'No fiscal year data')}${state.quarter === 'all' ? '' : ` · ${esc(quarterLabel(state.quarter))}`}${state.mcpStatus === 'all' ? '' : ` · ${esc(statusLabel())}`} · share by course group</p>
         <div class="cat-chart-wrap">${chartBlock}</div>
       </div>
       <div class="completion-card"><div class="cc-head"><span class="lbl">Completion rate</span><span class="rate">${fmtRate(rate(catCompleted, catTotal, 100))}</span></div>
@@ -2542,7 +2566,7 @@ function renderMcpCategoryGrid(){
     if (!canvas) return;
     const cur = currentRows.filter(r => r.category === cat.category), prev = previousRows.filter(r => r.category === cat.category);
     const labels = previousLabel ? [previousLabel, currentFY] : [currentFY];
-    canvas.setAttribute('role', 'img'); canvas.setAttribute('aria-label', `${cat.category}: share of enrollments by course group, ${labels.join(' vs. ')}${state.quarter === 'all' ? '' : ', ' + quarterLabel(state.quarter)}`);
+    canvas.setAttribute('role', 'img'); canvas.setAttribute('aria-label', `${cat.category}: share of enrollments by course group, ${labels.join(' vs. ')}${state.quarter === 'all' ? '' : ', ' + quarterLabel(state.quarter)}${state.mcpStatus === 'all' ? '' : ', ' + statusLabel()}`);
     // Raw counts per bar (one entry per label); the bars are drawn as shares so every bar stacks to 100%.
     const counts = cat.groups.map(g => previousLabel
       ? [prev.filter(r => r.group === g).length, cur.filter(r => r.group === g).length]
@@ -2584,9 +2608,14 @@ function equalizeMcpCards(){
   });
 }
 
-// Teachers arrive already ranked and without names (see DATA.MCP_Teacher_Ranking[fiscal year][quarter]), so the label comes from the rank alone.
+// Teachers arrive already ranked and without names (see DATA.MCP_Teacher_Ranking[fiscal year][quarter][students filter]), so the label comes from the rank alone.
+// There is no ranking for "Completed": every teacher would be at 100%.
 function renderTeacherBoard(){
-  const ranked = ((DATA.MCP_Teacher_Ranking[state.fiscalYear] || {})[state.quarter] || []).map(([completed, total], i) => ({ rank:i + 1, completed, total, rate: rate(completed, total, 100) }));
+  if (state.mcpStatus === 'completed') {
+    el('teacherBoard').innerHTML = `<div class="cat-empty">With only completed students counted, every teacher is at 100%. Pick another student group to rank teachers.</div>`;
+    return;
+  }
+  const ranked = (((DATA.MCP_Teacher_Ranking[state.fiscalYear] || {})[state.quarter] || {})[state.mcpStatus] || []).map(([completed, total], i) => ({ rank:i + 1, completed, total, rate: rate(completed, total, 100) }));
   el('teacherBoard').innerHTML = ranked.map(t => `<div class="teacher-row">
       <div class="teacher-rank ${t.rank <= 3 ? 'top' : ''}">${t.rank}</div><div class="teacher-name">Teacher ${t.rank}</div>
       <div class="teacher-meta">${fmtInt(t.completed)}/${fmtInt(t.total)} completed</div><div class="teacher-rate">${fmtRate(t.rate)}</div></div>`).join('')
@@ -2602,7 +2631,7 @@ const RENDERERS = { overview: renderOverview, traffic: renderTraffic, content: r
 function renderActiveTab(){
   paintFreshness();
   el('footerRangeLabel').textContent = state.activeTab === 'mcp'
-    ? `Showing ${state.fiscalYear === 'all' ? 'all fiscal years' : state.fiscalYear}${state.quarter === 'all' ? '' : ', ' + quarterLabel(state.quarter)}`
+    ? `Showing ${state.fiscalYear === 'all' ? 'all fiscal years' : state.fiscalYear}${state.quarter === 'all' ? '' : ', ' + quarterLabel(state.quarter)}${state.mcpStatus === 'all' ? '' : ', ' + statusLabel().toLowerCase() + ' students'}`
     : `Showing ${rangeLabel()}`;
   const fn = RENDERERS[state.activeTab];
   if (fn) fn();
