@@ -63,8 +63,17 @@ The Enrollments tab filters by Fiscal year AND Quarter. The quarter is read from
 - `transform.py` (`class_quarter`) writes it as the `quarter` column of `MCP_Enrollment_Data` in `data.json` (`Q1` to `Q4`, or empty). It prefers a code in parentheses, and it never reads part of a longer number (`10.25`, `1.2.3`, `$5.2`) or a name with two different codes: those stay empty.
 - Empty means "Unknown / no code": those rows are kept, are not in Q1 to Q4, and the filter shows their count. `transform.py` prints the unmatched count by fiscal year on every run.
 - FY22-23 and FY23-24 class names use a letter instead (`(1B)`, `(2C)`), so those two years have no quarter yet. FY24-25 parses for all but 18 rows; FY25-26 and FY26-27 parse fully.
-- The Top 10 teachers ranking is built per fiscal year and per quarter (`mcpTeacherRanking[fy][quarter]`, quarter = `all`, `Q1` to `Q4` or `none`), so it follows both filters and still carries no names.
+- The Top 10 teachers ranking is built per fiscal year, quarter and student group (`mcpTeacherRanking[fy][quarter][status]`, quarter = `all`, `Q1` to `Q4` or `none`, status = `all`, `registered` or `service`), so it follows all three filters and still carries no names.
 - The quarter in the class name does not always match the quarter in the cohort (`Class: Program Cohort`, "FY24-25 Q3"): in FY24-25 about 510 enrollments are in a later cohort than their code. The filter follows the class name, as asked.
+
+## Students filter (Enrollments tab)
+
+The third filter counts enrollments by the sheet's **Status** column (Lucas Blanco, 2026-10-21). The lists live in two places that must stay the same: `STATUS_GROUPS` in `transform.py` and `MCP_STATUS_GROUPS` in `index.html`.
+
+- **Registered** (brought to the door): Completed, Enrolled, Pre-Registered, Registered, Provisionally Completed, Voluntary Withdrawal.
+- **Completed** (completed the class): Completed, Provisionally Completed. The completion rate shows 100% and the Top 10 is hidden (every teacher would be at 100%), so `transform.py` builds no ranking for it.
+- **Service level** (counts toward the Children's Board contract goals): Completed, Enrolled, Provisionally Completed, Voluntary Withdrawal.
+- `transform.py` folds Provisionally Completed into Completed, so every group above counts both. A status in none of the lists (for example Suspended) only counts under "All statuses", the default.
 
 ## Teacher names (Enrollments tab, "Top 10 teachers by completion rate")
 
