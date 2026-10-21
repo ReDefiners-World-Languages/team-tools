@@ -848,7 +848,11 @@ const COURSE_TAXONOMY = [
   { category: 'Workshops for Adults', groups: ['Arabic Workshop for Adults','Chinese Workshop for Adults','Spanish Workshop for Adults'] },
   { category: 'Professionals', groups: ['Arabic for Professionals','Chinese for Professionals','Spanish for Professionals'] },
   { category: 'English for School Success', groups: ['English for School Success'] },
-  { category: 'Youth Clubs', groups: ['Spanish Youth Club','English Youth Club','Arabic Youth Club','Chinese Youth Club'] }
+  { category: 'Youth Clubs', groups: ['Spanish Youth Club','Arabic Youth Club','Chinese Youth Club'] }
+];
+// Former course names counted under the current group, so year-over-year comparisons span the rename.
+const COURSE_FORMER_NAMES = [
+  { former: 'English Youth Club', group: 'English for School Success' }
 ];
 // Flat list of every recognized mid-level group, longest-first, for greedy regex-style matching.
 const ALL_GROUPS = COURSE_TAXONOMY.flatMap(c => c.groups.map(g => ({ group: g, category: c.category })))
@@ -857,7 +861,9 @@ const ALL_GROUPS = COURSE_TAXONOMY.flatMap(c => c.groups.map(g => ({ group: g, c
 function categorizeCourse(rawCourseName){
   const name = str(rawCourseName);
   const lower = name.toLowerCase();
-  const match = ALL_GROUPS.find(g => lower.startsWith(g.group.toLowerCase()) || lower.includes(g.group.toLowerCase()));
+  const renamed = COURSE_FORMER_NAMES.find(f => lower.includes(f.former.toLowerCase()));
+  const match = renamed ? ALL_GROUPS.find(g => g.group === renamed.group)
+    : ALL_GROUPS.find(g => lower.startsWith(g.group.toLowerCase()) || lower.includes(g.group.toLowerCase()));
   if (match) return { category: match.category, group: match.group };
   return { category: 'Other', group: name || 'Uncategorized' };
 }
@@ -1809,7 +1815,7 @@ function campaignCanon(rows, key, countKey){
 
 // ---- course page groups --------------------------------------------------------------------------------------------
 // Confirmed by Lucas Blanco, 2026-10-09. Pages that are not listed (retired registration pages, the online adult course pages and so on)
-// are simply part of "Other website pages". `sf` matches Class: Course in Salesforce. English Youth Club no longer runs and is not listed.
+// are simply part of "Other website pages". `sf` matches Class: Course in Salesforce. English Youth Club is the former name of English for School Success (no page of its own).
 const CONV_PORTAL_PAGES = ['/myredefiners-portal', '/successful-registration-mcp'];   // visit starts on the portal / the confirmation page
 const CONV_CONVERSION_PAGES = ['/successful-registration-mcp', '/contact-us'];         // the conversion happens on the page itself
 // Retired or mistaken pages: still counted in "Other website pages" (so the rows add up) but never listed.
