@@ -63,7 +63,7 @@ Context fields available: `what` (required), `date`, `staff`, `notes`. The uploa
 
 ## Deploy (once, by the owner of the Media Library folders)
 
-Nothing below has been done yet. Each step is in the Google account that owns the Media Library folders.
+Done 2026-10-23. Kept here for a re-deploy or a move to another account. Each step is in the Google account that owns the Media Library folders.
 
 1. **Apps Script project.** script.google.com > New project, named `ReDefiners Media Library API`, signed in as the owner of the Media Library folders. Project Settings > tick "Show appsscript.json". Paste the four files from `apps-script/` (same names).
 2. **Folder id.** Project Settings > Script properties > add `CLASSES_ROOT_FOLDER_ID` = the id of the `Classes and Programs` folder (the last part of its Drive address). It is kept out of this public repo on purpose.
