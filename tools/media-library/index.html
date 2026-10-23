@@ -1,0 +1,1305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>ReDefiners Media Library</title>
+<link rel="icon" href="https://redefinerswl.org/hubfs/Brand%20Kit/ReDefiners%20Symbol%20Logo%20(Navy%20Blue).png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* Same family as the team-tools dashboards: one dark glass shell, 12px cards, pill controls.
+     FY26-27 brand guide on top: Orange = action with Navy text, Marigold hover, Ember pressed,
+     Amber only on things you cannot click, Mist for the active tab, Montserrat only. */
+  :root {
+    --bg: #00131A; --navy: #00303F; --mist: #DFF0EE; --cloud: #F5FBFF; --cream: #FAF5E6;
+    --amber: #FFC100; --orange: #FF7400; --marigold: #FF9A00; --ember: #FF4D00;
+    --mint: #3FE0A5; --red: #FF6B6B;
+    --ink: #F5FBFF; --ink-2: rgba(223,240,238,.82); --ink-3: rgba(223,240,238,.64);
+    --line: rgba(223,240,238,.10); --line-2: rgba(223,240,238,.18);
+    --card: rgba(255,255,255,.03); --field: rgba(255,255,255,.04); --field-hover: rgba(255,255,255,.07);
+    --radius: 12px; --pill: 60px;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
+    font-family: 'Montserrat', system-ui, sans-serif; font-size: 15px; line-height: 1.5;
+    display: flex; justify-content: center; padding: 24px;
+    font-variant-numeric: tabular-nums;
+  }
+  [hidden] { display: none !important; }
+  ::selection { background: var(--amber); color: var(--navy); }
+  a { color: var(--ink); text-underline-offset: 3px; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { touch-action: manipulation; }
+  :focus-visible { outline: 2px solid var(--mist); outline-offset: 3px; }
+  svg.i { width: 18px; height: 18px; flex: none; }
+
+  .dashboard {
+    width: 100%; max-width: 1180px; background: rgba(255,255,255,.05);
+    backdrop-filter: blur(18px) saturate(180%); -webkit-backdrop-filter: blur(18px) saturate(180%);
+    border-radius: var(--radius); padding: 28px 32px 36px; border: 1px solid rgba(255,255,255,.06);
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,.8), inset 0 1px 1px rgba(255,255,255,.05);
+  }
+  @media (max-width: 700px) {
+    body { padding: 0; }
+    .dashboard { border-radius: 0; border: 0; padding: 20px 16px 32px; }
+  }
+
+  /* ---------- top bar ---------- */
+  .top-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .brand { display: flex; align-items: center; gap: 16px; min-width: 0; }
+  .brand-logo { height: 34px; width: auto; display: block; }
+  .wordmark { font-weight: 900; font-size: 15px; letter-spacing: .02em; color: var(--cream); }
+  .brand h1 {
+    margin: 0; font-weight: 800; font-size: 22px; letter-spacing: -.3px; line-height: 1.2;
+    background: linear-gradient(to right, #f7f4ea, #ffe9b0); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .brand h1 span { background: inherit; -webkit-background-clip: inherit; background-clip: inherit; color: inherit; opacity: .72; font-weight: inherit; }
+  .top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .pill-badge {
+    display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: var(--radius);
+    background: rgba(255,255,255,.04); border: 1px solid var(--line); color: var(--ink-2); font-size: 13px; font-weight: 500;
+  }
+  .pill-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
+  .user-pill { max-width: 100%; padding-right: 8px; }
+  .user-pill .link-btn { min-height: 0; padding: 4px 6px; }
+  .user-pill .avatar {
+    width: 24px; height: 24px; border-radius: 50%; background: var(--mist); color: var(--navy);
+    display: grid; place-items: center; font-weight: 800; font-size: 12px; flex: none;
+  }
+  .user-pill .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+  .link-btn {
+    background: none; border: 0; padding: 4px 2px; color: var(--ink); font-weight: 600; font-size: 13px;
+    text-decoration: underline; text-underline-offset: 3px; cursor: pointer; min-height: 32px;
+  }
+
+  .tabs { display: flex; gap: 6px; padding: 8px 0 10px; margin-bottom: 22px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .tab {
+    appearance: none; border: 1px solid transparent; background: transparent; color: var(--ink-2);
+    font-size: 13px; font-weight: 600; padding: 0 16px; min-height: 44px; border-radius: var(--radius);
+    display: flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer; transition: background .15s, color .15s;
+  }
+  .tab:hover { background: rgba(255,255,255,.07); color: var(--ink); }
+  .tab[aria-selected="true"] { background: var(--mist); color: var(--navy); }
+
+  .page-head { margin-bottom: 22px; }
+  .page-head h2 { margin: 0 0 4px; font-size: 24px; font-weight: 800; letter-spacing: -.3px; text-wrap: balance; }
+  .page-head p { margin: 0; color: var(--ink-2); max-width: 62ch; }
+
+  /* ---------- cards and fields ---------- */
+  .card {
+    background: var(--card); border: 1px solid rgba(255,255,255,.05); border-radius: var(--radius);
+    box-shadow: 0 8px 18px -8px rgba(0,0,0,.5); padding: 22px 24px 24px;
+  }
+  .step { border: 1px solid rgba(255,255,255,.05); margin: 0; min-width: 0; }
+  .step-title { display: flex; align-items: center; gap: 12px; margin: 0 0 18px; font-size: 16px; font-weight: 700; letter-spacing: -.2px; }
+  legend.step-title { float: left; width: 100%; padding: 0; }
+  .step > :not(legend) { clear: both; }
+  .step-num {
+    flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center;
+    background: rgba(255,255,255,.06); border: 1px solid var(--line-2); font-size: 13px; font-weight: 800; color: var(--ink-2);
+    transition: background .2s, color .2s;
+  }
+  .is-done > .step-title .step-num, .is-done .step-title .step-num { background: var(--mint); border-color: transparent; color: var(--navy); }
+
+  .field { margin-bottom: 16px; min-width: 0; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-weight: 600; font-size: 13px; color: var(--ink-2); margin-bottom: 6px; }
+  .opt { font-weight: 500; color: var(--ink-3); }
+  .hint { font-size: 12.5px; color: var(--ink-3); margin: 8px 0 0; }
+  select, input[type="text"], input[type="date"], input[type="search"], textarea {
+    width: 100%; min-height: 46px; padding: 10px 14px; border-radius: var(--radius);
+    background-color: var(--field); border: 1px solid var(--line-2); color: var(--ink); font-size: 16px;
+    transition: border-color .15s, background .15s;
+  }
+  select {
+    cursor: pointer; appearance: none; -webkit-appearance: none; padding-right: 44px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23DFF0EE' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 16px center; background-size: 16px;
+  }
+  select option { background: var(--bg); color: var(--ink); }
+  select:hover, input:hover, textarea:hover { background-color: var(--field-hover); }
+  select:focus, input:focus, textarea:focus { outline: none; border-color: var(--mist); box-shadow: 0 0 0 3px rgba(223,240,238,.14); }
+  ::placeholder { color: var(--ink-3); opacity: 1; }
+  textarea { min-height: 96px; resize: vertical; }
+  .pick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+  @media (max-width: 640px) { .pick-grid { grid-template-columns: 1fr; } }
+
+  .warn {
+    display: flex; gap: 10px; align-items: flex-start; margin: 0 0 8px; padding: 10px 14px; border-radius: var(--radius);
+    background: rgba(255,193,0,.08); border: 1px solid rgba(255,193,0,.28); color: var(--cream); font-size: 13px; font-weight: 600;
+  }
+  .warn svg { color: var(--amber); margin-top: 1px; }
+  .uploader-line { display: flex; align-items: center; gap: 10px; color: var(--ink-2); font-size: 13px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+  .uploader-line strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; cursor: pointer;
+    background: var(--orange); color: var(--navy); font-weight: 700; font-size: 14px; padding: 0 22px;
+    min-height: 46px; border-radius: var(--radius); text-decoration: none; transition: background .15s;
+  }
+  .btn:hover { background: var(--marigold); }
+  .btn:active { background: var(--ember); }
+  .btn[disabled] { background: rgba(255,255,255,.08); color: var(--ink-3); cursor: not-allowed; }
+  .btn-ghost { background: rgba(255,255,255,.04); border: 1px solid var(--line-2); color: var(--ink); }
+  .btn-ghost:hover { background: rgba(255,255,255,.10); }
+  .btn-ghost:active { background: rgba(255,255,255,.14); }
+  .btn-wide { width: 100%; }
+
+  /* ---------- add view layout ---------- */
+  .add-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 22px; align-items: start; }
+  .add-main { display: grid; gap: 16px; min-width: 0; }
+  .add-side { position: sticky; top: 24px; display: grid; gap: 14px; }
+  #doneArea:empty { display: none; }
+  @media (max-width: 960px) {
+    .add-grid { grid-template-columns: 1fr; }
+    .add-side { position: static; } /* phones: destination and upload come last, as step 4 */
+  }
+
+  /* drop zone */
+  .drop {
+    display: grid; justify-items: center; gap: 6px; text-align: center; padding: 28px 16px;
+    border: 1.5px dashed var(--line-2); border-radius: var(--radius); background: rgba(255,255,255,.02);
+    transition: background .15s, border-color .15s;
+  }
+  .drop.is-over { background: rgba(223,240,238,.08); border-color: var(--mist); }
+  .drop-icon { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: rgba(223,240,238,.10); color: var(--mist); margin-bottom: 4px; }
+  .drop-icon svg { width: 24px; height: 24px; }
+  .drop strong { font-size: 15px; }
+  .drop p { margin: 0 0 10px; color: var(--ink-3); font-size: 13px; max-width: 46ch; }
+  .rejects { margin-top: 12px; padding: 10px 14px; border-radius: var(--radius); background: rgba(255,107,107,.08); border: 1px solid rgba(255,107,107,.3); color: #ffd0d0; font-size: 13px; display: grid; gap: 2px; }
+
+  .file-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+  .file-list li {
+    display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 12px; align-items: center;
+    padding: 10px 12px; border-radius: var(--radius); background: rgba(255,255,255,.025); border: 1px solid var(--line);
+  }
+  .file-icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: rgba(223,240,238,.08); color: var(--mist); }
+  .file-name { font-weight: 600; font-size: 13.5px; overflow-wrap: anywhere; }
+  .file-meta { font-size: 12.5px; color: var(--ink-3); display: flex; align-items: center; gap: 6px; }
+  .file-meta svg { width: 14px; height: 14px; }
+  .bar { height: 5px; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; margin-top: 6px; }
+  .bar span { display: block; height: 100%; width: 0; background: var(--mist); border-radius: 4px; transition: width .25s ease-out; }
+  .is-waiting .bar span { background: var(--amber); }
+  .is-error .file-meta { color: var(--red); font-weight: 600; }
+  .is-done .file-meta { color: var(--mint); font-weight: 600; }
+  .is-done .file-icon { background: rgba(63,224,165,.12); color: var(--mint); }
+  .file-list .link-btn { font-size: 12.5px; }
+
+  /* ---------- destination (the folder the files will land in) ---------- */
+  .dest-card { padding: 0; overflow: hidden; }
+  .dest-head { padding: 20px 22px 0; }
+  .dest-head .step-title { margin-bottom: 14px; }
+  .folder-path { list-style: none; margin: 0; padding: 4px 22px 18px; }
+  .folder-path li {
+    position: relative; display: flex; align-items: center; gap: 10px; padding: 5px 0 5px calc(var(--depth, 0) * 10px);
+    font-weight: 600; font-size: 14px; overflow-wrap: anywhere; min-width: 0;
+  }
+  .folder-path li svg { color: var(--mist); width: 16px; height: 16px; }
+  .folder-path li.root { font-weight: 800; }
+  .folder-path li.pending { color: var(--ink-3); font-weight: 500; font-style: italic; }
+  .folder-path li.pending svg { color: var(--ink-3); }
+  .folder-path li.auto { color: var(--ink-2); }
+  .folder-path li.other svg { color: var(--amber); }
+  .tag {
+    margin-left: auto; flex: none; font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: var(--pill);
+    background: rgba(255,193,0,.14); color: var(--amber);
+  }
+  .tag.auto { background: rgba(223,240,238,.08); color: var(--ink-3); }
+  .dest-foot { padding: 14px 22px 20px; border-top: 1px solid var(--line); background: rgba(255,255,255,.015); display: grid; gap: 12px; }
+  .dest-foot p { margin: 0; font-size: 13px; color: var(--ink-2); }
+  .dest-foot .missing { color: var(--ink); font-weight: 600; }
+  .dest-note { font-size: 12.5px; color: var(--ink-3); }
+
+  .done-panel { border-color: rgba(63,224,165,.3); background: rgba(63,224,165,.06); }
+  .done-panel h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; font-size: 17px; font-weight: 800; }
+  .done-panel h3 svg { color: var(--mint); }
+  .done-panel.has-errors { border-color: rgba(255,193,0,.3); background: rgba(255,193,0,.06); }
+  .done-panel.has-errors h3 svg { color: var(--amber); }
+  .done-panel p { margin: 0 0 14px; color: var(--ink-2); overflow-wrap: anywhere; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .notice {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; padding: 12px 16px;
+    border-radius: var(--radius); background: rgba(255,193,0,.08); border: 1px solid rgba(255,193,0,.28); color: var(--cream); font-size: 13.5px; font-weight: 600;
+  }
+
+  /* ---------- sign-in ---------- */
+  .gate { max-width: 560px; margin: 40px auto; text-align: center; padding: 36px 28px; }
+  .gate .drop-icon { margin: 0 auto 14px; }
+  .gate h2 { margin: 0 0 8px; font-size: 22px; font-weight: 800; text-wrap: balance; }
+  .gate p { margin: 0 auto 22px; color: var(--ink-2); max-width: 46ch; }
+  .gate .gsi { display: flex; justify-content: center; min-height: 44px; }
+  .status-line { min-height: 20px; font-size: 13px; color: var(--ink-3); margin: 0 0 12px; }
+  .status-line:empty { display: none; }
+  .status-line.is-error { color: var(--red); font-weight: 600; }
+
+  /* ---------- find view ---------- */
+  .find-tools { display: grid; gap: 14px; margin-bottom: 20px; }
+  .modes { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip {
+    border: 1px solid var(--line-2); background: rgba(255,255,255,.03); color: var(--ink-2);
+    font-size: 13px; font-weight: 600; padding: 0 18px; min-height: 40px; border-radius: var(--radius); cursor: pointer; transition: background .15s;
+  }
+  .chip:hover { background: rgba(255,255,255,.08); }
+  .chip[aria-selected="true"] { background: var(--mist); color: var(--navy); border-color: transparent; }
+  .searchbar { display: flex; gap: 10px; }
+  .searchbar input { flex: 1; min-width: 0; }
+  .filters { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+  .filters label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-3); margin-bottom: 4px; }
+  .filters select { min-height: 40px; padding: 6px 40px 6px 12px; font-size: 14px; background-position: right 14px center; }
+  .crumbs { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 13.5px; }
+  .crumbs .sep { color: var(--ink-3); }
+  .crumbs strong { padding: 4px 2px; }
+  .folders { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+  .folders:empty { display: none; }
+  .folder-btn {
+    display: flex; align-items: center; gap: 10px; text-align: left; min-height: 48px; padding: 10px 14px;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink);
+    font-weight: 600; font-size: 13.5px; cursor: pointer; overflow-wrap: anywhere; transition: background .15s, border-color .15s;
+  }
+  .folder-btn svg { color: var(--mist); }
+  .folder-btn:hover { background: rgba(255,255,255,.06); border-color: var(--line-2); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  .media-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+  .thumb {
+    all: unset; cursor: pointer; position: relative; display: block; aspect-ratio: 4 / 3; max-width: 100%;
+    background: linear-gradient(135deg, rgba(223,240,238,.10), rgba(0,48,63,.6));
+  }
+  .thumb:focus-visible { outline: 2px solid var(--mist); outline-offset: -2px; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb .ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-3); }
+  .thumb .ph svg { width: 28px; height: 28px; }
+  .badge {
+    position: absolute; left: 8px; top: 8px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: var(--pill);
+    background: var(--amber); color: var(--navy);
+  }
+  .media-body { padding: 10px 12px 12px; display: grid; gap: 3px; }
+  .media-title { font-weight: 700; font-size: 13.5px; overflow-wrap: anywhere; }
+  .media-path { font-size: 12px; color: var(--ink-3); overflow-wrap: anywhere; }
+  .media-what { font-size: 12.5px; color: var(--ink-2); margin-top: 3px; }
+  .empty-state { grid-column: 1 / -1; text-align: center; padding: 40px 16px; color: var(--ink-2); }
+  .empty-state strong { display: block; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+  .more { margin-top: 18px; text-align: center; }
+
+  dialog {
+    border: 1px solid var(--line-2); border-radius: var(--radius); padding: 0; width: 100%;
+    max-width: min(920px, calc(100vw - 32px)); background: #062029; color: var(--ink);
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,.8);
+  }
+  dialog::backdrop { background: rgba(0,19,26,.78); backdrop-filter: blur(4px); }
+  .viewer img { width: 100%; max-height: 66vh; object-fit: contain; background: #000; display: block; }
+  .viewer-body { padding: 18px 22px 22px; display: grid; gap: 10px; }
+  .viewer-body h2 { margin: 0; font-size: 17px; overflow-wrap: anywhere; }
+  .viewer-body pre {
+    margin: 0; white-space: pre-wrap; font: inherit; font-size: 13px; color: var(--ink-2);
+    background: rgba(255,255,255,.03); border: 1px solid var(--line); padding: 12px 14px; border-radius: var(--radius);
+  }
+
+  footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 12px; color: var(--ink-3); }
+
+  @media (max-width: 700px) {
+    .brand h1 { font-size: 19px; }
+    .brand h1 span { display: none; }
+    .brand-logo { height: 28px; }
+    .user-pill .who { max-width: 150px; }
+    .card:not(.dest-card):not(.media-card) { padding: 18px 16px 20px; }
+    .dest-head, .folder-path { padding-left: 16px; padding-right: 16px; }
+    .dest-foot { padding: 14px 16px 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<div class="dashboard">
+  <header class="top-bar">
+    <div class="brand">
+      <img class="brand-logo" src="https://redefinerswl.org/hubfs/Brand%20Kit/OfficialLogo(white).png" alt="ReDefiners World Languages"
+           onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'wordmark',textContent:'REDEFINERS'}))">
+      <h1>Media Library<span> Classes and Programs</span></h1>
+    </div>
+    <div class="top-actions">
+      <span class="pill-badge" id="previewBadge" hidden><span class="dot"></span>Preview: nothing is uploaded</span>
+      <span class="pill-badge user-pill" id="userPill" hidden>
+        <span class="avatar" id="userInitial" aria-hidden="true"></span>
+        <span class="who" id="userEmail"></span>
+        <button type="button" class="link-btn" id="signOut">Sign out</button>
+      </span>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Media Library" id="tabs" hidden>
+    <button type="button" role="tab" class="tab" id="tabAdd" aria-selected="true" aria-controls="addView"></button>
+    <button type="button" role="tab" class="tab" id="tabFind" aria-selected="false" aria-controls="findView"></button>
+  </nav>
+
+  <div class="notice" id="reauth" role="alert" hidden>
+    <span>Your sign-in ran out. Sign in again and the uploads carry on.</span>
+    <div id="reauthButton"></div>
+  </div>
+
+  <!-- ================= SIGN IN ================= -->
+  <section id="gate" class="card gate" hidden>
+    <div class="drop-icon" id="gateIcon"></div>
+    <h2>Sign in to the Media Library</h2>
+    <p id="gateText">Use your ReDefiners Google account. These are photos and videos of our students, so only staff can add or see them.</p>
+    <div class="gsi" id="gsiButton"></div>
+    <p class="status-line is-error" id="gateError" role="alert"></p>
+  </section>
+
+  <!-- ================= ADD ================= -->
+  <section id="addView" role="tabpanel" aria-labelledby="tabAdd" hidden>
+    <div class="page-head">
+      <h2>Add photos and videos</h2>
+      <p>Choose where they belong, add the files and say what they show, so the team can find them later.</p>
+    </div>
+    <div class="add-grid">
+      <div class="add-main">
+        <div id="doneArea"></div>
+        <form id="addForm" class="add-main" novalidate>
+          <fieldset class="card step" id="stepWhere">
+            <legend class="step-title"><span class="step-num">1</span>Where do they belong?</legend>
+            <div class="field" id="collectionField" hidden>
+              <label for="collection">Type of media</label>
+              <select id="collection"></select>
+            </div>
+            <div class="pick-grid" id="pickers"></div>
+            <p class="hint">Not sure of the site or the class? Choose Other and someone will place the files later.</p>
+          </fieldset>
+
+          <fieldset class="card step" id="stepFiles">
+            <legend class="step-title"><span class="step-num">2</span>Add the files</legend>
+            <div class="drop" id="drop">
+              <span class="drop-icon" id="dropIcon"></span>
+              <strong>Drag photos and videos here</strong>
+              <p>Large videos are fine. If the connection drops, the upload carries on from where it stopped.</p>
+              <label class="btn btn-ghost" for="fileInput">Choose files</label>
+              <input type="file" id="fileInput" multiple accept="image/*,video/*" hidden>
+            </div>
+            <div class="rejects" id="rejects" role="alert" hidden></div>
+            <ul class="file-list" id="fileList" aria-live="polite"></ul>
+          </fieldset>
+
+          <fieldset class="card step" id="stepAbout">
+            <legend class="step-title"><span class="step-num">3</span>What do they show?</legend>
+            <div id="contextFields"></div>
+            <div class="uploader-line" id="uploaderLine"></div>
+          </fieldset>
+        </form>
+      </div>
+
+      <aside class="add-side" aria-labelledby="destTitle">
+        <div class="card dest-card" id="stepCheck">
+          <div class="dest-head">
+            <h3 class="step-title" id="destTitle"><span class="step-num">4</span>Check and upload</h3>
+          </div>
+          <ol class="folder-path" id="folderPath" aria-label="Destination folder" aria-live="polite"></ol>
+          <div class="dest-foot">
+            <p id="summaryText"></p>
+            <button type="button" class="btn btn-wide" id="uploadBtn" disabled>Upload files</button>
+            <span class="dest-note" id="destNote"></span>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= FIND ================= -->
+  <section id="findView" role="tabpanel" aria-labelledby="tabFind" hidden>
+    <div class="page-head">
+      <h2>Find photos and videos</h2>
+      <p>Search by course, site or anything written about the files, or open the folders.</p>
+    </div>
+    <div class="find-tools">
+      <div class="modes" role="tablist" aria-label="Find by">
+        <button type="button" role="tab" class="chip" id="modeSearch" aria-selected="true">Search</button>
+        <button type="button" role="tab" class="chip" id="modeBrowse" aria-selected="false">Browse folders</button>
+      </div>
+      <div id="searchPane" class="find-tools">
+        <form class="searchbar" id="searchForm" role="search">
+          <input type="search" id="q" aria-label="Search the library" placeholder="Try: cooking day, Brandon, Arabic">
+          <button class="btn" type="submit">Search</button>
+        </form>
+        <div class="filters" id="filters"></div>
+      </div>
+      <div id="browsePane" class="find-tools" hidden>
+        <nav class="crumbs" id="crumbs" aria-label="Folder path"></nav>
+        <div class="folders" id="folders"></div>
+      </div>
+    </div>
+    <p class="status-line" id="findStatus" role="status"></p>
+    <div class="grid" id="results"></div>
+    <div class="more"><button type="button" class="btn btn-ghost" id="moreBtn" hidden>Show more</button></div>
+  </section>
+
+  <p class="status-line" id="loadStatus" role="status"></p>
+  <footer>Files are saved in the ReDefiners Media Library in Google Drive. Nothing here is shared or made public.</footer>
+</div>
+
+<dialog id="viewer" aria-labelledby="viewerTitle">
+  <div class="viewer">
+    <img id="viewerImg" alt="">
+    <div class="viewer-body">
+      <h2 id="viewerTitle"></h2>
+      <div class="media-path" id="viewerPath"></div>
+      <pre id="viewerDesc"></pre>
+      <div class="actions">
+        <a class="btn" id="viewerOpen" target="_blank" rel="noopener">Open in Google Drive</a>
+        <button type="button" class="btn btn-ghost" id="viewerClose">Close</button>
+      </div>
+      <p class="hint">Google Drive opens the file only if the folder is shared with you.</p>
+    </div>
+  </div>
+</dialog>
+
+<script>
+// ---------------------------------------------------------------------------
+// Settings. apiUrl = the Apps Script web app /exec address. googleClientId = the
+// OAuth client id for "Sign in with Google". Both are public by design (they give
+// no access on their own). Leave apiUrl empty (or add ?preview=1) for preview mode.
+// ---------------------------------------------------------------------------
+const SETTINGS = {
+  apiUrl: '',
+  googleClientId: '',
+  staffDomain: 'redefinerswl.org',
+  chunkBytes: 8 * 1024 * 1024, // must be a multiple of 256 KB (Drive rule)
+  firstYear: 2026,
+  timeZone: 'America/New_York'
+};
+
+const OTHER = '__other__';
+const PREVIEW = !SETTINGS.apiUrl || new URLSearchParams(location.search).has('preview');
+const MEDIA_EXT = /\.(jpe?g|png|gif|webp|heic|heif|tiff?|bmp|dng|cr2|cr3|nef|arw|raf|orf|rw2|mp4|mov|m4v|avi|mkv|webm|3gp|3g2|mts|m2ts|wmv|mpg|mpeg)$/i;
+const VIDEO_EXT = /\.(mp4|mov|m4v|avi|mkv|webm|3gp|3g2|mts|m2ts|wmv|mpg|mpeg)$/i;
+const SESSION_STORE = PREVIEW ? 'ml-preview-sessions' : 'ml-sessions';
+const SESSION_DAYS = 6; // Drive keeps a resumable session for about a week
+
+const $ = id => document.getElementById(id);
+function el(tag, attrs, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') n.className = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else if (k === 'text') n.textContent = v;
+    else n.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) n.append(kid.nodeType ? kid : String(kid));
+  return n;
+}
+function fmtBytes(b) {
+  if (b >= 1073741824) return (b / 1073741824).toFixed(2) + ' GB';
+  if (b >= 1048576) return (b / 1048576).toFixed(1) + ' MB';
+  return Math.max(1, Math.round(b / 1024)) + ' KB';
+}
+function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+function isVideo(file) { return /^video\//.test(file.type) || VIDEO_EXT.test(file.name); }
+function nowParts() {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: SETTINGS.timeZone, year: 'numeric', month: '2-digit', day: '2-digit' })
+    .formatToParts(new Date()).map(p => [p.type, p.value]));
+  const monthName = new Intl.DateTimeFormat('en-US', { timeZone: SETTINGS.timeZone, month: 'long' }).format(new Date());
+  return { year: parts.year, mm: parts.month, dd: parts.day, monthFolder: `${parts.month} ${monthName} ${parts.year}` };
+}
+
+// Icons: one drawn set, 2px stroke, so the page needs no icon font.
+const ICONS = {
+  alert: 'M12 3 2 20h20L12 3zM12 10v4M12 17v.5',
+  photo: 'M4 5h16v14H4zM4 15l4.5-4.5 4 4 3-3L20 16M9 9.5h.01',
+  video: 'M3 6h12v12H3zM15 10l6-3.5v11L15 14',
+  folder: 'M3 6.5h6.5l2 2H21V19H3z',
+  upload: 'M12 16V4M7 9l5-5 5 5M4 15v5h16v-5',
+  check: 'M20 6 9 17l-5-5',
+  lock: 'M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
+  search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM20 20l-4-4',
+  plus: 'M12 5v14M5 12h14',
+  wait: 'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z',
+  user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20c1.5-4 4.5-5.5 8-5.5s6.5 1.5 8 5.5'
+};
+function svgIcon(kind) {
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  s.setAttribute('viewBox', '0 0 24 24'); s.setAttribute('aria-hidden', 'true'); s.setAttribute('class', 'i');
+  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  p.setAttribute('d', ICONS[kind]); p.setAttribute('fill', 'none'); p.setAttribute('stroke', 'currentColor');
+  p.setAttribute('stroke-width', '2'); p.setAttribute('stroke-linejoin', 'round'); p.setAttribute('stroke-linecap', 'round');
+  s.append(p);
+  return s;
+}
+
+// ---------------------------------------------------------------------------
+// Sign-in and API. Every call carries the Google ID token; the server checks it
+// belongs to an @redefinerswl.org account.
+// ---------------------------------------------------------------------------
+class ApiError extends Error {
+  constructor(code, message, retryable) { super(message); this.code = code; this.retryable = !!retryable; }
+}
+const RETRYABLE_CODES = ['server_error', 'drive_error', 'network'];
+
+let idToken = '';
+let who = null;
+let gsiReady = null;
+let signInWaiters = [];
+
+async function api(action, body) {
+  if (!idToken) throw new ApiError('sign_in_required', 'Sign in again to continue.', true);
+  const payload = { action, idToken, ...(body || {}) };
+  if (PREVIEW) return window.MockApi(action, payload);
+  let res;
+  try {
+    // text/plain keeps this a "simple" request, which Apps Script answers without a CORS preflight.
+    res = await fetch(SETTINGS.apiUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(payload) });
+  } catch (e) {
+    throw new ApiError('network', 'No connection to the library.', true);
+  }
+  let json;
+  try { json = await res.json(); } catch (e) { throw new ApiError('server_error', 'The library did not answer properly. Try again.', true); }
+  if (!json.ok) {
+    if (json.error === 'sign_in_required') { needSignIn(); throw new ApiError('sign_in_required', json.message, true); }
+    throw new ApiError(json.error, json.message || 'Something went wrong.', RETRYABLE_CODES.includes(json.error));
+  }
+  return json.data;
+}
+
+function loadGsi() {
+  if (gsiReady) return gsiReady;
+  gsiReady = new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    s.onload = () => {
+      google.accounts.id.initialize({ client_id: SETTINGS.googleClientId, callback: onCredential, hd: SETTINGS.staffDomain, auto_select: true, use_fedcm_for_prompt: true });
+      resolve();
+    };
+    s.onerror = () => reject(new Error('Google sign-in did not load. Check the connection and reload the page.'));
+    document.head.append(s);
+  });
+  return gsiReady;
+}
+
+async function renderSignInButton(target) {
+  if (PREVIEW) {
+    target.replaceChildren(el('button', { type: 'button', class: 'btn', onclick: () => onCredential({ credential: 'preview-token' }) }, svgIcon('user'), 'Sign in (preview)'));
+    return;
+  }
+  if (!SETTINGS.googleClientId) {
+    target.replaceChildren(el('p', { class: 'hint', text: 'Sign-in is not switched on yet. Ask the marketing team.' }));
+    return;
+  }
+  try {
+    await loadGsi();
+    google.accounts.id.renderButton(target, { theme: 'filled_black', size: 'large', text: 'signin_with', shape: 'rectangular' });
+  } catch (e) {
+    $('gateError').textContent = e.message;
+  }
+}
+
+/** Shown when a sign-in expires during work: uploads pause until the person signs in again. */
+function needSignIn() {
+  idToken = '';
+  if ($('addView').hidden && $('findView').hidden) return;
+  $('reauth').hidden = false;
+  renderSignInButton($('reauthButton'));
+  if (!PREVIEW && window.google) google.accounts.id.prompt();
+}
+function waitForSignIn() {
+  if (idToken) return Promise.resolve();
+  return new Promise(resolve => signInWaiters.push(resolve));
+}
+
+async function onCredential(resp) {
+  idToken = resp.credential;
+  $('gateError').textContent = '';
+  try {
+    const me = await api('whoami');
+    if (who && who.email !== me.email) { location.reload(); return; } // a different person: start clean
+    who = me;
+    $('reauth').hidden = true;
+    signInWaiters.splice(0).forEach(fn => fn());
+    if (!CONFIG) await startApp();
+  } catch (e) {
+    idToken = '';
+    $('gateError').textContent = e.code === 'not_staff' ? `Use your @${SETTINGS.staffDomain} Google account.` : e.message;
+  }
+}
+
+function signOut() {
+  if (uploading) { $('loadStatus').textContent = 'Wait until the uploads finish before signing out.'; return; }
+  idToken = ''; who = null;
+  if (!PREVIEW && window.google) google.accounts.id.disableAutoSelect();
+  location.hash = '';
+  location.reload();
+}
+
+// ---------------------------------------------------------------------------
+// Picker logic (mirrors resolveDestination_ in Code.gs)
+// ---------------------------------------------------------------------------
+let CONFIG = null;
+let col = null;
+const choices = {};
+
+function stepList(collection, st, picked) {
+  if (!st.dependsOn) return (collection.options[st.id] || {})[''] || [];
+  const parent = picked[st.dependsOn];
+  if (!parent) return null; // parent not chosen yet
+  if (parent === OTHER) return [];
+  return (collection.options[st.id] || {})[parent] || [];
+}
+
+/** Steps to show now, in order, with their lists. Steps waiting on a parent are left out. */
+function activeSteps(collection, picked) {
+  const out = [];
+  for (const st of collection.steps) {
+    const list = stepList(collection, st, picked);
+    if (list === null || !list.length) continue;
+    out.push({ st, list });
+  }
+  return out;
+}
+
+/** A step can drop out of the path if some parent value has no list for it (like sub course). */
+function stepCanBeSkipped(st) {
+  if (!st.dependsOn) return false;
+  const parentValues = Object.values(col.options[st.dependsOn] || {}).flat();
+  return parentValues.some(v => !((col.options[st.id] || {})[v] || []).length);
+}
+
+/** The folder trail for the current choices, with placeholders for what is still missing. */
+function destination() {
+  const segs = {};
+  let complete = true;
+  for (const st of col.steps) {
+    const list = stepList(col, st, choices);
+    if (list === null) {
+      // Parent not chosen yet. Steps that only some parents have (sub course) stay out of sight.
+      complete = false;
+      if (!stepCanBeSkipped(st)) segs[st.id] = { name: st.label, pending: true };
+      continue;
+    }
+    if (!list.length) continue;
+    const v = choices[st.id];
+    if (!v) { complete = false; segs[st.id] = { name: st.label, pending: true }; }
+    else segs[st.id] = v === OTHER ? { name: st.otherFolder, other: true } : { name: v };
+  }
+  const now = nowParts();
+  segs.year = { name: now.year, auto: true };
+  segs.month = { name: now.monthFolder, auto: true };
+  const trail = [];
+  for (const part of col.path.split('/')) {
+    const key = (part.match(/\{(\w+)\}/) || [])[1];
+    if (!key) trail.push({ name: part });
+    else if (segs[key]) trail.push(segs[key]);
+  }
+  return { trail, complete };
+}
+
+function anyOtherNeedsNote() {
+  return col.steps.some(st => st.askNote && choices[st.id] === OTHER && stepList(col, st, choices)?.length);
+}
+
+// ---------------------------------------------------------------------------
+// Add view
+// ---------------------------------------------------------------------------
+const files = []; // { file, key, state, progress, message, session, savedAs, path }
+let uploading = false;
+
+const CONTEXT_FIELDS = {
+  what: () => el('div', { class: 'field' },
+    el('label', { for: 'ctx-what', text: 'What happened' }),
+    el('input', { type: 'text', id: 'ctx-what', name: 'what', maxlength: 200, required: true, autocomplete: 'off', placeholder: 'Class, event or activity, for example "Arabic class, cooking day"' })),
+  date: () => el('div', { class: 'field' },
+    el('label', { for: 'ctx-date', text: 'Date of the class or event' }),
+    el('input', { type: 'date', id: 'ctx-date', name: 'date', value: (p => `${p.year}-${p.mm}-${p.dd}`)(nowParts()) })),
+  staff: () => el('div', { class: 'field' },
+    el('label', { for: 'ctx-staff' }, 'Instructor or staff member ', el('span', { class: 'opt', text: '(optional)' })),
+    el('input', { type: 'text', id: 'ctx-staff', name: 'staff', maxlength: 120, autocomplete: 'off' }),
+    el('p', { class: 'hint', text: 'Staff names only.' })),
+  notes: () => el('div', { class: 'field' },
+    el('label', { for: 'ctx-notes' }, 'Notes ', el('span', { class: 'opt', text: '(optional)' })),
+    el('p', { class: 'warn', role: 'note' }, svgIcon('alert'), el('span', { text: "Do not type students' or children's names." })),
+    el('textarea', { id: 'ctx-notes', name: 'notes', maxlength: 1500, placeholder: 'Anything that helps someone understand these files later' }))
+};
+
+function renderContextFields() {
+  const box = $('contextFields');
+  box.replaceChildren();
+  for (const f of ['what', 'date', 'staff', 'notes']) if (col.contextFields.includes(f)) box.append(CONTEXT_FIELDS[f]());
+  box.append(el('div', { class: 'field', id: 'otherNoteField', hidden: true },
+    el('label', { for: 'ctx-otherNote' }, 'Which site or class do you think this is? ', el('span', { class: 'opt', text: '(optional)' })),
+    el('input', { type: 'text', id: 'ctx-otherNote', name: 'otherNote', maxlength: 300, autocomplete: 'off' }),
+    el('p', { class: 'hint', text: 'Helps whoever places these files later.' })));
+  $('uploaderLine').replaceChildren(svgIcon('user'),
+    el('span', {}, 'Saved as uploaded by ', el('strong', { text: who.name || who.email }), who.name ? ` (${who.email})` : ''));
+}
+
+function contextValues() {
+  const out = {};
+  for (const n of ['what', 'date', 'staff', 'notes', 'otherNote']) {
+    const input = $('ctx-' + n);
+    out[n] = input && !input.closest('[hidden]') ? input.value.trim() : '';
+  }
+  return out;
+}
+
+function renderPickers() {
+  const box = $('pickers');
+  box.replaceChildren();
+  for (const { st, list } of activeSteps(col, choices)) {
+    const id = 'pick-' + st.id;
+    const select = el('select', { id, 'data-step': st.id, required: true },
+      el('option', { value: '', text: `Choose a ${st.label.toLowerCase()}` }),
+      list.map(v => el('option', { value: v, text: v })),
+      st.otherFolder ? el('option', { value: OTHER, text: 'Other' }) : null);
+    select.value = choices[st.id] || '';
+    select.addEventListener('change', () => {
+      choices[st.id] = select.value;
+      pruneChoices();
+      renderPickers();
+      $(id)?.focus();
+      refreshSummary();
+    });
+    box.append(el('div', { class: 'field' }, el('label', { for: id, text: st.label }), select));
+  }
+}
+
+/** Drops choices that no longer fit after a parent changed. */
+function pruneChoices() {
+  for (const st of col.steps) {
+    const list = stepList(col, st, choices);
+    const v = choices[st.id];
+    if (!v) continue;
+    if (!list || !list.length || (v !== OTHER && !list.includes(v)) || (v === OTHER && !st.otherFolder)) delete choices[st.id];
+  }
+}
+
+function renderFolderPath() {
+  const d = destination();
+  const rows = [{ name: col.label, root: true }, ...d.trail];
+  $('folderPath').replaceChildren(...rows.map((s, i) => el('li', {
+      class: s.root ? 'root' : s.pending ? 'pending' : s.auto ? 'auto' : s.other ? 'other' : '',
+      style: `--depth:${Math.min(i, 5)}`
+    },
+    svgIcon('folder'),
+    el('span', { text: s.pending ? `${s.name}: not chosen yet` : s.name }),
+    s.other ? el('span', { class: 'tag', text: 'Other' }) : s.auto && i === rows.length - 1 ? el('span', { class: 'tag auto', text: 'This month' }) : null)));
+  return d;
+}
+
+function refreshSummary() {
+  if (!col) return;
+  const d = renderFolderPath();
+  if ($('otherNoteField')) $('otherNoteField').hidden = !anyOtherNeedsNote();
+  const queued = files.filter(f => f.state !== 'done');
+  const total = queued.reduce((a, f) => a + f.file.size, 0);
+  const ctx = contextValues();
+  const needs = [];
+  if (!d.complete) needs.push('where the files go');
+  if (!queued.length) needs.push('the files');
+  if (col.contextFields.includes('what') && !ctx.what) needs.push('what happened');
+  $('stepWhere').classList.toggle('is-done', d.complete);
+  $('stepFiles').classList.toggle('is-done', queued.length > 0);
+  $('stepAbout').classList.toggle('is-done', !col.contextFields.includes('what') || !!ctx.what);
+  $('stepCheck').classList.toggle('is-done', !needs.length);
+  const btn = $('uploadBtn');
+  const text = $('summaryText');
+  text.replaceChildren();
+  btn.replaceChildren(svgIcon('upload'));
+  if (uploading) {
+    btn.disabled = true;
+    btn.append('Uploading');
+    text.append('Keep this page open until every file says Uploaded.');
+  } else if (needs.length) {
+    btn.disabled = true;
+    btn.append('Upload files');
+    text.append(el('span', { class: 'missing', text: 'Still needed: ' }), needs.join(', ') + '.');
+  } else {
+    btn.disabled = false;
+    btn.append(`Upload ${plural(queued.length, 'file', 'files')}`);
+    text.append(`${plural(queued.length, 'file', 'files')}, ${fmtBytes(total)}, go into the folder above.`);
+  }
+  $('destNote').textContent = d.trail.some(s => s.other)
+    ? 'Files marked Other wait in these folders until someone places them. The month is the month you upload.'
+    : 'The month is the month you upload.';
+}
+
+// ----- files -----
+function fileKey(f) { return [f.name, f.size, f.lastModified].join('|'); }
+
+function addFiles(list) {
+  const rejected = [];
+  const maxBytes = (CONFIG.maxFileGb || 10) * 1073741824;
+  for (const file of list) {
+    const isMedia = /^(image|video)\//.test(file.type) || MEDIA_EXT.test(file.name);
+    if (!isMedia) { rejected.push(`${file.name} is not a photo or video.`); continue; }
+    if (!file.size) { rejected.push(`${file.name} is empty.`); continue; }
+    if (file.size > maxBytes) { rejected.push(`${file.name} is larger than ${CONFIG.maxFileGb} GB.`); continue; }
+    const key = fileKey(file);
+    if (files.some(f => f.key === key && f.state !== 'done')) continue;
+    files.push({ file, key, state: 'ready', progress: 0, message: '' });
+  }
+  const box = $('rejects');
+  box.hidden = !rejected.length;
+  box.replaceChildren(...rejected.map(r => el('div', { text: r })));
+  renderFiles();
+  refreshSummary();
+}
+
+function renderFiles() {
+  $('fileList').replaceChildren(...files.map(item => {
+    const meta = {
+      ready: [null, fmtBytes(item.file.size)],
+      starting: ['wait', 'Getting the folder ready'],
+      uploading: [null, `${Math.floor(item.progress * 100)}% of ${fmtBytes(item.file.size)}`],
+      waiting: ['wait', item.message],
+      done: ['check', item.savedAs && item.savedAs !== item.file.name ? `Uploaded as ${item.savedAs} (that name was taken)` : 'Uploaded'],
+      error: ['alert', item.message]
+    }[item.state];
+    const busy = ['uploading', 'waiting', 'starting'].includes(item.state);
+    return el('li', { class: 'is-' + item.state },
+      el('span', { class: 'file-icon' }, svgIcon(item.state === 'done' ? 'check' : isVideo(item.file) ? 'video' : 'photo')),
+      el('div', { style: 'min-width:0' },
+        el('div', { class: 'file-name', text: item.file.name }),
+        el('div', { class: 'file-meta' }, meta[0] ? svgIcon(meta[0]) : null, el('span', { text: meta[1] })),
+        busy ? el('div', { class: 'bar' }, el('span', { style: `width:${(item.progress * 100).toFixed(1)}%` })) : null),
+      item.state === 'ready' && !uploading
+        ? el('button', { type: 'button', class: 'link-btn', 'aria-label': `Remove ${item.file.name}`, text: 'Remove', onclick: () => { files.splice(files.indexOf(item), 1); renderFiles(); refreshSummary(); } })
+        : item.state === 'error' && !uploading ? el('button', { type: 'button', class: 'link-btn', text: 'Try again', onclick: () => retryOne(item) }) : el('span'));
+  }));
+}
+
+function setupDrop() {
+  const drop = $('drop');
+  const input = $('fileInput');
+  input.addEventListener('change', () => { addFiles([...input.files]); input.value = ''; });
+  ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); if (!uploading) drop.classList.add('is-over'); }));
+  ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('is-over'); }));
+  drop.addEventListener('drop', e => { if (!uploading) addFiles([...e.dataTransfer.files]); });
+  // A file dropped outside the zone should not open in the browser and leave the page.
+  window.addEventListener('dragover', e => e.preventDefault());
+  window.addEventListener('drop', e => e.preventDefault());
+}
+
+// ----- resumable sessions, kept in this browser so a reload can pick up where it stopped -----
+function readSessions() {
+  try {
+    const all = JSON.parse(localStorage.getItem(SESSION_STORE) || '{}');
+    const cutoff = Date.now() - SESSION_DAYS * 864e5;
+    for (const k of Object.keys(all)) if (all[k].createdAt < cutoff) delete all[k];
+    return all;
+  } catch (e) { return {}; }
+}
+function writeSession(key, s) {
+  try { const all = readSessions(); if (s) all[key] = s; else delete all[key]; localStorage.setItem(SESSION_STORE, JSON.stringify(all)); } catch (e) { /* storage off: resume works only while the page stays open */ }
+}
+function sessionKey(item) {
+  const p = nowParts();
+  return [who.email, col.id, JSON.stringify(destinationChoices()), p.year + p.mm, item.key].join('::');
+}
+function destinationChoices() {
+  const out = {};
+  for (const { st } of activeSteps(col, choices)) out[st.id] = choices[st.id];
+  return out;
+}
+
+// ----- the upload itself -----
+function putToDrive(url, blob, rangeHeader, onProgress) {
+  if (url.startsWith('mock:')) return window.MockUpload(url, blob, rangeHeader, onProgress);
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', url);
+    xhr.setRequestHeader('Content-Range', rangeHeader);
+    if (onProgress) xhr.upload.onprogress = e => onProgress(e.loaded);
+    xhr.onload = () => resolve({ status: xhr.status, range: xhr.getResponseHeader('Range'), text: xhr.responseText });
+    xhr.onerror = () => reject(new ApiError('network', 'Connection lost.', true));
+    xhr.ontimeout = xhr.onerror;
+    xhr.send(blob);
+  });
+}
+function rangeEnd(range) { const m = /bytes=0-(\d+)/.exec(range || ''); return m ? Number(m[1]) + 1 : null; }
+
+async function uploadOne(item) {
+  const file = item.file;
+  const key = sessionKey(item);
+  let s = item.session || readSessions()[key];
+  if (!s) {
+    item.state = 'starting'; renderFiles();
+    const started = await api('startUpload', {
+      collection: col.id, choices: destinationChoices(), context: contextValues(),
+      file: { name: file.name, size: file.size, type: file.type }, origin: location.origin
+    });
+    s = { ...started, offset: 0, sent: false, createdAt: Date.now() };
+    writeSession(key, s);
+  }
+  item.session = s; item.savedAs = s.savedAs; item.path = s.path;
+  item.state = 'uploading'; item.progress = s.offset / file.size; renderFiles();
+
+  if (!s.fileId) {
+    let offset = s.offset || 0;
+    if (s.sent) {
+      // Ask Drive how much it already has (after a dropped connection or a reload).
+      const st = await putToDrive(s.uploadUrl, null, `bytes */${file.size}`);
+      if (st.status === 200 || st.status === 201) s.fileId = JSON.parse(st.text).id;
+      else if (st.status === 308) offset = rangeEnd(st.range) ?? offset;
+      else if (st.status === 404 || st.status === 410) { writeSession(key, null); item.session = null; throw new ApiError('network', 'The upload expired. Starting this file again.', true); }
+      else throw new ApiError('network', `Google Drive answered ${st.status}. Trying again.`, true);
+    }
+    while (!s.fileId && offset < file.size) {
+      const end = Math.min(offset + SETTINGS.chunkBytes, file.size);
+      s.sent = true; writeSession(key, s);
+      const start = offset;
+      const r = await putToDrive(s.uploadUrl, file.slice(start, end), `bytes ${start}-${end - 1}/${file.size}`, loaded => {
+        item.progress = Math.min(1, (start + loaded) / file.size); renderFiles();
+      });
+      if (r.status === 308) { offset = rangeEnd(r.range) ?? end; s.offset = offset; writeSession(key, s); }
+      else if (r.status === 200 || r.status === 201) { s.fileId = JSON.parse(r.text).id; }
+      else if (r.status === 404 || r.status === 410) { writeSession(key, null); item.session = null; throw new ApiError('network', 'The upload expired. Starting this file again.', true); }
+      else if (r.status >= 500 || r.status === 429 || r.status === 0) throw new ApiError('network', 'Google Drive is busy. Trying again.', true);
+      else throw new ApiError('drive_refused', `Google Drive refused this file (code ${r.status}).`, false);
+    }
+    if (!s.fileId) throw new ApiError('network', 'Checking the upload.', true);
+    writeSession(key, s);
+  }
+  item.progress = 1; renderFiles();
+  await api('finishUpload', { collection: col.id, fileId: s.fileId, token: s.token, originalName: file.name, context: contextValues() });
+  writeSession(key, null);
+  item.state = 'done'; item.session = null; renderFiles();
+}
+
+function waitForRetry(seconds) {
+  return new Promise(resolve => {
+    let timer;
+    const go = () => { clearTimeout(timer); window.removeEventListener('online', go); resolve(); };
+    if (!navigator.onLine) window.addEventListener('online', go);
+    else timer = setTimeout(go, seconds * 1000);
+  });
+}
+
+async function runItem(item) {
+  for (let attempt = 0; ; attempt++) {
+    try { await uploadOne(item); return; }
+    catch (e) {
+      if (e.code === 'sign_in_required') {
+        item.state = 'waiting'; item.message = 'Paused until you sign in again.'; renderFiles();
+        needSignIn();
+        await waitForSignIn();
+        attempt--;
+        continue;
+      }
+      if (!e.retryable || attempt >= 12) {
+        item.state = 'error';
+        item.message = e.retryable ? 'Could not reach Google Drive. Check the connection, then choose Try again.' : e.message;
+        renderFiles();
+        return;
+      }
+      const delay = Math.min(30, 2 ** attempt);
+      item.state = 'waiting';
+      item.message = navigator.onLine ? `${e.message} Trying again in ${delay} s.` : 'Waiting for the connection to come back. The upload carries on from where it stopped.';
+      renderFiles();
+      await waitForRetry(delay);
+    }
+  }
+}
+
+async function runUploads(items) {
+  if (uploading) return;
+  uploading = true;
+  $('addForm').inert = true;
+  refreshSummary();
+  for (const item of items) if (item.state !== 'done') await runItem(item);
+  uploading = false;
+  $('addForm').inert = false;
+  renderFiles();
+  showDone();
+  refreshSummary();
+}
+function startUploads() { runUploads(files); }
+function retryOne(item) { runUploads([item]); }
+
+function showDone() {
+  const done = files.filter(f => f.state === 'done');
+  const failed = files.filter(f => f.state === 'error');
+  const area = $('doneArea');
+  area.replaceChildren();
+  if (!done.length && !failed.length) return;
+  const path = (done[0] || failed[0]).path || '';
+  area.append(el('div', { class: 'card done-panel' + (failed.length ? ' has-errors' : ''), role: 'status' },
+    el('h3', {}, svgIcon(failed.length ? 'alert' : 'check'),
+      failed.length ? `${plural(done.length, 'file', 'files')} uploaded, ${failed.length} not yet` : `${plural(done.length, 'file', 'files')} uploaded`),
+    path ? el('p', {}, 'Saved in ', el('strong', { text: path.split('/').join(' / ') })) : null,
+    failed.length ? el('p', { text: 'Choose Try again next to each file that did not upload.' }) : null,
+    el('div', { class: 'actions' },
+      el('button', { type: 'button', class: 'btn', onclick: () => { clearDoneFiles(); area.replaceChildren(); $('fileInput').click(); } }, svgIcon('plus'), 'Add more to this folder'),
+      el('button', { type: 'button', class: 'btn btn-ghost', text: 'Start a new upload', onclick: () => resetAdd() }))));
+  area.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+}
+
+function clearDoneFiles() {
+  for (let i = files.length - 1; i >= 0; i--) if (files[i].state === 'done') files.splice(i, 1);
+  renderFiles(); refreshSummary();
+}
+
+function resetAdd() {
+  files.length = 0;
+  for (const k of Object.keys(choices)) delete choices[k];
+  $('doneArea').replaceChildren();
+  renderPickers(); renderContextFields(); renderFiles(); refreshSummary();
+  window.scrollTo({ top: 0 });
+}
+
+/**
+ * Desktop: the Check and upload panel starts level with step 1 and, once scrolled to the
+ * bottom, ends level with step 3. Its sticky offset is set so it lands there at the last scroll.
+ */
+let alignQueued = false;
+function alignSide() {
+  if (alignQueued) return;
+  alignQueued = true;
+  setTimeout(() => {
+    alignQueued = false;
+    const side = document.querySelector('.add-side');
+    if ($('addView').hidden || matchMedia('(max-width: 960px)').matches) { side.style.removeProperty('top'); return; }
+    const maxScroll = document.documentElement.scrollHeight - innerHeight;
+    const stepThreeBottom = $('stepAbout').getBoundingClientRect().bottom + scrollY;
+    side.style.top = Math.round(stepThreeBottom - maxScroll - side.offsetHeight) + 'px';
+  }, 0);
+}
+
+function selectCollection(id) {
+  col = CONFIG.collections.find(c => c.id === id);
+  for (const k of Object.keys(choices)) delete choices[k];
+  renderPickers(); renderContextFields(); refreshSummary();
+}
+
+// ---------------------------------------------------------------------------
+// Find view
+// ---------------------------------------------------------------------------
+let findMode = 'search';
+const findState = { pageToken: '', folderId: '', started: false };
+const filterValues = {};
+
+function findApi(action, body) { return api(action, { ...body, collection: col.id }); }
+
+function setMode(mode) {
+  findMode = mode;
+  findState.started = true;
+  $('modeSearch').setAttribute('aria-selected', mode === 'search');
+  $('modeBrowse').setAttribute('aria-selected', mode === 'browse');
+  $('searchPane').hidden = mode !== 'search';
+  $('browsePane').hidden = mode !== 'browse';
+  $('results').replaceChildren(); $('moreBtn').hidden = true;
+  if (mode === 'search') runSearch(false); else openFolder(findState.folderId || '');
+}
+
+function renderFilters() {
+  const box = $('filters');
+  box.replaceChildren();
+  const add = (id, label, list) => {
+    const select = el('select', { id: 'f-' + id },
+      el('option', { value: '', text: 'Any' }), list.map(o => el('option', { value: o.value ?? o, text: o.label ?? o })));
+    select.value = filterValues[id] || '';
+    select.addEventListener('change', () => {
+      filterValues[id] = select.value;
+      for (const st of col.steps) {
+        const l = stepList(col, st, filterValues);
+        if (filterValues[st.id] && (!l || (filterValues[st.id] !== 'Other' && !l.includes(filterValues[st.id])))) delete filterValues[st.id];
+      }
+      renderFilters(); runSearch(false);
+      $('f-' + id)?.focus();
+    });
+    box.append(el('div', {}, el('label', { for: 'f-' + id, text: label }), select));
+  };
+  for (const st of col.steps) {
+    const list = stepList(col, st, filterValues);
+    if (!list || !list.length) continue;
+    add(st.id, st.label, st.otherFolder ? [...list, { value: 'Other', label: 'Other' }] : list);
+  }
+  const years = [];
+  for (let y = Number(nowParts().year); y >= SETTINGS.firstYear; y--) years.push(String(y));
+  add('year', 'Upload year', years);
+  add('month', 'Upload month', Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1).padStart(2, '0'), label: new Date(2000, i, 1).toLocaleString('en-US', { month: 'long' }) })));
+  add('type', 'Type', [{ value: 'photo', label: 'Photos' }, { value: 'video', label: 'Videos' }]);
+}
+
+function setFindStatus(text, isError) {
+  const s = $('findStatus');
+  s.classList.toggle('is-error', !!isError);
+  s.textContent = text;
+}
+
+async function runSearch(more) {
+  setFindStatus('Searching');
+  if (!more) { findState.pageToken = ''; $('results').replaceChildren(); }
+  try {
+    const res = await findApi('search', { q: $('q').value.trim(), filters: filterValues, pageToken: more ? findState.pageToken : '' });
+    findState.pageToken = res.nextPageToken;
+    renderCards(res.files, more);
+    const count = $('results').querySelectorAll('.media-card').length;
+    setFindStatus(count ? `${plural(count, 'file', 'files')}${res.nextPageToken ? ' so far' : ''}.` : '');
+    if (!count) $('results').replaceChildren(el('div', { class: 'card empty-state' },
+      el('strong', { text: 'Nothing matches yet' }),
+      'Try fewer words or clear a filter. Files that were in Drive before this page existed are under Browse folders.'));
+    $('moreBtn').hidden = !res.nextPageToken;
+  } catch (e) {
+    if (e.code !== 'sign_in_required') setFindStatus(e.message, true);
+  }
+}
+
+async function openFolder(folderId, more) {
+  setFindStatus('Opening');
+  if (!more) { findState.pageToken = ''; $('results').replaceChildren(); }
+  try {
+    const res = await findApi('browse', { folderId, pageToken: more ? findState.pageToken : '' });
+    findState.folderId = folderId;
+    findState.pageToken = res.nextPageToken;
+    $('crumbs').replaceChildren(...res.crumbs.flatMap((c, i) => {
+      const last = i === res.crumbs.length - 1;
+      const node = last ? el('strong', { text: c.name, 'aria-current': 'page' }) : el('button', { type: 'button', class: 'link-btn', text: c.name, onclick: () => openFolder(i === 0 ? '' : c.id) });
+      return i ? [el('span', { class: 'sep', text: '/' }), node] : [node];
+    }));
+    if (!more) $('folders').replaceChildren(...res.folders.map(f => el('button', { type: 'button', class: 'folder-btn', onclick: () => openFolder(f.id) }, svgIcon('folder'), f.name)));
+    renderCards(res.files, more);
+    const n = $('results').children.length;
+    setFindStatus(n ? `${plural(n, 'file', 'files')} in this folder.` : (res.folders.length ? '' : 'This folder is empty.'));
+    $('moreBtn').hidden = !res.nextPageToken;
+  } catch (e) {
+    if (e.code !== 'sign_in_required') setFindStatus(e.message, true);
+  }
+}
+
+// Thumbnails come through the API (the files are private), a few at a time as cards scroll into view.
+const thumbQueue = [];
+let thumbsRunning = 0;
+const thumbObserver = new IntersectionObserver(entries => {
+  for (const e of entries) if (e.isIntersecting) { thumbObserver.unobserve(e.target); thumbQueue.push(e.target); }
+  pumpThumbs();
+}, { rootMargin: '200px' });
+function pumpThumbs() {
+  while (thumbsRunning < 4 && thumbQueue.length) {
+    const img = thumbQueue.shift();
+    thumbsRunning++;
+    findApi('thumbnail', { fileId: img.dataset.id })
+      .then(r => { if (r.dataUrl) { img.src = r.dataUrl; img.hidden = false; img.previousElementSibling.hidden = true; } })
+      .catch(() => {})
+      .finally(() => { thumbsRunning--; pumpThumbs(); });
+  }
+}
+
+function renderCards(list, append) {
+  const box = $('results');
+  if (!append) box.replaceChildren();
+  for (const f of list) {
+    const img = el('img', { alt: '', 'data-id': f.id, hidden: true });
+    if (f.hasThumbnail) thumbObserver.observe(img);
+    const what = (f.description.match(/^What happened: (.*)$/m) || [])[1];
+    box.append(el('article', { class: 'card media-card' },
+      el('button', { type: 'button', class: 'thumb', 'aria-label': `Open ${f.name}`, onclick: () => openViewer(f, img) },
+        el('span', { class: 'ph' }, svgIcon(f.kind === 'video' ? 'video' : 'photo')), img,
+        el('span', { class: 'badge', text: f.kind === 'video' ? 'Video' : 'Photo' })),
+      el('div', { class: 'media-body' },
+        el('div', { class: 'media-title', text: f.name }),
+        el('div', { class: 'media-path', text: f.path.split('/').join(' / ') }),
+        what ? el('div', { class: 'media-what', text: what }) : null)));
+  }
+}
+
+async function openViewer(f, img) {
+  $('viewerTitle').textContent = f.name;
+  $('viewerPath').textContent = f.path.split('/').join(' / ');
+  $('viewerDesc').textContent = f.description || 'No context was added for this file.';
+  $('viewerImg').src = img.src || '';
+  $('viewerImg').hidden = !img.src;
+  $('viewerImg').alt = f.name;
+  $('viewerOpen').href = f.link || '#';
+  $('viewerOpen').hidden = !f.link;
+  $('viewer').showModal();
+  if (f.hasThumbnail) {
+    try {
+      const r = await findApi('thumbnail', { fileId: f.id, large: true });
+      if (r.dataUrl) { $('viewerImg').src = r.dataUrl; $('viewerImg').hidden = false; }
+    } catch (e) { /* keep the small one */ }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Start
+// ---------------------------------------------------------------------------
+function showView(which) {
+  const add = which === 'add';
+  $('tabAdd').setAttribute('aria-selected', add);
+  $('tabFind').setAttribute('aria-selected', !add);
+  $('addView').hidden = !add;
+  $('findView').hidden = add;
+  try { history.replaceState(null, '', add ? location.pathname + location.search : '#find'); } catch (e) { /* not allowed in some frames */ }
+  if (!add && !findState.started) { renderFilters(); setMode('search'); }
+  alignSide();
+}
+
+/** After sign-in: load the lists and open the page. */
+async function startApp() {
+  const status = $('loadStatus');
+  status.classList.remove('is-error');
+  status.textContent = 'Loading';
+  for (let attempt = 0; ; attempt++) {
+    try { CONFIG = await api('config'); break; }
+    catch (e) {
+      if (attempt >= 3 || !e.retryable) { status.classList.add('is-error'); status.textContent = e.message || 'The library did not load. Reload the page.'; return; }
+      await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+    }
+  }
+  status.textContent = '';
+  $('gate').hidden = true;
+  $('tabs').hidden = false;
+  $('userPill').hidden = false;
+  $('userInitial').textContent = (who.name || who.email).trim().charAt(0).toUpperCase();
+  $('userEmail').textContent = who.email;
+  const colSelect = $('collection');
+  colSelect.replaceChildren(...CONFIG.collections.map(c => el('option', { value: c.id, text: c.label })));
+  $('collectionField').hidden = CONFIG.collections.length < 2;
+  colSelect.addEventListener('change', () => selectCollection(colSelect.value));
+  selectCollection(CONFIG.collections[0].id);
+  showView(location.hash === '#find' ? 'find' : 'add');
+}
+
+async function loadMock() {
+  if (!PREVIEW || window.MockApi) return;
+  await new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'preview-mock.js';
+    s.onload = resolve; s.onerror = () => reject(new Error('Preview files are missing.'));
+    document.head.append(s);
+  });
+}
+
+async function init() {
+  $('previewBadge').hidden = !PREVIEW;
+  $('tabAdd').replaceChildren(svgIcon('upload'), 'Add media');
+  $('tabFind').replaceChildren(svgIcon('search'), 'Find media');
+  $('dropIcon').replaceChildren(svgIcon('upload'));
+  $('gateIcon').replaceChildren(svgIcon('lock'));
+  $('tabAdd').addEventListener('click', () => showView('add'));
+  $('tabFind').addEventListener('click', () => showView('find'));
+  $('modeSearch').addEventListener('click', () => setMode('search'));
+  $('modeBrowse').addEventListener('click', () => setMode('browse'));
+  $('searchForm').addEventListener('submit', e => { e.preventDefault(); runSearch(false); });
+  $('moreBtn').addEventListener('click', () => findMode === 'search' ? runSearch(true) : openFolder(findState.folderId, true));
+  $('signOut').addEventListener('click', signOut);
+  $('viewerClose').addEventListener('click', () => $('viewer').close());
+  $('uploadBtn').addEventListener('click', startUploads);
+  $('contextFields').addEventListener('input', refreshSummary);
+  window.addEventListener('beforeunload', e => { if (uploading) { e.preventDefault(); e.returnValue = ''; } });
+  setupDrop();
+  new ResizeObserver(alignSide).observe(document.body);
+  new ResizeObserver(alignSide).observe(document.querySelector('.add-side'));
+  window.addEventListener('resize', alignSide);
+  try { await loadMock(); } catch (e) { $('gateError').textContent = e.message; }
+  $('gate').hidden = false;
+  renderSignInButton($('gsiButton'));
+  if (!PREVIEW && SETTINGS.googleClientId) loadGsi().then(() => google.accounts.id.prompt()).catch(() => {});
+}
+init();
+</script>
+</body>
+</html>
