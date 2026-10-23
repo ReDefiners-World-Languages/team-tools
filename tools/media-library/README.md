@@ -2,7 +2,7 @@
 
 A page where staff file class and program photos and videos into the ReDefiners Media Library in Google Drive, with context, and later find them again.
 
-Everything needs a sign-in with an @redefinerswl.org Google account (Lucas Blanco, 2026-10-22). The uploader's name and email come from that sign-in.
+Everything needs a sign-in with an @redefinerswl.org Google account (decided 2026-10-22). The uploader's name and email come from that sign-in.
 
 - **Add media**: pick the destination (Program, Course, Sub course where the course has them, Site), drop the files, say what they show, confirm. Files go straight from the browser to Drive with resumable uploads.
 - **Find media**: search (file names, folder path and context text) with filters, or browse the folders.
@@ -61,7 +61,7 @@ Edits show up within 5 minutes (or run `refreshConfig()`).
 
 Context fields available: `what` (required), `date`, `staff`, `notes`. The uploader is always taken from the sign-in. The "which site or class do you think this is?" note appears by itself when someone picks Other on a step marked `Ask Note When Other`.
 
-## Deploy (Lucas Blanco, once)
+## Deploy (once, by the owner of the Media Library folders)
 
 Nothing below has been done yet. Each step is in the Google account that owns the Media Library folders.
 
