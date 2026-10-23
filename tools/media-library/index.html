@@ -224,9 +224,9 @@
   .dest-foot .missing { color: var(--ink); font-weight: 600; }
   .dest-note { font-size: 12.5px; color: var(--ink-3); }
   .dest-note:empty { display: none; }
-  .date-row { display: flex; gap: 10px; }
-  .date-row input { flex: 1; min-width: 0; }
-  .date-row .btn { flex: none; min-height: 46px; }
+  /* iPhones give date inputs their own minimum width, which pushed the field past the page edge. */
+  input[type="date"] { -webkit-appearance: none; appearance: none; display: block; min-width: 0; max-width: 100%; }
+  input[type="date"]::-webkit-date-and-time-value { text-align: left; margin: 0; }
 
   .done-panel { border-color: rgba(63,224,165,.3); background: rgba(63,224,165,.06); }
   .done-panel h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; font-size: 17px; font-weight: 800; }
@@ -384,7 +384,6 @@
               <select id="collection"></select>
             </div>
             <div class="pick-grid" id="pickers"></div>
-            <div id="dateField"></div>
             <p class="hint">Not sure of the site or the class? Choose Other and someone will place the files later.</p>
           </fieldset>
 
@@ -730,15 +729,16 @@ function destination() {
     segs.month = { name: when.monthFolder, auto: true };
   } else {
     complete = false;
-    segs.year = { name: 'Class date', pending: true };
+    segs.year = { name: 'Date of the class', pending: true };
   }
+  const dateSeg = segs.year.pending ? segs.year : null;
   const trail = [];
   for (const part of col.path.split('/')) {
     const key = (part.match(/\{(\w+)\}/) || [])[1];
     if (!key) trail.push({ name: part });
     else if (segs[key]) trail.push(segs[key]);
   }
-  return { trail, complete };
+  return { trail, complete, dateSeg };
 }
 
 function anyOtherNeedsNote() {
@@ -755,12 +755,9 @@ const CONTEXT_FIELDS = {
   what: () => el('div', { class: 'field' },
     el('label', { for: 'ctx-what', text: 'What happened' }),
     el('input', { type: 'text', id: 'ctx-what', name: 'what', maxlength: 200, required: true, autocomplete: 'off', placeholder: 'Class, event or activity, for example "Arabic class, cooking day"' })),
-  date: () => el('div', { class: 'field date-field' },
-    el('label', { for: 'ctx-date', text: 'Date of the class' }),
-    el('div', { class: 'date-row' },
-      el('input', { type: 'date', id: 'ctx-date', name: 'date', required: true, min: `${SETTINGS.firstYear}-01-01`, max: todayIso() }),
-      el('button', { type: 'button', class: 'btn btn-ghost', text: 'Today', onclick: () => { $('ctx-date').value = todayIso(); refreshSummary(); } })),
-    el('p', { class: 'hint', text: 'The files go into the year and month of this date.' })),
+  date: () => el('div', { class: 'field' },
+    el('label', { for: 'ctx-date', text: 'Date of the class or event' }),
+    el('input', { type: 'date', id: 'ctx-date', name: 'date', value: todayIso(), min: `${SETTINGS.firstYear}-01-01`, max: todayIso() })),
   staff: () => el('div', { class: 'field' },
     el('label', { for: 'ctx-staff' }, 'Instructor or staff member ', el('span', { class: 'opt', text: '(optional)' })),
     el('input', { type: 'text', id: 'ctx-staff', name: 'staff', maxlength: 120, autocomplete: 'off' }),
@@ -774,10 +771,7 @@ const CONTEXT_FIELDS = {
 function renderContextFields() {
   const box = $('contextFields');
   box.replaceChildren();
-  for (const f of ['what', 'staff', 'notes']) if (col.contextFields.includes(f)) box.append(CONTEXT_FIELDS[f]());
-  const dateBox = $('dateField');
-  dateBox.replaceChildren();
-  if (col.contextFields.includes('date')) dateBox.append(CONTEXT_FIELDS.date());
+  for (const f of ['what', 'date', 'staff', 'notes']) if (col.contextFields.includes(f)) box.append(CONTEXT_FIELDS[f]());
   box.append(el('div', { class: 'field', id: 'otherNoteField', hidden: true },
     el('label', { for: 'ctx-otherNote' }, 'Which site or class do you think this is? ', el('span', { class: 'opt', text: '(optional)' })),
     el('input', { type: 'text', id: 'ctx-otherNote', name: 'otherNote', maxlength: 300, autocomplete: 'off' }),
@@ -853,12 +847,14 @@ function refreshSummary() {
   const total = queued.reduce((a, f) => a + f.file.size, 0);
   const ctx = contextValues();
   const needs = [];
-  if (!d.complete) needs.push(col.contextFields.includes('date') && !classDate() ? 'where the files go and the class date' : 'where the files go');
+  const datePending = col.contextFields.includes('date') && !classDate();
+  if (d.trail.some(s => s.pending && s !== d.dateSeg) || activeSteps(col, choices).some(({ st }) => !choices[st.id])) needs.push('where the files go');
+  if (datePending) needs.push('the date of the class');
   if (!queued.length) needs.push('the files');
   if (col.contextFields.includes('what') && !ctx.what) needs.push('what happened');
-  $('stepWhere').classList.toggle('is-done', d.complete);
+  $('stepWhere').classList.toggle('is-done', !needs.includes('where the files go'));
   $('stepFiles').classList.toggle('is-done', queued.length > 0);
-  $('stepAbout').classList.toggle('is-done', !col.contextFields.includes('what') || !!ctx.what);
+  $('stepAbout').classList.toggle('is-done', (!col.contextFields.includes('what') || !!ctx.what) && !datePending);
   $('stepCheck').classList.toggle('is-done', !needs.length);
   const btn = $('uploadBtn');
   const text = $('summaryText');
@@ -1387,8 +1383,7 @@ async function init() {
   $('viewerClose').addEventListener('click', () => $('viewer').close());
   $('uploadBtn').addEventListener('click', startUploads);
   $('contextFields').addEventListener('input', refreshSummary);
-  $('dateField').addEventListener('input', refreshSummary);
-  $('dateField').addEventListener('change', refreshSummary);
+  $('contextFields').addEventListener('change', refreshSummary);
   window.addEventListener('beforeunload', e => { if (uploading) { e.preventDefault(); e.returnValue = ''; } });
   setupDrop();
   new ResizeObserver(alignSide).observe(document.body);
