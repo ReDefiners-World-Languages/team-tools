@@ -7,14 +7,17 @@
 
 var DRIVE = 'https://www.googleapis.com/drive/v3';
 var TZ = 'America/New_York';
+var FIRST_CLASS_DATE = '2016-01-01'; // ReDefiners was founded in 2016
+var MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 var MEDIA_EXT = /\.(jpe?g|png|gif|webp|heic|heif|tiff?|bmp|dng|cr2|cr3|nef|arw|raf|orf|rw2|mp4|mov|m4v|avi|mkv|webm|3gp|3g2|mts|m2ts|wmv|mpg|mpeg)$/i;
 var FIELD_LIMITS = { what: 200, date: 10, staff: 120, notes: 1500, otherNote: 300 };
 var FILE_FIELDS = 'id,name,mimeType,size,createdTime,hasThumbnail,description,properties,parents,webViewLink';
 
 var STAFF_ACTIONS = {
   whoami: function (req, who) { return who; },
+  start: function (req, who) { return { who: who, config: getPublicConfig_() }; }, // one round trip after sign-in
   config: getPublicConfig_, startUpload: startUpload_, finishUpload: finishUpload_,
-  search: search_, browse: browse_, thumbnail: thumbnail_
+  search: search_, browse: browse_, thumbnail: thumbnail_, thumbnails: thumbnails_
 };
 
 function doGet() {
@@ -75,7 +78,27 @@ function getPublicConfig_() {
  * Other is allowed only on steps with an Other Folder; a step that has no list
  * for the chosen parent does not apply and must be empty.
  */
-function resolveDestination_(col, choices, now) {
+/**
+ * The year and month folders: the class date when the collection asks for one
+ * (Lucas Blanco, 2026-10-23), otherwise the upload date.
+ */
+function folderDate_(col, context, now) {
+  if (col.contextFields.indexOf('date') < 0) {
+    return { year: Utilities.formatDate(now, TZ, 'yyyy'), mm: Utilities.formatDate(now, TZ, 'MM') };
+  }
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(context.date || '');
+  var tomorrow = Utilities.formatDate(new Date(now.getTime() + 864e5), TZ, 'yyyy-MM-dd');
+  if (!m || context.date < FIRST_CLASS_DATE || context.date > tomorrow || Number(m[2]) < 1 || Number(m[2]) > 12) {
+    throw userError_('bad_context', 'Pick the date of the class.');
+  }
+  return { year: m[1], mm: m[2] };
+}
+
+function monthFolder_(year, mm) {
+  return mm + ' ' + MONTH_NAMES[Number(mm) - 1] + ' ' + year;
+}
+
+function resolveDestination_(col, choices, when) {
   choices = choices || {};
   var chosen = {};
   var folders = {};
@@ -102,10 +125,10 @@ function resolveDestination_(col, choices, now) {
     chosen[st.id] = value;
     folders[st.id] = value;
   });
-  folders.year = Utilities.formatDate(now, TZ, 'yyyy');
-  folders.month = Utilities.formatDate(now, TZ, 'MM MMMM yyyy');
+  folders.year = when.year;
+  folders.month = monthFolder_(when.year, when.mm);
   var segments = segmentsFromTemplate_(col.path, folders);
-  return { chosen: chosen, segments: segments, year: folders.year, month: Utilities.formatDate(now, TZ, 'MM') };
+  return { chosen: chosen, segments: segments, year: when.year, month: when.mm };
 }
 
 function segmentsFromTemplate_(template, folders) {
@@ -137,8 +160,7 @@ function startUpload_(req, who) {
   var context = cleanContext_(req.context, col, who);
   if (!context.what) throw userError_('bad_context', 'Say what happened (class, event or activity).');
 
-  var now = new Date();
-  var dest = resolveDestination_(col, req.choices, now);
+  var dest = resolveDestination_(col, req.choices, folderDate_(col, context, new Date()));
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   var folder, savedAs;
@@ -365,27 +387,50 @@ function thumbnail_(req) {
   return { dataUrl: 'data:' + (blob.getContentType() || 'image/jpeg') + ';base64,' + Utilities.base64Encode(blob.getBytes()) };
 }
 
-/** Root-to-folder trail. Throws when the folder is not inside the collection's root. */
-function breadcrumbs_(folderId, col) {
-  if (!folderId) throw userError_('not_found', 'That folder is not in the library.');
+/**
+ * Up to 24 small previews in one call. Drive is asked for all of them at once (fetchAll),
+ * which is much faster than one page-to-script round trip per picture.
+ */
+function thumbnails_(req) {
+  var col = collection_(req.collection);
+  var ids = (req.fileIds || []).map(clean_).filter(function (id) { return /^[\w-]{10,}$/.test(id); }).slice(0, 24);
+  if (!ids.length) return { dataUrls: {} };
+  var auth = { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() };
+  var metas = UrlFetchApp.fetchAll(ids.map(function (id) {
+    return { url: DRIVE + '/files/' + id + '?fields=id,parents,thumbnailLink', headers: auth, muteHttpExceptions: true };
+  })).map(function (res) { return res.getResponseCode() === 200 ? JSON.parse(res.getContentText()) : null; });
+  var wanted = metas.filter(function (f) {
+    if (!f || !f.thumbnailLink) return false;
+    try { breadcrumbs_((f.parents || [])[0], col); return true; } catch (e) { return false; } // outside the library: skip
+  });
+  var out = {};
+  var pics = UrlFetchApp.fetchAll(wanted.map(function (f) {
+    return { url: f.thumbnailLink.replace(/=s\d+$/, '=s400'), headers: auth, muteHttpExceptions: true };
+  }));
+  pics.forEach(function (res, i) {
+    if (res.getResponseCode() !== 200) return;
+    var blob = res.getBlob();
+    out[wanted[i].id] = 'data:' + (blob.getContentType() || 'image/jpeg') + ';base64,' + Utilities.base64Encode(blob.getBytes());
+  });
+  return { dataUrls: out };
+}
+
+/**
+ * Root-to-folder trail. Throws when the folder is not inside the collection's root.
+ * Each folder's trail is cached, so a subfolder of an open folder costs one Drive call.
+ */
+function breadcrumbs_(folderId, col, depth) {
+  if (!folderId || (depth || 0) > 15) throw userError_('not_found', 'That folder is not in the library.');
+  if (folderId === col.rootFolderId) return [{ id: folderId, name: col.label }];
   var cache = CacheService.getScriptCache();
   var key = 'crumbs:' + col.id + ':' + folderId;
   var hit = cache.get(key);
   if (hit) return JSON.parse(hit);
-  var trail = [];
-  var id = folderId;
-  for (var depth = 0; depth < 15; depth++) {
-    var f = driveGet_('/files/' + id, { fields: 'id,name,parents' });
-    if (id === col.rootFolderId) {
-      trail.unshift({ id: id, name: col.label });
-      cache.put(key, JSON.stringify(trail), 600);
-      return trail;
-    }
-    trail.unshift({ id: f.id, name: f.name });
-    if (!f.parents || !f.parents.length) break;
-    id = f.parents[0];
-  }
-  throw userError_('not_found', 'That folder is not in the library.');
+  var f = driveGet_('/files/' + folderId, { fields: 'id,name,parents' });
+  if (!f.parents || !f.parents.length) throw userError_('not_found', 'That folder is not in the library.');
+  var trail = breadcrumbs_(f.parents[0], col, (depth || 0) + 1).concat([{ id: f.id, name: f.name }]);
+  cache.put(key, JSON.stringify(trail), 3600);
+  return trail;
 }
 
 function fileOut_(f, path) {

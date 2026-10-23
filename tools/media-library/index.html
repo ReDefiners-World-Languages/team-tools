@@ -7,6 +7,9 @@
 <title>ReDefiners Media Library</title>
 <link rel="icon" href="https://redefinerswl.org/hubfs/Brand%20Kit/ReDefiners%20Symbol%20Logo%20(Navy%20Blue).png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://script.google.com">
+<link rel="preconnect" href="https://script.googleusercontent.com">
+<link rel="preconnect" href="https://accounts.google.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   /* Same family as the team-tools dashboards: one dark glass shell, 12px cards, pill controls.
@@ -186,6 +189,11 @@
   .bar { height: 5px; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden; margin-top: 6px; }
   .bar span { display: block; height: 100%; width: 0; background: var(--mist); border-radius: 4px; transition: width .25s ease-out; }
   .is-waiting .bar span { background: var(--amber); }
+  .total-progress { display: grid; gap: 6px; }
+  .total-bar { height: 8px; margin: 0; }
+  .total-bar span { background: var(--mint); }
+  .total-meta { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-2); }
+  .total-meta strong { color: var(--mint); font-weight: 800; }
   .is-error .file-meta { color: var(--red); font-weight: 600; }
   .is-done .file-meta { color: var(--mint); font-weight: 600; }
   .is-done .file-icon { background: rgba(63,224,165,.12); color: var(--mint); }
@@ -215,6 +223,10 @@
   .dest-foot p { margin: 0; font-size: 13px; color: var(--ink-2); }
   .dest-foot .missing { color: var(--ink); font-weight: 600; }
   .dest-note { font-size: 12.5px; color: var(--ink-3); }
+  .dest-note:empty { display: none; }
+  .date-row { display: flex; gap: 10px; }
+  .date-row input { flex: 1; min-width: 0; }
+  .date-row .btn { flex: none; min-height: 46px; }
 
   .done-panel { border-color: rgba(63,224,165,.3); background: rgba(63,224,165,.06); }
   .done-panel h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; font-size: 17px; font-weight: 800; }
@@ -235,6 +247,9 @@
   .gate h2 { margin: 0 0 8px; font-size: 22px; font-weight: 800; text-wrap: balance; }
   .gate p { margin: 0 auto 22px; color: var(--ink-2); max-width: 46ch; }
   .gate .gsi { display: flex; justify-content: center; min-height: 44px; }
+  /* Google's sign-in button is an iframe. Under color-scheme: dark the browser paints a white box
+     behind it, so its holders keep the light scheme and a transparent background. */
+  #gsiButton, #reauthButton, #gsiButton iframe, #reauthButton iframe { color-scheme: light; background: transparent; }
   .status-line { min-height: 20px; font-size: 13px; color: var(--ink-3); margin: 0 0 12px; }
   .status-line:empty { display: none; }
   .status-line.is-error { color: var(--red); font-weight: 600; }
@@ -369,6 +384,7 @@
               <select id="collection"></select>
             </div>
             <div class="pick-grid" id="pickers"></div>
+            <div id="dateField"></div>
             <p class="hint">Not sure of the site or the class? Choose Other and someone will place the files later.</p>
           </fieldset>
 
@@ -402,6 +418,10 @@
           <div class="dest-foot">
             <p id="summaryText"></p>
             <button type="button" class="btn btn-wide" id="uploadBtn" disabled>Upload files</button>
+            <div class="total-progress" id="totalProgress" hidden>
+              <div class="bar total-bar" role="progressbar" aria-label="Upload progress" aria-valuemin="0" aria-valuemax="100" id="totalBar"><span></span></div>
+              <div class="total-meta"><strong id="totalPct">0%</strong><span id="totalCount"></span></div>
+            </div>
             <span class="dest-note" id="destNote"></span>
           </div>
         </div>
@@ -468,7 +488,7 @@ const SETTINGS = {
   googleClientId: '659997017934-6hkcdeot321phtjfhv2vbhm3novvbkgk.apps.googleusercontent.com',
   staffDomain: 'redefinerswl.org',
   chunkBytes: 8 * 1024 * 1024, // must be a multiple of 256 KB (Drive rule)
-  firstYear: 2026,
+  firstYear: 2016, // ReDefiners was founded in 2016: no class date before it
   timeZone: 'America/New_York'
 };
 
@@ -480,6 +500,7 @@ const SESSION_STORE = PREVIEW ? 'ml-preview-sessions' : 'ml-sessions';
 const SESSION_DAYS = 6; // Drive keeps a resumable session for about a week
 
 const $ = id => document.getElementById(id);
+const finePointer = matchMedia('(pointer: fine)').matches; // false on phones and tablets
 function el(tag, attrs, ...kids) {
   const n = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs || {})) {
@@ -499,6 +520,14 @@ function fmtBytes(b) {
 }
 function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
 function isVideo(file) { return /^video\//.test(file.type) || VIDEO_EXT.test(file.name); }
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+/** "2026-10-14" -> { year: '2026', mm: '10', monthFolder: '10 October 2026' }, or null. */
+function dateParts(value) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
+  if (!m) return null;
+  return { year: m[1], mm: m[2], monthFolder: `${m[2]} ${MONTHS[Number(m[2]) - 1]} ${m[1]}` };
+}
+function todayIso() { const p = nowParts(); return `${p.year}-${p.mm}-${p.dd}`; }
 function nowParts() {
   const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: SETTINGS.timeZone, year: 'numeric', month: '2-digit', day: '2-digit' })
     .formatToParts(new Date()).map(p => [p.type, p.value]));
@@ -614,13 +643,24 @@ async function onCredential(resp) {
   idToken = resp.credential;
   $('gateError').textContent = '';
   try {
+    if (!CONFIG) {
+      // First sign-in: who you are and the lists come back in one call.
+      $('loadStatus').classList.remove('is-error');
+      $('loadStatus').textContent = 'Loading';
+      const res = await callWithRetry('start');
+      who = res.who;
+      CONFIG = res.config;
+      $('loadStatus').textContent = '';
+      startApp();
+      return;
+    }
     const me = await api('whoami');
     if (who && who.email !== me.email) { location.reload(); return; } // a different person: start clean
     who = me;
     $('reauth').hidden = true;
     signInWaiters.splice(0).forEach(fn => fn());
-    if (!CONFIG) await startApp();
   } catch (e) {
+    $('loadStatus').textContent = '';
     idToken = '';
     $('gateError').textContent = e.code === 'not_staff' ? `Use your @${SETTINGS.staffDomain} Google account.` : e.message;
   }
@@ -684,9 +724,14 @@ function destination() {
     if (!v) { complete = false; segs[st.id] = { name: st.label, pending: true }; }
     else segs[st.id] = v === OTHER ? { name: st.otherFolder, other: true } : { name: v };
   }
-  const now = nowParts();
-  segs.year = { name: now.year, auto: true };
-  segs.month = { name: now.monthFolder, auto: true };
+  const when = col.contextFields.includes('date') ? dateParts(classDate()) : nowParts();
+  if (when) {
+    segs.year = { name: when.year, auto: true };
+    segs.month = { name: when.monthFolder, auto: true };
+  } else {
+    complete = false;
+    segs.year = { name: 'Class date', pending: true };
+  }
   const trail = [];
   for (const part of col.path.split('/')) {
     const key = (part.match(/\{(\w+)\}/) || [])[1];
@@ -710,9 +755,12 @@ const CONTEXT_FIELDS = {
   what: () => el('div', { class: 'field' },
     el('label', { for: 'ctx-what', text: 'What happened' }),
     el('input', { type: 'text', id: 'ctx-what', name: 'what', maxlength: 200, required: true, autocomplete: 'off', placeholder: 'Class, event or activity, for example "Arabic class, cooking day"' })),
-  date: () => el('div', { class: 'field' },
-    el('label', { for: 'ctx-date', text: 'Date of the class or event' }),
-    el('input', { type: 'date', id: 'ctx-date', name: 'date', value: (p => `${p.year}-${p.mm}-${p.dd}`)(nowParts()) })),
+  date: () => el('div', { class: 'field date-field' },
+    el('label', { for: 'ctx-date', text: 'Date of the class' }),
+    el('div', { class: 'date-row' },
+      el('input', { type: 'date', id: 'ctx-date', name: 'date', required: true, min: `${SETTINGS.firstYear}-01-01`, max: todayIso() }),
+      el('button', { type: 'button', class: 'btn btn-ghost', text: 'Today', onclick: () => { $('ctx-date').value = todayIso(); refreshSummary(); } })),
+    el('p', { class: 'hint', text: 'The files go into the year and month of this date.' })),
   staff: () => el('div', { class: 'field' },
     el('label', { for: 'ctx-staff' }, 'Instructor or staff member ', el('span', { class: 'opt', text: '(optional)' })),
     el('input', { type: 'text', id: 'ctx-staff', name: 'staff', maxlength: 120, autocomplete: 'off' }),
@@ -726,13 +774,22 @@ const CONTEXT_FIELDS = {
 function renderContextFields() {
   const box = $('contextFields');
   box.replaceChildren();
-  for (const f of ['what', 'date', 'staff', 'notes']) if (col.contextFields.includes(f)) box.append(CONTEXT_FIELDS[f]());
+  for (const f of ['what', 'staff', 'notes']) if (col.contextFields.includes(f)) box.append(CONTEXT_FIELDS[f]());
+  const dateBox = $('dateField');
+  dateBox.replaceChildren();
+  if (col.contextFields.includes('date')) dateBox.append(CONTEXT_FIELDS.date());
   box.append(el('div', { class: 'field', id: 'otherNoteField', hidden: true },
     el('label', { for: 'ctx-otherNote' }, 'Which site or class do you think this is? ', el('span', { class: 'opt', text: '(optional)' })),
     el('input', { type: 'text', id: 'ctx-otherNote', name: 'otherNote', maxlength: 300, autocomplete: 'off' }),
     el('p', { class: 'hint', text: 'Helps whoever places these files later.' })));
   $('uploaderLine').replaceChildren(svgIcon('user'),
     el('span', {}, 'Saved as uploaded by ', el('strong', { text: who.name || who.email }), who.name ? ` (${who.email})` : ''));
+}
+
+/** The class date, only when it is a real date in the allowed range. */
+function classDate() {
+  const v = $('ctx-date')?.value || '';
+  return v && v >= `${SETTINGS.firstYear}-01-01` && v <= todayIso() ? v : '';
 }
 
 function contextValues() {
@@ -758,7 +815,7 @@ function renderPickers() {
       choices[st.id] = select.value;
       pruneChoices();
       renderPickers();
-      $(id)?.focus();
+      if (finePointer) $(id)?.focus();
       refreshSummary();
     });
     box.append(el('div', { class: 'field' }, el('label', { for: id, text: st.label }), select));
@@ -784,7 +841,7 @@ function renderFolderPath() {
     },
     svgIcon('folder'),
     el('span', { text: s.pending ? `${s.name}: not chosen yet` : s.name }),
-    s.other ? el('span', { class: 'tag', text: 'Other' }) : s.auto && i === rows.length - 1 ? el('span', { class: 'tag auto', text: 'This month' }) : null)));
+    s.other ? el('span', { class: 'tag', text: 'Other' }) : null)));
   return d;
 }
 
@@ -796,7 +853,7 @@ function refreshSummary() {
   const total = queued.reduce((a, f) => a + f.file.size, 0);
   const ctx = contextValues();
   const needs = [];
-  if (!d.complete) needs.push('where the files go');
+  if (!d.complete) needs.push(col.contextFields.includes('date') && !classDate() ? 'where the files go and the class date' : 'where the files go');
   if (!queued.length) needs.push('the files');
   if (col.contextFields.includes('what') && !ctx.what) needs.push('what happened');
   $('stepWhere').classList.toggle('is-done', d.complete);
@@ -820,9 +877,7 @@ function refreshSummary() {
     btn.append(`Upload ${plural(queued.length, 'file', 'files')}`);
     text.append(`${plural(queued.length, 'file', 'files')}, ${fmtBytes(total)}, go into the folder above.`);
   }
-  $('destNote').textContent = d.trail.some(s => s.other)
-    ? 'Files marked Other wait in these folders until someone places them. The month is the month you upload.'
-    : 'The month is the month you upload.';
+  $('destNote').textContent = d.trail.some(s => s.other) ? 'Files marked Other wait in these folders until someone places them.' : '';
 }
 
 // ----- files -----
@@ -847,7 +902,24 @@ function addFiles(list) {
   refreshSummary();
 }
 
+/** Whole-batch progress under the Upload button, by bytes so one big video counts for what it weighs. */
+let runItems = [];
+function renderTotal() {
+  const box = $('totalProgress');
+  box.hidden = !uploading;
+  if (!uploading) return;
+  const total = runItems.reduce((a, f) => a + f.file.size, 0) || 1;
+  const sent = runItems.reduce((a, f) => a + f.file.size * (f.state === 'done' ? 1 : f.progress || 0), 0);
+  const pct = Math.min(100, Math.floor(sent / total * 100));
+  const doneCount = runItems.filter(f => f.state === 'done').length;
+  $('totalBar').firstElementChild.style.width = pct + '%';
+  $('totalBar').setAttribute('aria-valuenow', pct);
+  $('totalPct').textContent = pct + '%';
+  $('totalCount').textContent = `${doneCount} of ${plural(runItems.length, 'file', 'files')} done`;
+}
+
 function renderFiles() {
+  renderTotal();
   $('fileList').replaceChildren(...files.map(item => {
     const meta = {
       ready: [null, fmtBytes(item.file.size)],
@@ -895,8 +967,7 @@ function writeSession(key, s) {
   try { const all = readSessions(); if (s) all[key] = s; else delete all[key]; localStorage.setItem(SESSION_STORE, JSON.stringify(all)); } catch (e) { /* storage off: resume works only while the page stays open */ }
 }
 function sessionKey(item) {
-  const p = nowParts();
-  return [who.email, col.id, JSON.stringify(destinationChoices()), p.year + p.mm, item.key].join('::');
+  return [who.email, col.id, JSON.stringify(destinationChoices()), (classDate() || todayIso()).slice(0, 7), item.key].join('::');
 }
 function destinationChoices() {
   const out = {};
@@ -1006,8 +1077,10 @@ async function runItem(item) {
 async function runUploads(items) {
   if (uploading) return;
   uploading = true;
+  runItems = items.filter(item => item.state !== 'done');
   $('addForm').inert = true;
   refreshSummary();
+  renderTotal();
   for (const item of items) if (item.state !== 'done') await runItem(item);
   uploading = false;
   $('addForm').inert = false;
@@ -1033,7 +1106,8 @@ function showDone() {
     el('div', { class: 'actions' },
       el('button', { type: 'button', class: 'btn', onclick: () => { clearDoneFiles(); area.replaceChildren(); $('fileInput').click(); } }, svgIcon('plus'), 'Add more to this folder'),
       el('button', { type: 'button', class: 'btn btn-ghost', text: 'Start a new upload', onclick: () => resetAdd() }))));
-  area.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  // Instant on purpose: a smooth scroll stops halfway when the page changes height under it.
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function clearDoneFiles() {
@@ -1107,7 +1181,7 @@ function renderFilters() {
         if (filterValues[st.id] && (!l || (filterValues[st.id] !== 'Other' && !l.includes(filterValues[st.id])))) delete filterValues[st.id];
       }
       renderFilters(); runSearch(false);
-      $('f-' + id)?.focus();
+      if (finePointer) $('f-' + id)?.focus();
     });
     box.append(el('div', {}, el('label', { for: 'f-' + id, text: label }), select));
   };
@@ -1118,8 +1192,8 @@ function renderFilters() {
   }
   const years = [];
   for (let y = Number(nowParts().year); y >= SETTINGS.firstYear; y--) years.push(String(y));
-  add('year', 'Upload year', years);
-  add('month', 'Upload month', Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1).padStart(2, '0'), label: new Date(2000, i, 1).toLocaleString('en-US', { month: 'long' }) })));
+  add('year', 'Class year', years);
+  add('month', 'Class month', Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1).padStart(2, '0'), label: new Date(2000, i, 1).toLocaleString('en-US', { month: 'long' }) })));
   add('type', 'Type', [{ value: 'photo', label: 'Photos' }, { value: 'video', label: 'Videos' }]);
 }
 
@@ -1172,16 +1246,36 @@ async function openFolder(folderId, more) {
 // Thumbnails come through the API (the files are private), a few at a time as cards scroll into view.
 const thumbQueue = [];
 let thumbsRunning = 0;
-const thumbObserver = new IntersectionObserver(entries => {
-  for (const e of entries) if (e.isIntersecting) { thumbObserver.unobserve(e.target); thumbQueue.push(e.target); }
-  pumpThumbs();
-}, { rootMargin: '200px' });
+const waitingFrames = new Set();
+/** Queues the previews of cards that are on screen (or within 300px of it), then loads them. */
+let visibleCheckQueued = false;
+function queueVisibleThumbs() {
+  if (visibleCheckQueued) return;
+  visibleCheckQueued = true;
+  setTimeout(() => {
+    visibleCheckQueued = false;
+    if ($('findView').hidden) return;
+    for (const frame of waitingFrames) {
+      const r = frame.getBoundingClientRect();
+      if (r.width && r.top < innerHeight + 300 && r.bottom > -300) { waitingFrames.delete(frame); thumbQueue.push(frame.querySelector('img')); }
+    }
+    pumpThumbs();
+  }, 50);
+}
+window.addEventListener('scroll', queueVisibleThumbs, { passive: true });
+window.addEventListener('resize', queueVisibleThumbs);
 function pumpThumbs() {
-  while (thumbsRunning < 4 && thumbQueue.length) {
-    const img = thumbQueue.shift();
+  // Up to 12 pictures per call, two calls at a time: far fewer round trips than one per picture.
+  while (thumbsRunning < 2 && thumbQueue.length) {
+    const batch = thumbQueue.splice(0, 12);
     thumbsRunning++;
-    findApi('thumbnail', { fileId: img.dataset.id })
-      .then(r => { if (r.dataUrl) { img.src = r.dataUrl; img.hidden = false; img.previousElementSibling.hidden = true; } })
+    findApi('thumbnails', { fileIds: batch.map(img => img.dataset.id) })
+      .then(r => {
+        for (const img of batch) {
+          const url = r.dataUrls[img.dataset.id];
+          if (url) { img.src = url; img.hidden = false; img.previousElementSibling.hidden = true; }
+        }
+      })
       .catch(() => {})
       .finally(() => { thumbsRunning--; pumpThumbs(); });
   }
@@ -1189,15 +1283,18 @@ function pumpThumbs() {
 
 function renderCards(list, append) {
   const box = $('results');
-  if (!append) box.replaceChildren();
+  if (!append) { box.replaceChildren(); waitingFrames.clear(); }
+  setTimeout(queueVisibleThumbs, 0);
   for (const f of list) {
     const img = el('img', { alt: '', 'data-id': f.id, hidden: true });
-    if (f.hasThumbnail) thumbObserver.observe(img);
     const what = (f.description.match(/^What happened: (.*)$/m) || [])[1];
+    const frame = el('button', { type: 'button', class: 'thumb', 'aria-label': `Open ${f.name}`, onclick: () => openViewer(f, img) },
+      el('span', { class: 'ph' }, svgIcon(f.kind === 'video' ? 'video' : 'photo')), img,
+      el('span', { class: 'badge', text: f.kind === 'video' ? 'Video' : 'Photo' }));
+    // Watch the visible frame: the picture itself stays hidden until it has loaded.
+    if (f.hasThumbnail) waitingFrames.add(frame);
     box.append(el('article', { class: 'card media-card' },
-      el('button', { type: 'button', class: 'thumb', 'aria-label': `Open ${f.name}`, onclick: () => openViewer(f, img) },
-        el('span', { class: 'ph' }, svgIcon(f.kind === 'video' ? 'video' : 'photo')), img,
-        el('span', { class: 'badge', text: f.kind === 'video' ? 'Video' : 'Photo' })),
+      frame,
       el('div', { class: 'media-body' },
         el('div', { class: 'media-title', text: f.name }),
         el('div', { class: 'media-path', text: f.path.split('/').join(' / ') }),
@@ -1235,21 +1332,22 @@ function showView(which) {
   try { history.replaceState(null, '', add ? location.pathname + location.search : '#find'); } catch (e) { /* not allowed in some frames */ }
   if (!add && !findState.started) { renderFilters(); setMode('search'); }
   alignSide();
+  if (!add) queueVisibleThumbs();
 }
 
 /** After sign-in: load the lists and open the page. */
-async function startApp() {
-  const status = $('loadStatus');
-  status.classList.remove('is-error');
-  status.textContent = 'Loading';
+async function callWithRetry(action, body) {
   for (let attempt = 0; ; attempt++) {
-    try { CONFIG = await api('config'); break; }
+    try { return await api(action, body); }
     catch (e) {
-      if (attempt >= 3 || !e.retryable) { status.classList.add('is-error'); status.textContent = e.message || 'The library did not load. Reload the page.'; return; }
+      if (attempt >= 3 || !e.retryable || e.code === 'sign_in_required') throw e;
       await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
     }
   }
-  status.textContent = '';
+}
+
+/** After sign-in: open the page with the lists from the start call. */
+function startApp() {
   $('gate').hidden = true;
   $('tabs').hidden = false;
   $('userPill').hidden = false;
@@ -1289,6 +1387,8 @@ async function init() {
   $('viewerClose').addEventListener('click', () => $('viewer').close());
   $('uploadBtn').addEventListener('click', startUploads);
   $('contextFields').addEventListener('input', refreshSummary);
+  $('dateField').addEventListener('input', refreshSummary);
+  $('dateField').addEventListener('change', refreshSummary);
   window.addEventListener('beforeunload', e => { if (uploading) { e.preventDefault(); e.returnValue = ''; } });
   setupDrop();
   new ResizeObserver(alignSide).observe(document.body);
