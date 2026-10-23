@@ -61,11 +61,12 @@
   .brand h1 span { background: inherit; -webkit-background-clip: inherit; background-clip: inherit; color: inherit; opacity: .72; font-weight: inherit; }
   .top-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .pill-badge {
-    display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--pill);
+    display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: var(--radius);
     background: rgba(255,255,255,.04); border: 1px solid var(--line); color: var(--ink-2); font-size: 13px; font-weight: 500;
   }
   .pill-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--amber); }
-  .user-pill { max-width: 100%; }
+  .user-pill { max-width: 100%; padding-right: 8px; }
+  .user-pill .link-btn { min-height: 0; padding: 4px 6px; }
   .user-pill .avatar {
     width: 24px; height: 24px; border-radius: 50%; background: var(--mist); color: var(--navy);
     display: grid; place-items: center; font-weight: 800; font-size: 12px; flex: none;
@@ -79,7 +80,7 @@
   .tabs { display: flex; gap: 6px; padding: 8px 0 10px; margin-bottom: 22px; border-bottom: 1px solid var(--line); overflow-x: auto; }
   .tab {
     appearance: none; border: 1px solid transparent; background: transparent; color: var(--ink-2);
-    font-size: 13px; font-weight: 600; padding: 0 16px; min-height: 44px; border-radius: var(--pill);
+    font-size: 13px; font-weight: 600; padding: 0 16px; min-height: 44px; border-radius: var(--radius);
     display: flex; align-items: center; gap: 8px; white-space: nowrap; cursor: pointer; transition: background .15s, color .15s;
   }
   .tab:hover { background: rgba(255,255,255,.07); color: var(--ink); }
@@ -112,12 +113,16 @@
   .hint { font-size: 12.5px; color: var(--ink-3); margin: 8px 0 0; }
   select, input[type="text"], input[type="date"], input[type="search"], textarea {
     width: 100%; min-height: 46px; padding: 10px 14px; border-radius: var(--radius);
-    background: var(--field); border: 1px solid var(--line-2); color: var(--ink); font-size: 16px;
+    background-color: var(--field); border: 1px solid var(--line-2); color: var(--ink); font-size: 16px;
     transition: border-color .15s, background .15s;
   }
-  select { cursor: pointer; }
+  select {
+    cursor: pointer; appearance: none; -webkit-appearance: none; padding-right: 44px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23DFF0EE' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 16px center; background-size: 16px;
+  }
   select option { background: var(--bg); color: var(--ink); }
-  select:hover, input:hover, textarea:hover { background: var(--field-hover); }
+  select:hover, input:hover, textarea:hover { background-color: var(--field-hover); }
   select:focus, input:focus, textarea:focus { outline: none; border-color: var(--mist); box-shadow: 0 0 0 3px rgba(223,240,238,.14); }
   ::placeholder { color: var(--ink-3); opacity: 1; }
   textarea { min-height: 96px; resize: vertical; }
@@ -150,6 +155,7 @@
   .add-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 22px; align-items: start; }
   .add-main { display: grid; gap: 16px; min-width: 0; }
   .add-side { position: sticky; top: 24px; display: grid; gap: 14px; }
+  #doneArea:empty { display: none; }
   @media (max-width: 960px) {
     .add-grid { grid-template-columns: 1fr; }
     .add-side { position: static; } /* phones: destination and upload come last, as step 4 */
@@ -238,7 +244,7 @@
   .modes { display: flex; gap: 8px; flex-wrap: wrap; }
   .chip {
     border: 1px solid var(--line-2); background: rgba(255,255,255,.03); color: var(--ink-2);
-    font-size: 13px; font-weight: 600; padding: 0 18px; min-height: 40px; border-radius: var(--pill); cursor: pointer; transition: background .15s;
+    font-size: 13px; font-weight: 600; padding: 0 18px; min-height: 40px; border-radius: var(--radius); cursor: pointer; transition: background .15s;
   }
   .chip:hover { background: rgba(255,255,255,.08); }
   .chip[aria-selected="true"] { background: var(--mist); color: var(--navy); border-color: transparent; }
@@ -246,7 +252,7 @@
   .searchbar input { flex: 1; min-width: 0; }
   .filters { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
   .filters label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-3); margin-bottom: 4px; }
-  .filters select { min-height: 40px; padding: 6px 12px; font-size: 14px; }
+  .filters select { min-height: 40px; padding: 6px 40px 6px 12px; font-size: 14px; background-position: right 14px center; }
   .crumbs { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; font-size: 13.5px; }
   .crumbs .sep { color: var(--ink-3); }
   .crumbs strong { padding: 4px 2px; }
@@ -1043,6 +1049,24 @@ function resetAdd() {
   window.scrollTo({ top: 0 });
 }
 
+/**
+ * Desktop: the Check and upload panel starts level with step 1 and, once scrolled to the
+ * bottom, ends level with step 3. Its sticky offset is set so it lands there at the last scroll.
+ */
+let alignQueued = false;
+function alignSide() {
+  if (alignQueued) return;
+  alignQueued = true;
+  setTimeout(() => {
+    alignQueued = false;
+    const side = document.querySelector('.add-side');
+    if ($('addView').hidden || matchMedia('(max-width: 960px)').matches) { side.style.removeProperty('top'); return; }
+    const maxScroll = document.documentElement.scrollHeight - innerHeight;
+    const stepThreeBottom = $('stepAbout').getBoundingClientRect().bottom + scrollY;
+    side.style.top = Math.round(stepThreeBottom - maxScroll - side.offsetHeight) + 'px';
+  }, 0);
+}
+
 function selectCollection(id) {
   col = CONFIG.collections.find(c => c.id === id);
   for (const k of Object.keys(choices)) delete choices[k];
@@ -1210,6 +1234,7 @@ function showView(which) {
   $('findView').hidden = add;
   try { history.replaceState(null, '', add ? location.pathname + location.search : '#find'); } catch (e) { /* not allowed in some frames */ }
   if (!add && !findState.started) { renderFilters(); setMode('search'); }
+  alignSide();
 }
 
 /** After sign-in: load the lists and open the page. */
@@ -1266,6 +1291,9 @@ async function init() {
   $('contextFields').addEventListener('input', refreshSummary);
   window.addEventListener('beforeunload', e => { if (uploading) { e.preventDefault(); e.returnValue = ''; } });
   setupDrop();
+  new ResizeObserver(alignSide).observe(document.body);
+  new ResizeObserver(alignSide).observe(document.querySelector('.add-side'));
+  window.addEventListener('resize', alignSide);
   try { await loadMock(); } catch (e) { $('gateError').textContent = e.message; }
   $('gate').hidden = false;
   renderSignInButton($('gsiButton'));
