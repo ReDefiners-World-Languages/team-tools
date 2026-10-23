@@ -141,7 +141,7 @@
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; cursor: pointer;
     background: var(--orange); color: var(--navy); font-weight: 700; font-size: 14px; padding: 0 22px;
-    min-height: 46px; border-radius: var(--pill); text-decoration: none; transition: background .15s;
+    min-height: 46px; border-radius: var(--radius); text-decoration: none; transition: background .15s;
   }
   .btn:hover { background: var(--marigold); }
   .btn:active { background: var(--ember); }
@@ -591,7 +591,7 @@ async function renderSignInButton(target) {
   }
   try {
     await loadGsi();
-    google.accounts.id.renderButton(target, { theme: 'filled_black', size: 'large', text: 'signin_with', shape: 'pill' });
+    google.accounts.id.renderButton(target, { theme: 'filled_black', size: 'large', text: 'signin_with', shape: 'rectangular' });
   } catch (e) {
     $('gateError').textContent = e.message;
   }
