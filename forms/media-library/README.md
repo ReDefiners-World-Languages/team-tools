@@ -1,5 +1,7 @@
 # ReDefiners Media Library page
 
+Live at https://redefiners-world-languages.github.io/team-tools/forms/media-library/ (moved from `tools/media-library/` on 2026-10-23; the old address redirects here).
+
 A page where staff file class and program photos and videos into the ReDefiners Media Library in Google Drive, with context, and later find them again.
 
 Everything needs a sign-in with an @redefinerswl.org Google account (decided 2026-10-22). The uploader's name and email come from that sign-in.
@@ -71,7 +73,7 @@ Done 2026-10-23. Kept here for a re-deploy or a move to another account. Each st
 4. **Sign-in client (free, no billing).** console.cloud.google.com > create a project (for example `redefiners-media-library`) > Google Auth Platform / OAuth consent screen: **Internal** > Clients > Create client > Web application > Authorized JavaScript origin `https://redefiners-world-languages.github.io`. Copy the client id.
 5. **Script properties** (Project Settings > Script properties): `GOOGLE_CLIENT_ID` = that client id. `setup()` already set `STAFF_DOMAIN` = `redefinerswl.org`, `ALLOWED_ORIGINS` = `https://redefiners-world-languages.github.io`, `MAX_FILE_GB` = `10`.
 6. **Deploy** > New deployment > Web app > Execute as: Me > Who has access: Anyone. (Google does not limit this to staff itself; the script refuses every call without a staff sign-in.) Copy the `/exec` address. (If "Anyone" is not offered, the Workspace admin setting for Apps Script web apps blocks it.)
-7. Put the `/exec` address and the client id in `SETTINGS` at the top of `index.html`, merge, and the page is live at `https://redefiners-world-languages.github.io/team-tools/tools/media-library/`.
+7. Put the `/exec` address and the client id in `SETTINGS` at the top of `index.html`, merge, and the page is live at `https://redefiners-world-languages.github.io/team-tools/forms/media-library/`.
 
 After a code change in Apps Script: Deploy > Manage deployments > edit > New version (the address stays the same).
 
