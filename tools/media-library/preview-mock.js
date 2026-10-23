@@ -40,7 +40,7 @@
   }
 
   function makeFile(col, name, kind, chosen, ctx, thumb) {
-    const d = new Date();
+    const d = ctx && ctx.date ? new Date(ctx.date + 'T12:00:00') : new Date();
     const month = d.toLocaleString('en-US', { month: 'long' });
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const path = [col.label, ...folderNames(col, chosen), String(d.getFullYear()), `${mm} ${month} ${d.getFullYear()}`].join('/');
@@ -69,7 +69,7 @@
     if (action === 'startUpload') {
       const chosen = {};
       for (const [k, v] of Object.entries(body.choices || {})) chosen[k] = v === '__other__' ? 'Other' : v;
-      const path = makeFile(col, '', '', chosen, {}, '').path;
+      const path = makeFile(col, '', '', chosen, body.context, '').path;
       const taken = library.filter(f => f.path === path).map(f => f.name);
       let savedAs = body.file.name;
       const dot = savedAs.lastIndexOf('.');
@@ -81,6 +81,7 @@
     }
     if (action === 'finishUpload') return { logged: true };
     if (action === 'whoami') return { email: 'you@redefinerswl.org', name: 'Preview User' };
+    if (action === 'start') return { who: { email: 'you@redefinerswl.org', name: 'Preview User' }, config: cfg };
     const visible = library.filter(f => !f.pending);
     if (action === 'search') {
       const words = (body.q || '').toLowerCase().split(/\s+/).filter(Boolean);
@@ -98,6 +99,11 @@
         crumbs: here.map((name, i) => ({ id: here.slice(0, i + 1).join('/'), name })),
         folders, files: visible.filter(f => f.path === prefix).map(out), nextPageToken: ''
       };
+    }
+    if (action === 'thumbnails') {
+      const dataUrls = {};
+      for (const id of body.fileIds || []) { const f = library.find(x => x.id === id); if (f && f.thumb) dataUrls[id] = f.thumb; }
+      return { dataUrls };
     }
     if (action === 'thumbnail') {
       const f = library.find(x => x.id === body.fileId);
