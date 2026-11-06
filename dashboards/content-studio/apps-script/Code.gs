@@ -15,6 +15,8 @@
 // SAME item, the later save wins for that item (last write wins). Every save raises a revision number; the page
 // notices a newer revision on its next heartbeat and reloads the board when the person is not mid-edit.
 //
+// Matrix sync: see Sync.gs (one-way, off until SYNC_ENABLED=true, trigger installed by hand).
+//
 // Presence: each open board calls "heartbeat" every ~18 s. The server keeps who called in the last 45 s in the
 // script cache (not in the sheet) and returns that list.
 
@@ -26,11 +28,12 @@ var SINGLES = ['people', 'pillars', 'pillarType', 'texts', 'links'];
 var MAX_OPS = 300, MAX_JSON = 45000, PRESENCE_TTL_MS = 45000;
 
 var ACTIONS = {
-  start: function (req, who) { return { who: publicWho_(who), board: readBoard_(), rev: rev_() }; },
+  start: function (req, who) { return { who: publicWho_(who), board: readBoard_(), rev: rev_(), sync: syncStatus_() }; },
   board: function () { return { board: readBoard_(), rev: rev_() }; },
   save: save_,
   heartbeat: heartbeat_,
-  leave: leave_
+  leave: leave_,
+  syncNow: function (req, who) { return syncNowAction_(req, who); } // Sync.gs
 };
 
 function doGet() {
@@ -162,6 +165,7 @@ function save_(req, who) {
     clears.forEach(function (r) { sh.getRange(r, 1, 1, HEADER.length).clearContent(); });
     var rev = rev_() + 1;
     PropertiesService.getScriptProperties().setProperty('BOARD_REV', String(rev));
+    markDirty_(clean); // Sync.gs: record which matrix tabs need a sync; the matrix itself is written later by syncTick()
     return { rev: rev, applied: clean.length };
   } finally {
     lock.releaseLock();
@@ -185,7 +189,7 @@ function heartbeat_(req, who) {
   var list = updatePresence_(function (map) {
     map[me.id] = { name: me.name, picture: me.picture, view: String(req.view || '').slice(0, 20), t: now };
   });
-  return { people: list.map(function (p) { p.self = p.id === me.id; return p; }), rev: rev_() };
+  return { people: list.map(function (p) { p.self = p.id === me.id; return p; }), rev: rev_(), sync: syncStatus_() };
 }
 
 function leave_(req, who) {

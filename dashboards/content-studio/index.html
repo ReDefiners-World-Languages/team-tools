@@ -518,6 +518,26 @@ html.gated main{padding-bottom:40px}
 #gsiButton,#gsiGate,#gsiButton iframe,#gsiGate iframe{color-scheme:light;background:transparent}
 .savestate{font-weight:600;margin-left:6px;opacity:.85}
 .savestate.warn{color:var(--crit);opacity:1}
+/* docs level label + matrix sync status */
+.drow{grid-template-columns:minmax(0,1.3fr) 150px minmax(0,1.2fr) 140px minmax(0,1fr) 28px}
+@media (max-width:860px){
+ .drow{grid-template-columns:minmax(0,1fr) 44px}
+ .drow>:nth-child(1){grid-column:1/-1;grid-row:1}
+ .drow>:nth-child(2){grid-column:1/-1;grid-row:2;font-weight:500}
+ .drow>:nth-child(3){grid-column:1/-1;grid-row:3}
+ .drow>:nth-child(4){grid-column:1;grid-row:4}
+ .drow>:nth-child(6){grid-column:2;grid-row:4;justify-self:center}
+ .drow>:nth-child(5){grid-column:1/-1;grid-row:5}
+ .drow>button:only-child{grid-column:1/-1;grid-row:1}
+}
+.syncstate{margin-left:10px;white-space:nowrap}
+.syncstate .warn,.sync-item .warn b{color:var(--crit)}
+.linkbtn{border:0;background:none;padding:0 2px;font:inherit;font-weight:700;color:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+.linkbtn:disabled{opacity:.5;cursor:default}
+.sync-item{justify-content:space-between;cursor:default}
+.sync-item:hover{background:none}
+@media (pointer:coarse){.linkbtn{min-height:44px;padding:0 6px}}
+@media (max-width:700px){.syncstate{display:block;margin:4px 0 0}}
 </style>
 </head>
 <body>
@@ -533,7 +553,7 @@ html.gated main{padding-bottom:40px}
       <div class="theme-sw" role="group" aria-label="Theme" id="themesw"></div>
     </div>
   </div>
-  <div class="wrap banner"><span id="bannerText">The board loads after you sign in.</span> <span id="saveState" class="savestate" aria-live="polite"></span></div>
+  <div class="wrap banner"><span id="bannerText">The board loads after you sign in.</span> <span id="saveState" class="savestate" aria-live="polite"></span><span id="syncState" class="syncstate" hidden></span></div>
 </div>
 <main class="wrap" id="view" role="tabpanel" aria-label="Current view"></main>
 <nav class="bnav" id="bnav" aria-label="Views"></nav>
@@ -802,8 +822,8 @@ function docsView(){
  <div class="bar">${Object.keys(cnt).map(s=>`<span class="badge ${s==="Current/Active"?"ok":s==="Reserved"||s==="Draft"?"":"warn"}">${esc(s)} · ${cnt[s]}</span>`).join("")}</div>
  ${LEVELS.map((L,li)=>{const ds=docs.map((d,i)=>[d,i]).filter(([d])=>d.l===L.k);return `${li>0&&L.k!=="S"?'<div class="arrow">↓ feeds</div>':L.k==="S"?'<div class="arrow">Supports every level</div>':""}
  <section class="level"><header><span class="lnum">${L.k==="S"?"+":L.k}</span><div><h3>${L.k==="S"?"":"Level "+L.k+" · "}${esc(L.n)}</h3><p>${esc(L.q)}</p></div></header>
- <div class="drow dh2"><span>Document</span><span>What it answers</span><span>Status</span><span>Link</span><span></span></div>
- ${ds.map(([d,i])=>`<div class="drow"><input type="text" data-d="n" data-i="${i}" value="${esc(d.n)}" aria-label="Document name"><input type="text" data-d="a" data-i="${i}" value="${esc(d.a)}" aria-label="What it answers"><select data-d="s" data-i="${i}" aria-label="Status">${DSTAT.map(s=>`<option ${d.s===s?"selected":""}>${s}</option>`).join("")}</select><input type="url" data-d="u" data-i="${i}" value="${esc(d.u)}" placeholder="Paste link" aria-label="Link">${d.u?`<a href="${esc(d.u)}" target="_blank" rel="noopener" aria-label="Open ${esc(d.n)}" class="dopen">${ICON.ext}</a>`:`<span></span>`}</div>`).join("")}
+ <div class="drow dh2"><span>Document</span><span>Matrix label</span><span>What it answers</span><span>Status</span><span>Link</span><span></span></div>
+ ${ds.map(([d,i])=>`<div class="drow"><input type="text" data-d="n" data-i="${i}" value="${esc(d.n)}" aria-label="Document name"><input type="text" data-d="ln" data-i="${i}" value="${esc(d.ln||"")}" placeholder="${esc(levelDefault(d))}" aria-label="Matrix level label" title="Level label in the Content Matrix"><input type="text" data-d="a" data-i="${i}" value="${esc(d.a)}" aria-label="What it answers"><select data-d="s" data-i="${i}" aria-label="Status">${DSTAT.map(s=>`<option ${d.s===s?"selected":""}>${s}</option>`).join("")}</select><input type="url" data-d="u" data-i="${i}" value="${esc(d.u)}" placeholder="Paste link" aria-label="Link">${d.u?`<a href="${esc(d.u)}" target="_blank" rel="noopener" aria-label="Open ${esc(d.n)}" class="dopen">${ICON.ext}</a>`:`<span></span>`}</div>`).join("")}
  <div class="drow"><button class="btn ghost sm" data-act="adddoc" data-v="${L.k}" style="justify-self:start">+ Add document</button></div></section>`}).join("")}`;
 }
 /* MODAL */
@@ -878,7 +898,7 @@ function moreHtml(){
  <a class="sheet-item" href="https://redefiners-world-languages.github.io/team-tools/forms/media-library/" target="_blank" rel="noopener">${ICON.upload}<span><b>Media Upload app</b><small>Opens in a new tab</small></span></a>
  <button class="sheet-item" data-act="camps">${ICON.camps}<span><b>Campaigns</b><small>Colors, default calls to action and hashtags</small></span></button>
  <button class="sheet-item" data-act="signin">${ICON.user}<span><b>${ME?"Signed in":"Sign in"}</b><small>${ME?esc(ME.email):"Google account, @redefinerswl.org"}</small></span></button></div>
- <span class="lbl">Theme</span>${themeButtons("seg",true)}</div></div>`;
+ ${(()=>{const x=BOARD.status==="ready"?syncText():null;return x?`<span class="lbl">Content Matrix</span><div class="sheet-list"><div class="sheet-item sync-item"><span class="${x.warn?"warn":""}"><b>${esc(x.t)}</b>${SYNC_STATUS.error?`<small>${esc(SYNC_STATUS.error.slice(0,140))}</small>`:"<small>The board writes to the Content Matrix about once a minute.</small>"}</span>${SYNC_STATUS.enabled?`<button type="button" class="btn ghost sm" data-act="syncnow" ${syncBusy?"disabled":""}>Sync now</button>`:""}</div></div>`:""})()}<span class="lbl">Theme</span>${themeButtons("seg",true)}</div></div>`;
 }
 const FK=["data-act","data-v","data-id","data-i","data-k","data-f","data-d","data-th","data-mix","data-lock","data-cf","data-meta","data-vf","data-pers","data-act-link","data-mixwhy","data-td","data-fq","data-pil","data-tdate","name"];
 function focusSel(el){
@@ -979,6 +999,7 @@ document.addEventListener("click",e=>{
  const a=t.dataset.act,v=t.dataset.v,id=t.dataset.id,i=t.dataset.i;
  if(a==="tab"){goTab(v)}
  else if(a==="theme"){themeSet(v)}
+ else if(a==="syncnow"){syncNow()}
  else if(a==="more"){state.more=true;layer();render()}
  else if(a==="moreclose"){state.more=false;layer();render()}
  else if(a==="fcamp"){state.camp=v;render()}else if(a==="fowner"){state.owner=v;render()}
@@ -998,7 +1019,7 @@ document.addEventListener("click",e=>{
  else if(a==="del"){if(state.delSure){cards=cards.filter(x=>x.id!==state.modal);state.modal=null;state.delSure=false;layer();render();toast("Card deleted")}else{state.delSure=true;layer()}}
  else if(a==="camps"){state.more=false;state.panel="camps";layer()}
  else if(a==="signin"){state.more=false;state.signErr="";state.panel="signin";layer();if(!ME)mountGoogleButton("gsiButton")}
- else if(a==="signout"){saveNow();PRESENCE_ADAPTER.setSelf(null);ME=null;ID_TOKEN="";try{if(window.google)google.accounts.id.disableAutoSelect()}catch(err){}BOARD.status="signedout";loadBoard({},0);const bt=$("#bannerText");if(bt)bt.textContent="The board loads after you sign in.";setSaveState("");state.panel=null;state.modal=null;layer();render();toast("Signed out")}
+ else if(a==="signout"){saveNow();PRESENCE_ADAPTER.setSelf(null);ME=null;ID_TOKEN="";try{if(window.google)google.accounts.id.disableAutoSelect()}catch(err){}BOARD.status="signedout";SYNC_STATUS=null;loadBoard({},0);const bt=$("#bannerText");if(bt)bt.textContent="The board loads after you sign in.";setSaveState("");state.panel=null;state.modal=null;layer();render();toast("Signed out")}
  else if(a==="pmore"||a==="pav"){togglePresencePop()}
  else if(a==="swatch"){state.newCamp.c=v;layer()}
  else if(a==="cmonth"||a==="fmonth"||a==="tmonth"){const ky=a==="cmonth"?"y":a==="fmonth"?"cy":"ty",km=a==="cmonth"?"m":a==="fmonth"?"cm":"tm";if(v==="0"){state[ky]=2026;state[km]=10}else{let m=state[km]+ +v,y=state[ky];if(m<0){m=11;y--}if(m>11){m=0;y++}state[ky]=y;state[km]=m}render()}
@@ -1197,7 +1218,7 @@ function createServerPresence(){
   try{const r=await api("heartbeat",{view:state.tab});const next=(r.people||[]).filter(p=>!p.self).map(p=>({id:p.id,name:p.name,avatarUrl:p.picture||""}));
    const old=new Map(people.map(p=>[p.id,p])),nw=new Map(next.map(p=>[p.id,p]));people=next;
    next.forEach(p=>{if(!old.has(p.id))emit("join",p)});[...old.values()].forEach(p=>{if(!nw.has(p.id))emit("leave",p)});
-   onRemoteRev(r.rev)}catch(e){}};
+   onRemoteRev(r.rev);onSyncStatus(r.sync)}catch(e){}};
  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")beat()});
  window.addEventListener("pagehide",()=>{if(me&&ID_TOKEN&&SETTINGS.apiUrl&&!window.CSB_MOCK_API){try{navigator.sendBeacon(SETTINGS.apiUrl,JSON.stringify({action:"leave",idToken:ID_TOKEN}))}catch(e){}}});
  return {sample:false,list:()=>people.slice(),self:()=>me,
@@ -1272,7 +1293,7 @@ async function onGoogleCredential(resp){
  BOARD.status="loading";BOARD.error="";state.panel=null;layer();render();
  try{const r=await api("start");
   ME={id:r.who.id,name:r.who.name,email:String(p.email||"").toLowerCase(),avatarUrl:r.who.picture||""};
-  loadBoard(r.board,r.rev);BOARD.status="ready";
+  loadBoard(r.board,r.rev);onSyncStatus(r.sync);BOARD.status="ready";
   PRESENCE_ADAPTER.setSelf({id:ME.id,name:ME.name,avatarUrl:ME.avatarUrl});render();toast("Signed in as "+ME.name)}
  catch(e){ID_TOKEN="";ME=null;BOARD.status="signedout";BOARD.error=e.code==="not_staff"?"Use your @"+SETTINGS.staffDomain+" Google account.":e.message;render()}
 }
@@ -1341,6 +1362,26 @@ async function saveNow(){
  catch(e){setSaveState("Not saved yet: "+e.message+" Retrying.",true);clearTimeout(SYNC.timer);SYNC.timer=setTimeout(saveNow,8000)}
  finally{SYNC.saving=false;if(SYNC.again){SYNC.again=false;scheduleSave()}}
 }
+/* Content Matrix sync status (from the back end; null = sync not configured, nothing shown) */
+let SYNC_STATUS=null,syncBusy=false;
+function levelDefault(d){return d.s==="Reserved"&&d.l==="2"?"2. Campaign Briefs (pending)":({"1":"1. Marketing Plan","2":"2. Campaign Briefs","3":"3. Content Plan","4":"4. Channel Playbooks","S":"Supporting"})[d.l]||""}
+function ago(iso){const s=Math.max(0,(Date.now()-new Date(iso).getTime())/1000);return s<60?"just now":s<3600?Math.round(s/60)+" min ago":s<86400?Math.round(s/3600)+" h ago":Math.round(s/86400)+" d ago"}
+function syncText(){const s=SYNC_STATUS;if(!s)return null;
+ if(syncBusy)return{t:"Syncing the matrix",warn:false};
+ if(!s.enabled)return{t:"Matrix sync is off",warn:false};
+ if(s.error&&s.failures)return{t:"Matrix sync error, retrying",warn:true};
+ if(s.dry)return{t:"Matrix sync test mode"+(s.lastRun?", checked "+ago(s.lastRun):""),warn:false};
+ if(s.pending)return{t:"Matrix sync pending",warn:false};
+ return{t:s.lastOk?"Matrix synced "+ago(s.lastOk):"Matrix not synced yet",warn:false}}
+function renderSyncState(){const el=$("#syncState");if(!el)return;const x=BOARD.status==="ready"?syncText():null;
+ if(!x){el.hidden=true;el.innerHTML="";return}el.hidden=false;
+ el.innerHTML=`<span class="${x.warn?"warn":""}" title="${esc(SYNC_STATUS.error||"")}">${esc(x.t)}</span>${SYNC_STATUS.enabled?` <button type="button" class="linkbtn" data-act="syncnow" ${syncBusy?"disabled":""}>Sync now</button>`:""}`}
+function onSyncStatus(s){SYNC_STATUS=s||null;renderSyncState()}
+setInterval(renderSyncState,30000);
+async function syncNow(){if(syncBusy||!SYNC_STATUS||!SYNC_STATUS.enabled)return;syncBusy=true;renderSyncState();
+ try{const r=await api("syncNow");syncBusy=false;onSyncStatus(r.sync);toast(r.sync&&r.sync.error?"Matrix sync finished with errors":"Matrix synced")}
+ catch(e){syncBusy=false;renderSyncState();toast(e.message)}
+ if(state.more)layer()}
 function setSaveState(t,warn){const el=$("#saveState");if(el){el.textContent=t;el.classList.toggle("warn",!!warn)}}
 function pendingLocal(){const now=boardItems();return Object.keys(now).some(k=>SYNC.snap[k]!==now[k])||Object.keys(SYNC.snap).some(k=>!(k in now))}
 async function onRemoteRev(rev){
