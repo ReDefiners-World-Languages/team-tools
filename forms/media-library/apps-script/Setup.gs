@@ -145,30 +145,41 @@ function appendRows_(ss, tabName, objects) {
 function syncCampaignSubfolders() { syncSubfolders('campaigns', 'subcampaign'); }
 
 function syncSubfolders(collectionId, stepId) {
-  var col = loadConfig_().collections.filter(function (c) { return c.id === collectionId; })[0];
-  if (!col) {
-    // Also works while the collection is still switched off.
-    var row = sheetRows_(SpreadsheetApp.openById(prop_('ADMIN_SHEET_ID', '')), SHEETS.collections.name)
-      .filter(function (r) { return clean_(r['Collection ID']) === collectionId; })[0];
-    if (!row) throw new Error('No collection ' + collectionId + ' in the sheet.');
-    col = { id: collectionId, rootFolderId: clean_(row['Root Folder ID']), options: {} };
-  }
-  var known = (col.options && col.options[stepId]) || {};
+  // Read straight from the sheet: the collection may still be switched off (Active = No), and
+  // loadConfig_() only holds active ones (that is how the first live run added duplicates).
+  var ss = SpreadsheetApp.openById(prop_('ADMIN_SHEET_ID', ''));
+  var row = sheetRows_(ss, SHEETS.collections.name).filter(function (r) { return clean_(r['Collection ID']) === collectionId; })[0];
+  if (!row) throw new Error('No collection ' + collectionId + ' in the sheet.');
+  var existing = sheetRows_(ss, SHEETS.options.name);
   var rows = [];
-  var parents = DriveApp.getFolderById(col.rootFolderId).getFolders();
+  var parents = DriveApp.getFolderById(clean_(row['Root Folder ID'])).getFolders();
   while (parents.hasNext()) {
     var parent = parents.next();
     var subs = parent.getFolders();
     while (subs.hasNext()) {
       var name = subs.next().getName();
       if (/^\d{4}$/.test(name)) continue; // a year folder, not a sub-campaign
-      if ((known[parent.getName()] || []).indexOf(name) >= 0) continue;
-      rows.push({ 'Collection ID': collectionId, 'Step ID': stepId, 'Parent Value': parent.getName(), 'Value': name });
+      var candidate = { 'Collection ID': collectionId, 'Step ID': stepId, 'Parent Value': parent.getName(), 'Value': name };
+      if (optionExists_(existing.concat(rows), candidate)) continue; // already in the sheet, or added a moment ago
+      rows.push(candidate);
     }
   }
-  appendRows_(SpreadsheetApp.openById(prop_('ADMIN_SHEET_ID', '')), SHEETS.options.name, rows);
+  appendRows_(ss, SHEETS.options.name, rows);
   refreshConfig();
   Logger.log(rows.length ? 'Added: ' + rows.map(function (r) { return r['Parent Value'] + '/' + r['Value']; }).join('; ') : 'Nothing new.');
+}
+
+/**
+ * True when Options already has this collection + step + parent + value. Ids are compared trimmed and
+ * case-insensitive; parent and value with sameName (capitals, accents, spacing, punctuation ignored).
+ */
+function optionExists_(rows, o) {
+  var key = function (v) { return clean_(v).toLowerCase(); };
+  return rows.some(function (r) {
+    return key(r['Collection ID']) === key(o['Collection ID']) && key(r['Step ID']) === key(o['Step ID']) &&
+      (clean_(r['Parent Value']) === '' ? clean_(o['Parent Value']) === '' : sameName(r['Parent Value'], o['Parent Value'])) &&
+      sameName(r['Value'], o['Value']);
+  });
 }
 
 /** Clears the cached configuration so sheet edits show up at once (otherwise within 5 minutes). */
@@ -225,7 +236,8 @@ function readConfigFromSheet_() {
       if (!col.options[stepId] || !value) return;
       var parent = clean_(o['Parent Value']);
       var list = (col.options[stepId][parent] = col.options[stepId][parent] || []);
-      if (list.indexOf(value) < 0) list.push(value);
+      // Duplicate rows (same value apart from capitals or spacing) show once; the first row wins.
+      if (!list.some(function (x) { return sameName(x, value); })) list.push(value);
       var hint = clean_(o['Hint']);
       if (hint) col.steps.filter(function (st) { return st.id === stepId; })[0].hints[parent] = hint;
     });

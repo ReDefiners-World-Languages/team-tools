@@ -405,10 +405,7 @@ function adoptExistingNames_(dest, actual) {
 /** Adds a value to Options (a new campaign) unless it is already there. Caller holds the lock. */
 function addOption_(col, st, parent, value, who) {
   var ss = SpreadsheetApp.openById(prop_('ADMIN_SHEET_ID', ''));
-  var have = sheetRows_(ss, SHEETS.options.name).some(function (o) {
-    return clean_(o['Collection ID']) === col.id && clean_(o['Step ID']) === st.id &&
-      clean_(o['Parent Value']) === parent && sameName(clean_(o['Value']), value);
-  });
+  var have = optionExists_(sheetRows_(ss, SHEETS.options.name), { 'Collection ID': col.id, 'Step ID': st.id, 'Parent Value': parent, 'Value': value });
   if (!have) {
     appendRows_(ss, SHEETS.options.name, [{ 'Collection ID': col.id, 'Step ID': st.id, 'Parent Value': parent, 'Value': value,
       'Added By': who && who.email ? who.email : '', 'Added At': Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm') }]);
