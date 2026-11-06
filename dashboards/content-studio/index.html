@@ -1269,7 +1269,7 @@ window.addEventListener("scroll",()=>closePresencePop(false),{passive:true});
    Protection: the board's content is NOT in this file. It is stored by the Apps Script back end, which checks the
    ID token on every request (signature, audience, @redefinerswl.org) before returning or saving anything.
    apiUrl empty = "not connected yet" (nothing to show). */
-const SETTINGS={apiUrl:'',googleClientId:'659997017934-6hkcdeot321phtjfhv2vbhm3novvbkgk.apps.googleusercontent.com',staffDomain:'redefinerswl.org'};
+const SETTINGS={apiUrl:'https://script.google.com/macros/s/AKfycbwOiUtVndgI1ZwLdkanSqD3eOCztsvDvdmvvHbYAZZ9QfGvCvj1qqAEhM3ns51mgGSO/exec',googleClientId:'659997017934-6hkcdeot321phtjfhv2vbhm3novvbkgk.apps.googleusercontent.com',staffDomain:'redefinerswl.org'};
 const BOARD={status:SETTINGS.apiUrl||window.CSB_MOCK_API?"signedout":"unconfigured",error:""};
 let ID_TOKEN="",gsiLoad=null;
 class ApiError extends Error{constructor(code,message){super(message);this.code=code}}
