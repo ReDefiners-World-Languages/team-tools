@@ -1,3 +1,9 @@
+// DEPRECATED, DO NOT PASTE INTO THE APPS SCRIPT PROJECT.
+// This was the first design: a one-way copy from the board into the live Content Matrix. It was replaced when the board's
+// data moved to its own workbook ("Content Studio Data"). Nothing in the current Code.gs, TableSync.gs or the page calls
+// it, it is not part of the project, and it is kept here only as a reference. The file has a .txt extension on purpose.
+// -----------------------------------------------------------------------------------------------------------------
+
 // ReDefiners Content Studio: ONE-WAY sync from the "Board backup data" tab to the Content Matrix tabs.
 //
 // Safe by default:
