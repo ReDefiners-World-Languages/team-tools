@@ -4,9 +4,12 @@
 // Script Properties (Project Settings > Script properties):
 //   GOOGLE_CLIENT_ID  the same "Sign in with Google" client id the page uses
 //   STAFF_DOMAIN      redefinerswl.org
-//   SHEET_ID          the Google Sheet that stores the board (one row per item)
+//   SHEET_ID          the spreadsheet that holds the "Board backup data" tab
 //
-// Storage: one Google Sheet tab "Board" with columns collection | id | json | updatedAt | updatedBy.
+// Storage: ONLY the tab "Board backup data" of that spreadsheet, columns A:E = collection | id | data | updated at |
+// updated by (row 1 = header). One row per item. A:C and E are written as plain text, D as a real date-time.
+// The script never sorts, filters, inserts or deletes rows there, never writes past the tab's existing grid, and
+// never touches any other tab. A removed item's row is cleared and reused later.
 // Several editors: each save sends only the items that changed; the server applies them one item at a time
 // under a script lock. Two people editing DIFFERENT items never overwrite each other. If two people edit the
 // SAME item, the later save wins for that item (last write wins). Every save raises a revision number; the page
@@ -15,8 +18,9 @@
 // Presence: each open board calls "heartbeat" every ~18 s. The server keeps who called in the last 45 s in the
 // script cache (not in the sheet) and returns that list.
 
-var SHEET_TAB = 'Board';
-var HEADER = ['collection', 'id', 'json', 'updatedAt', 'updatedBy'];
+var SHEET_TAB = 'Board backup data';
+var HEADER = ['collection', 'id', 'data', 'updated at', 'updated by'];
+var ROW_FORMATS = [['@', '@', '@', 'yyyy-mm-dd hh:mm:ss', '@']];
 var KEYED = ['camps', 'themes', 'topics', 'docs', 'classes', 'visits', 'cards', 'mix', 'meta'];
 var SINGLES = ['people', 'pillars', 'pillarType', 'texts', 'links'];
 var MAX_OPS = 300, MAX_JSON = 45000, PRESENCE_TTL_MS = 45000;
@@ -84,28 +88,41 @@ function personId_(email) {
 function sheet_() {
   var id = prop_('SHEET_ID', '');
   if (!id) throw userError_('not_set_up', 'The board storage is not set up yet (SHEET_ID).');
-  var ss = SpreadsheetApp.openById(id);
-  var sh = ss.getSheetByName(SHEET_TAB);
-  if (!sh) {
-    sh = ss.insertSheet(SHEET_TAB);
-    sh.getRange(1, 1, 1, HEADER.length).setValues([HEADER]);
-    sh.setFrozenRows(1);
+  var sh = SpreadsheetApp.openById(id).getSheetByName(SHEET_TAB);
+  if (!sh) throw userError_('not_set_up', 'The "' + SHEET_TAB + '" tab is missing from the spreadsheet.');
+  var cache = CacheService.getScriptCache();
+  if (cache.get('layout_ok') !== id) {
+    checkLayout_(sh);
+    cache.put('layout_ok', id, 600);
   }
   return sh;
 }
 
+// Throws unless row 1 is exactly the expected header and the tab has room for data rows.
+function checkLayout_(sh) {
+  if (sh.getMaxColumns() < HEADER.length || sh.getMaxRows() < 2) throw userError_('not_set_up', 'The "' + SHEET_TAB + '" tab is too small.');
+  var head = sh.getRange(1, 1, 1, HEADER.length).getValues()[0].map(function (v) { return String(v).trim().toLowerCase(); });
+  var ok = HEADER.every(function (h, i) { return head[i] === h; });
+  if (!ok) throw userError_('not_set_up', 'Row 1 of "' + SHEET_TAB + '" must read: ' + HEADER.join(' | ') + '.');
+}
+
+// Data rows as [collection, id, data] with their row numbers; blank (cleared) rows are reported separately.
 function rows_(sh) {
-  var last = sh.getLastRow();
-  if (last < 2) return [];
-  return sh.getRange(2, 1, last - 1, 3).getValues();
+  var last = sh.getLastRow(), out = { items: [], blanks: [] };
+  if (last < 2) return out;
+  sh.getRange(2, 1, last - 1, 3).getValues().forEach(function (r, i) {
+    if (String(r[0]) === '' && String(r[1]) === '') out.blanks.push(i + 2);
+    else out.items.push({ row: i + 2, c: String(r[0]), id: String(r[1]), data: String(r[2]) });
+  });
+  return out;
 }
 
 function readBoard_() {
   var board = {};
   KEYED.forEach(function (c) { board[c] = (c === 'mix' || c === 'meta') ? {} : []; });
-  rows_(sheet_()).forEach(function (r) {
-    var c = String(r[0]), id = String(r[1]), v;
-    try { v = JSON.parse(r[2]); } catch (e) { return; }
+  rows_(sheet_()).items.forEach(function (r) {
+    var c = r.c, id = r.id, v;
+    try { v = JSON.parse(r.data); } catch (e) { return; }
     if (c === 'mix' || c === 'meta') board[c][id] = v;
     else if (KEYED.indexOf(c) >= 0) board[c].push(v);
     else if (c === 'single' && SINGLES.indexOf(id) >= 0) board[id] = v;
@@ -123,18 +140,26 @@ function save_(req, who) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(15000)) throw userError_('busy', 'Someone else is saving. Trying again in a moment.');
   try {
-    var sh = sheet_(), data = rows_(sh), index = {};
-    data.forEach(function (r, i) { index[r[0] + '|' + r[1]] = i + 2; });
-    var now = new Date(), toDelete = [], appends = [];
+    var sh = sheet_(), data = rows_(sh), index = {}, free = data.blanks.slice();
+    data.items.forEach(function (r) { index[r.c + '|' + r.id] = r.row; });
+    var next = Math.max(sh.getLastRow(), 1) + 1, maxRows = sh.getMaxRows(), now = new Date();
+    var writes = [], clears = [];
     clean.forEach(function (op) {
       var k = op.c + '|' + op.id, row = index[k];
-      if (op.del) { if (row) toDelete.push(row); return; }
-      var values = [[op.c, op.id, op.json, now, who.email]];
-      if (row) sh.getRange(row, 1, 1, 5).setValues(values);
-      else { appends.push(values[0]); index[k] = -1; }
+      if (op.del) { if (row) { clears.push(row); delete index[k]; } return; }
+      if (!row) {
+        row = free.length ? free.shift() : next++;
+        if (row > maxRows) throw userError_('full', 'The "' + SHEET_TAB + '" tab is full (' + (maxRows - 1) + ' rows). Ask for more rows to be added to it.');
+        index[k] = row;
+      }
+      writes.push({ row: row, values: [op.c, op.id, op.json, now, who.email] });
     });
-    if (appends.length) sh.getRange(sh.getLastRow() + 1, 1, appends.length, 5).setValues(appends);
-    toDelete.sort(function (a, b) { return b - a; }).forEach(function (r) { sh.deleteRow(r); });
+    writes.forEach(function (w) {
+      var range = sh.getRange(w.row, 1, 1, HEADER.length);
+      range.setNumberFormats(ROW_FORMATS);
+      range.setValues([w.values]);
+    });
+    clears.forEach(function (r) { sh.getRange(r, 1, 1, HEADER.length).clearContent(); });
     var rev = rev_() + 1;
     PropertiesService.getScriptProperties().setProperty('BOARD_REV', String(rev));
     return { rev: rev, applied: clean.length };
@@ -186,21 +211,23 @@ function updatePresence_(change) {
 
 // ---------- one-time setup, run from the editor ----------
 
-// Checks the Script Properties and creates the "Board" tab. Run once after setting the properties.
+// Checks the Script Properties and that the "Board backup data" tab exists with the right header. Changes nothing.
 function setup() {
   ['GOOGLE_CLIENT_ID', 'STAFF_DOMAIN', 'SHEET_ID'].forEach(function (k) {
     if (!prop_(k, '')) throw new Error('Missing Script Property: ' + k);
   });
-  var sh = sheet_();
-  Logger.log('Ready. Board tab has ' + Math.max(0, sh.getLastRow() - 1) + ' item rows. Revision ' + rev_() + '.');
+  CacheService.getScriptCache().remove('layout_ok');
+  var sh = sheet_(), data = rows_(sh);
+  Logger.log('Ready. "' + SHEET_TAB + '" has ' + data.items.length + ' item rows (room for ' + (sh.getMaxRows() - 1) + '). Revision ' + rev_() + '.');
 }
 
 // Loads the starting data from a file named "Seed" (function seedData_) pasted into this project.
-// Refuses to run if the Board tab already holds items, so it cannot wipe live data by accident.
+// Refuses to run if "Board backup data" already holds any data row, so it cannot overwrite live data.
 function importSeed() {
   if (typeof seedData_ !== 'function') throw new Error('Paste the Seed file into this project first.');
+  CacheService.getScriptCache().remove('layout_ok');
   var sh = sheet_();
-  if (sh.getLastRow() > 1) throw new Error('The Board tab already has data. Import stopped so nothing is overwritten.');
+  if (sh.getLastRow() > 1) throw new Error('"' + SHEET_TAB + '" already has data rows. Import stopped so nothing is overwritten.');
   var seed = seedData_(), now = new Date(), rows = [];
   KEYED.forEach(function (c) {
     var v = seed[c];
@@ -209,9 +236,15 @@ function importSeed() {
     else v.forEach(function (item) { rows.push([c, String(item.id), JSON.stringify(item), now, 'seed']); });
   });
   SINGLES.forEach(function (k) { if (seed[k] != null) rows.push(['single', k, JSON.stringify(seed[k]), now, 'seed']); });
-  if (rows.length) sh.getRange(2, 1, rows.length, 5).setValues(rows);
+  if (rows.length + 1 > sh.getMaxRows()) throw new Error('The seed has ' + rows.length + ' rows but the tab only has room for ' + (sh.getMaxRows() - 1) + '.');
+  rows.forEach(function (r) { if (r[2].length > MAX_JSON) throw new Error('Item ' + r[0] + '/' + r[1] + ' is too large.'); });
+  if (rows.length) {
+    var range = sh.getRange(2, 1, rows.length, HEADER.length);
+    range.setNumberFormats(rows.map(function () { return ROW_FORMATS[0]; }));
+    range.setValues(rows);
+  }
   PropertiesService.getScriptProperties().setProperty('BOARD_REV', '1');
-  Logger.log('Imported ' + rows.length + ' rows. You can now delete the Seed file.');
+  Logger.log('Imported ' + rows.length + ' rows into "' + SHEET_TAB + '". You can now delete the Seed file.');
 }
 
 // ---------- helpers ----------
