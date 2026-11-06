@@ -158,7 +158,7 @@ function formatDate(date, tz, fmt) {
 
 function makeEnv(opts = {}) {
   const clock = { t: Date.UTC(2026, 10, 6, 20, 30, 0) }; // 2026-11-06 15:30 Eastern
-  const props = new Map(Object.entries(Object.assign({ GOOGLE_CLIENT_ID: 'test-client.apps.googleusercontent.com', STAFF_DOMAIN: 'redefinerswl.org', SHEET_ID: 'TEST-WORKBOOK-ID', SYNC_ENABLED: 'true' }, opts.props || {})));
+  const props = new Map(Object.entries(Object.assign({ GOOGLE_CLIENT_ID: 'test-client.apps.googleusercontent.com', STAFF_DOMAIN: 'redefinerswl.org', SHEET_ID: 'TEST-WORKBOOK-ID', SYNC_ENABLED: 'true', TEXT_FORMAT_GUARD: 'on' }, opts.props || {})));
   const counters = { propReads: 0, propWrites: 0, cacheOps: 0, fetches: [], lockCalls: 0, triggers: [] };
   const cacheMap = new Map();
   const cache = {

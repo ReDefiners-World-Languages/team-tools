@@ -137,8 +137,14 @@ function tb_writeRows_(t, rows) {
     var j = i;
     while (j + 1 < rows.length && rows[j + 1].row === rows[j].row + 1) j++;
     var run = rows.slice(i, j + 1), range = t.sh.getRange(run[0].row, 1, run.length, n);
-    var risky = run.some(function (r) { return t.cols.some(function (c, k) { return (c[1] === 'text' || c[1] === 'long') && tb_risky_(r.values[k]); }); });
-    if (risky) { range.setNumberFormats(run.map(function () { return t.cols.map(function (c) { return TB_FORMATS[c[1]]; }); })); calls++; }
+    // Off by default. Every data tab of the real workbook is a Sheets table with typed columns, which refuse number
+    // formats. Apps Script queues writes, so the refusal surfaces at the end of the run and rejects the whole batch (a
+    // try/catch cannot catch it). Typed TEXT columns already keep text as text; verifyStoreAgainstTables shows any value
+    // that changed. Script Property TEXT_FORMAT_GUARD = on forces the text format first, for plain (untyped) sheets only.
+    if (prop_('TEXT_FORMAT_GUARD', 'off').toLowerCase() === 'on') {
+      var risky = run.some(function (r) { return t.cols.some(function (c, k) { return (c[1] === 'text' || c[1] === 'long') && tb_risky_(r.values[k]); }); });
+      if (risky) { range.setNumberFormats(run.map(function () { return t.cols.map(function (c) { return TB_FORMATS[c[1]]; }); })); calls++; }
+    }
     range.setValues(run.map(function (r) { return r.values; }));
     calls++;
     i = j + 1;
