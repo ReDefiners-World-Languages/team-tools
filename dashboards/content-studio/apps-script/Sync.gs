@@ -16,7 +16,11 @@
 // What the sync may touch: only rows that carry a Board ID in the tab's "Board ID" column, only the columns it owns,
 // never banner rows, the header rows above them, the Due Date column (except carrying a row's own Due Date when a
 // card moves month), or any tab not listed below. Empty board values never blank a cell. Status cells that already
-// say Published or Cancelled are never changed. Deleted or undated cards mark their row Cancelled (rows are kept).
+// say Published or Cancelled are never changed. A card deleted in the board marks its row Cancelled (row kept); an
+// undated card lives on Ideas (no date). A card dated in a month that is not synced (September, October, January 2027
+// and later) gets no row and its existing row is left untouched; the sync status lists it as a note.
+// OWNER: the board leads. A non-blank board owner is written, also into a blank Owner cell and on rows the sync
+// creates; a blank board owner ("Unassigned") never blanks a matrix cell.
 // Deleted themes and documents have their rows removed; themes not in use stay with "In use" = No.
 // Undated cards live on the "Ideas (no date)" tab; a card that gets or loses a date moves between Ideas and its
 // month's calendar tab (same Board ID). The eight board-mirror tabs (Campaigns, Personas, Pillars, Owners, Classes,
@@ -253,7 +257,7 @@ var BUILD_ = {
       var bid = 'card:' + c.id, month = c.post ? String(c.post).slice(0, 7) : '';
       if (!month) rows[bid] = { tab: SYNC.IDEAS_TAB, date: '', stage: c.status || 'idea', cells: cardCells_(c, look, ctx, true) };
       else if (SYNC.CAL_TABS[month]) rows[bid] = { tab: SYNC.CAL_TABS[month], date: c.post, stage: c.status || 'idea', cells: cardCells_(c, look, ctx, false) };
-      else cancel[bid] = 'month ' + month + ' is not synced';
+      else { cancel[bid] = 'unsynced'; ctx.note('card ' + c.id + ' is dated in a month that is not synced (' + month + ')'); }
     });
     return { rows: rows, cancel: cancel };
   },
@@ -294,9 +298,10 @@ BUILD_.m_campaigns = function (s) { return { rows: (s.camps || []).map(function 
 BUILD_.m_personas = function (s) { var m = personasMap_(s); return { rows: Object.keys(m).map(function (n) { return [n, m[n]]; }) }; };
 BUILD_.m_pillars = function (s) { return { rows: (s.pillars || []).map(function (p) { return [p, (s.pillarType || {})[p] || (/blog/i.test(p) ? 'blog' : 'social')]; }) }; };
 BUILD_.m_owners = function (s) { return { rows: (s.people || []).map(function (p) { return [p]; }) }; };
+// Day is written exactly as stored in the board (the test copy's Classes note says "as stored in the board").
 BUILD_.m_classes = function (s) {
   return { rows: (s.classes || []).map(function (c) {
-    return [String(c.id), c.prog || '', c.name || '', c.site || '', c.day == null ? '' : Number(c.day) + 1, c.time || '', c.aud || '',
+    return [String(c.id), c.prog || '', c.name || '', c.site || '', c.day == null ? '' : Number(c.day), c.time || '', c.aud || '',
       c.end ? dateOnly_(c.end) : '', c.endTxt || '', c.enr == null ? '' : c.enr, c.att == null ? '' : c.att, c.n == null ? '' : c.n];
   }) };
 };
@@ -528,10 +533,11 @@ APPLY_.cal = function (ss, target, ctx) {
         removeRows.push(r); ctx.counts.moved++;
         return;
       }
-      // deleted card, no date, or a month that is not synced: mark Cancelled, keep the row
+      // dated in a month that is not synced: leave the row exactly as it is (noted in BUILD_.cal)
+      if (target.cancel[bid]) return;
+      // deleted in the board: mark Cancelled, keep the row
       var st = String(t.tab.values[r][h.col['Status']] || '').trim();
       if (SYNC.PROTECTED_STATUS.indexOf(st) < 0) { var cells = {}; cells[h.col['Status']] = 'Cancelled'; cancelOut.push({ r: r, cells: cells }); }
-      if (target.cancel[bid]) ctx.note(bid + ': ' + target.cancel[bid] + ', row marked Cancelled');
     });
     if (cancelOut.length) { ctx.counts.cancelled += cancelOut.length; writeRuns_(t.sh, t.tab, cancelOut, [h.col['Status']], ctx, n + ' cancel'); ctx.counts.updated -= cancelOut.length; }
     removeRows.sort(function (a, b) { return b - a; }).forEach(function (r) {
@@ -584,7 +590,6 @@ APPLY_.cal = function (ss, target, ctx) {
           cells[c] = want.cells[name];                                   // otherwise the board leads
           return;
         }
-        if (name === 'Owner' && String(cur).trim() === '') return;      // never fill a blank Owner cell
         var m = mergeCell_(name, want.cells[name], cur, t.tab.formulas[r][c], CAL_ALWAYS);
         if (!m.keep) cells[c] = m.value;
       });

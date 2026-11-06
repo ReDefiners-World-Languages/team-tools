@@ -898,7 +898,7 @@ function moreHtml(){
  <a class="sheet-item" href="https://redefiners-world-languages.github.io/team-tools/forms/media-library/" target="_blank" rel="noopener">${ICON.upload}<span><b>Media Upload app</b><small>Opens in a new tab</small></span></a>
  <button class="sheet-item" data-act="camps">${ICON.camps}<span><b>Campaigns</b><small>Colors, default calls to action and hashtags</small></span></button>
  <button class="sheet-item" data-act="signin">${ICON.user}<span><b>${ME?"Signed in":"Sign in"}</b><small>${ME?esc(ME.email):"Google account, @redefinerswl.org"}</small></span></button></div>
- ${(()=>{const x=BOARD.status==="ready"?syncText():null;return x?`<span class="lbl">Content Matrix</span><div class="sheet-list"><div class="sheet-item sync-item"><span class="${x.warn?"warn":""}"><b>${esc(x.t)}</b>${SYNC_STATUS.error?`<small>${esc(SYNC_STATUS.error.slice(0,140))}</small>`:"<small>The board writes to the Content Matrix about once a minute.</small>"}</span>${SYNC_STATUS.enabled?`<button type="button" class="btn ghost sm" data-act="syncnow" ${syncBusy?"disabled":""}>Sync now</button>`:""}</div></div>`:""})()}<span class="lbl">Theme</span>${themeButtons("seg",true)}</div></div>`;
+ ${(()=>{const x=BOARD.status==="ready"?syncText():null;return x?`<span class="lbl">Content Matrix</span><div class="sheet-list"><div class="sheet-item sync-item"><span class="${x.warn?"warn":""}"><b>${esc(x.t)}</b>${SYNC_STATUS.error?`<small>${esc(SYNC_STATUS.error.slice(0,140))}</small>`:(SYNC_STATUS.notes||[]).length?(SYNC_STATUS.notes||[]).slice(0,3).map(n=>`<small>${esc(n)}</small>`).join(""):"<small>The board writes to the Content Matrix about once a minute.</small>"}</span>${SYNC_STATUS.enabled?`<button type="button" class="btn ghost sm" data-act="syncnow" ${syncBusy?"disabled":""}>Sync now</button>`:""}</div></div>`:""})()}<span class="lbl">Theme</span>${themeButtons("seg",true)}</div></div>`;
 }
 const FK=["data-act","data-v","data-id","data-i","data-k","data-f","data-d","data-th","data-mix","data-lock","data-cf","data-meta","data-vf","data-pers","data-act-link","data-mixwhy","data-td","data-fq","data-pil","data-tdate","name"];
 function focusSel(el){
@@ -1376,7 +1376,7 @@ function syncText(){const s=SYNC_STATUS;if(!s)return null;
  return{t:s.lastOk?"Matrix synced "+ago(s.lastOk):"Matrix not synced yet",warn:false}}
 function renderSyncState(){const el=$("#syncState");if(!el)return;const x=BOARD.status==="ready"?syncText():null;
  if(!x){el.hidden=true;el.innerHTML="";return}el.hidden=false;
- el.innerHTML=`<span class="${x.warn?"warn":""}" title="${esc(SYNC_STATUS.error||"")}">${esc(x.t)}</span>${SYNC_STATUS.enabled?` <button type="button" class="linkbtn" data-act="syncnow" ${syncBusy?"disabled":""}>Sync now</button>`:""}`}
+ const nn=(SYNC_STATUS.notes||[]).length;el.innerHTML=`<span class="${x.warn?"warn":""}" title="${esc(SYNC_STATUS.error||(SYNC_STATUS.notes||[]).join("\n"))}">${esc(x.t)}${nn&&!SYNC_STATUS.error?` (${nn} note${nn>1?"s":""})`:""}</span>${SYNC_STATUS.enabled?` <button type="button" class="linkbtn" data-act="syncnow" ${syncBusy?"disabled":""}>Sync now</button>`:""}`}
 function onSyncStatus(s){SYNC_STATUS=s||null;renderSyncState()}
 setInterval(renderSyncState,30000);
 async function syncNow(){if(syncBusy||!SYNC_STATUS||!SYNC_STATUS.enabled)return;syncBusy=true;renderSyncState();
