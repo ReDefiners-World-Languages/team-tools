@@ -2,7 +2,7 @@
 
 Live at https://redefiners-world-languages.github.io/team-tools/forms/media-library/ (moved from `tools/media-library/` on 2026-10-23; the old address redirects here).
 
-A page where staff file class and program photos and videos into the ReDefiners Media Library in Google Drive, with context, and later find them again.
+A page where staff file photos and videos (classes and programs, events, people, campaigns) into the ReDefiners Media Library in Google Drive, with context, and later find them again.
 
 Everything needs a sign-in with an @redefinerswl.org Google account (decided 2026-10-22). The uploader's name and email come from that sign-in.
 
@@ -59,9 +59,23 @@ Edits show up within 5 minutes (or run `refreshConfig()`).
 
 - **New MCP site**: add a row in `Options` (`classes`, `site`, `MCP`, the name). `checkMcpSites()` lists sheet sites whose name no longer appears on https://redefinerswl.org/learn-in-florida.
 - **New GEP site**: add a row (`classes`, `site`, `GEP`, the cohort name) from the Salesforce GEP program cohorts.
-- **New collection (for example Events)**: one row in `Collections` (root folder id, path like `{event}/{year}/{month}`, context fields), its rows in `Steps` and `Options`. No code change. `{year}` and `{month}` are filled from the upload date; any other `{step}` comes from the picker.
+- **New collection**: one row in `Collections` (root folder id, path pattern, context fields), its rows in `Steps` and `Options`. No code change. `{year}` and `{month}` come from the date field (or the upload date), `{date}` is the full `YYYY-MM-DD`, any other `{step}` comes from the picker. A folder made of several tokens (`{date} - {name}`) is kept only when all of them have a value.
+- **Sections Events, People, Campaigns** (built 2026-11, in `Defaults.gs`): Events `{kind}/{date} - {name}` (Outreach or Other), People `{kind}/{date} - {name}` (Headshot or Moment), Campaigns `{campaign}/{subcampaign}/{year}/{month}`. To add them to the live sheet: set the script properties `EVENTS_ROOT_FOLDER_ID`, `PEOPLE_ROOT_FOLDER_ID`, `CAMPAIGNS_ROOT_FOLDER_ID`, run `addNewCollections()` (adds them with Active = No and the new columns), then `syncCampaignSubfolders()`. Switch `Active` to Yes only after the page that draws them is live.
 
-Context fields available: `what` (required), `date`, `staff`, `notes`. The uploader is always taken from the sign-in. The "which site or class do you think this is?" note appears by itself when someone picks Other on a step marked `Ask Note When Other`.
+Columns added for these sections (blank = the old behavior; `upgradeSheets()` adds them to an existing sheet):
+
+| Tab | Column | Meaning |
+|---|---|---|
+| `Collections` | `Date Label` | Label of the date field ("Date of the event"). |
+| `Collections` | `Optional Fields` | Context fields shown but not required (for example `what`). |
+| `Steps` | `Input` | `List` (default) or `Text`: a typed name. A Text step's `Options` rows say for which parent values it is asked; the row's Value is the field label and its `Hint` the help line. |
+| `Steps` | `Allow New` | A list that also takes a typed new name (Campaigns). The server matches it against the list and every folder already there, ignoring capitals and spacing, and asks for a confirm box before making a new folder; a new name is added to `Options` with `Added By` and `Added At`. |
+| `Steps` | `None Label` | A list that can be left out ("No sub-campaign (directly in the campaign)"). |
+| `Steps` | `Max Length` | Limit for typed names (default 60). Typed names cannot contain `/ \ < > : " | ? *`. |
+
+Typed names that differ only in capitals or spacing from an existing folder go into that folder. When the type and date are picked, the page lists the folders already made for that date (`existingFolders`, read-only). Step ids `year`, `month`, `date` and `type` are reserved.
+
+Context fields available: `what` (required unless listed in `Optional Fields`), `date`, `staff`, `notes`. The uploader is always taken from the sign-in. The "which site or class do you think this is?" note appears by itself when someone picks Other on a step marked `Ask Note When Other`.
 
 ## Deploy (once, by the owner of the Media Library folders)
 

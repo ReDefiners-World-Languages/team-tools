@@ -12,12 +12,15 @@ var MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July
 var MEDIA_EXT = /\.(jpe?g|png|gif|webp|heic|heif|tiff?|bmp|dng|cr2|cr3|nef|arw|raf|orf|rw2|mp4|mov|m4v|avi|mkv|webm|3gp|3g2|mts|m2ts|wmv|mpg|mpeg)$/i;
 var FIELD_LIMITS = { what: 200, date: 10, staff: 120, notes: 1500, otherNote: 300 };
 var FILE_FIELDS = 'id,name,mimeType,size,createdTime,hasThumbnail,description,properties,parents,webViewLink';
+var NAME_MAX = 60;                // typed folder names (event, person, moment, new campaign)
+var NAME_BAD = /[\/\\<>:"|?*]/; // break paths, downloads or zip files on Windows
 
 var STAFF_ACTIONS = {
   whoami: function (req, who) { return who; },
   start: function (req, who) { return { who: who, config: getPublicConfig_() }; }, // one round trip after sign-in
   config: getPublicConfig_, startUpload: startUpload_, finishUpload: finishUpload_,
-  search: search_, browse: browse_, thumbnail: thumbnail_, thumbnails: thumbnails_
+  search: search_, browse: browse_, thumbnail: thumbnail_, thumbnails: thumbnails_,
+  existingFolders: existingFolders_
 };
 
 function doGet() {
@@ -68,7 +71,10 @@ function getPublicConfig_() {
     staffDomain: prop_('STAFF_DOMAIN', 'redefinerswl.org'),
     maxFileGb: Number(prop_('MAX_FILE_GB', '10')),
     collections: loadConfig_().collections.map(function (c) {
-      return { id: c.id, label: c.label, path: c.path, contextFields: c.contextFields, steps: c.steps, options: c.options };
+      var known = {};
+      c.steps.forEach(function (st) { if (st.allowNew && !st.dependsOn) known[st.id] = knownFolders_(c); });
+      return { id: c.id, label: c.label, path: c.path, contextFields: c.contextFields, optionalFields: c.optionalFields || [],
+        dateLabel: c.dateLabel || '', steps: c.steps, options: c.options, known: known };
     })
   };
 }
@@ -89,29 +95,33 @@ function folderDate_(col, context, now) {
   var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(context.date || '');
   var tomorrow = Utilities.formatDate(new Date(now.getTime() + 864e5), TZ, 'yyyy-MM-dd');
   if (!m || context.date < FIRST_CLASS_DATE || context.date > tomorrow || Number(m[2]) < 1 || Number(m[2]) > 12) {
-    throw userError_('bad_context', 'Pick the date of the class.');
+    throw userError_('bad_context', 'Pick the ' + (col.dateLabel || 'date of the class').replace(/^Date/, 'date') + '.');
   }
-  return { year: m[1], mm: m[2] };
+  return { year: m[1], mm: m[2], iso: context.date };
 }
 
 function monthFolder_(year, mm) {
   return mm + ' ' + MONTH_NAMES[Number(mm) - 1] + ' ' + year;
 }
 
-function resolveDestination_(col, choices, when) {
+function resolveDestination_(col, choices, when, confirmNew) {
   choices = choices || {};
+  confirmNew = confirmNew || {};
   var chosen = {};
   var folders = {};
+  var loose = {};     // typed values: matched to existing folders ignoring case and spacing
+  var created = [];   // { step, name }: new list values (a new campaign) to add to Options after the upload starts
   col.steps.forEach(function (st) {
-    var list;
-    if (!st.dependsOn) list = (col.options[st.id] || {})[''] || [];
-    else {
-      var parent = chosen[st.dependsOn];
-      list = parent && parent !== OTHER ? ((col.options[st.id] || {})[parent] || []) : [];
-    }
+    var list = stepList_(col, st, chosen);
     var value = clean_(choices[st.id]);
     if (!list.length) {
       if (value) throw userError_('bad_choice', st.label + ' does not apply to this choice.');
+      return;
+    }
+    if (st.input === 'text') {
+      var name = cleanName_(value, st, list[0]);
+      chosen[st.id] = folders[st.id] = name;
+      loose[st.id] = true;
       return;
     }
     if (!value) throw userError_('bad_choice', 'Pick a ' + st.label.toLowerCase() + '.');
@@ -121,20 +131,122 @@ function resolveDestination_(col, choices, when) {
       folders[st.id] = st.otherFolder;
       return;
     }
-    if (list.indexOf(value) < 0) throw userError_('bad_choice', 'Pick a ' + st.label.toLowerCase() + ' from the list.');
-    chosen[st.id] = value;
-    folders[st.id] = value;
+    if (value === NONE) {
+      if (!st.noneLabel) throw userError_('bad_choice', 'Pick a ' + st.label.toLowerCase() + ' from the list.');
+      chosen[st.id] = NONE; // no folder: the step drops out of the path
+      return;
+    }
+    var hit = list.indexOf(value) >= 0 ? value : (st.allowNew ? looseFind_(list, value) : '');
+    if (!hit && st.allowNew && !st.dependsOn) hit = looseFind_(knownFolders_(col), value); // a folder that is not offered
+    if (hit) {
+      chosen[st.id] = folders[st.id] = hit;
+      return;
+    }
+    if (!st.allowNew) throw userError_('bad_choice', 'Pick a ' + st.label.toLowerCase() + ' from the list.');
+    var fresh = cleanName_(value, st, st.label);
+    if (norm_(clean_(confirmNew[st.id])) !== norm_(fresh)) {
+      throw userError_('confirm_new', 'Confirm that you want a new ' + st.label.toLowerCase() + ' folder named "' + fresh + '".');
+    }
+    chosen[st.id] = folders[st.id] = fresh;
+    loose[st.id] = true;
+    created.push({ step: st, name: fresh });
   });
   folders.year = when.year;
   folders.month = monthFolder_(when.year, when.mm);
-  var segments = segmentsFromTemplate_(col.path, folders);
-  return { chosen: chosen, segments: segments, year: when.year, month: when.mm };
+  folders.date = when.iso || '';
+  var built = buildSegments_(col.path, folders, true);
+  return {
+    chosen: chosen, segments: built.names, keys: built.keys, parts: built.parts,
+    loose: built.keys.map(function (keys) { return keys.some(function (k) { return loose[k]; }); }),
+    created: created, year: when.year, month: when.mm
+  };
+}
+
+/** The allowed values of a step for the choices made so far ([] = the step does not apply). */
+function stepList_(col, st, chosen) {
+  if (!st.dependsOn) return (col.options[st.id] || {})[''] || [];
+  var parent = chosen[st.dependsOn];
+  return parent && parent !== OTHER && parent !== NONE ? ((col.options[st.id] || {})[parent] || []) : [];
+}
+
+/** A typed name made safe for a folder name, or a clear refusal. */
+function cleanName_(raw, st, label) {
+  var v = clean_(raw).replace(/[\u0000-\u001F\u007F]/g, '').replace(/\s+/g, ' ');
+  var max = st.maxLength || NAME_MAX;
+  if (!v) throw userError_('bad_choice', 'Type the ' + label.charAt(0).toLowerCase() + label.slice(1) + '.');
+  if (v.length > max) throw userError_('bad_choice', label + ' is longer than ' + max + ' characters.');
+  if (NAME_BAD.test(v)) throw userError_('bad_choice', label + ' cannot contain / \\ < > : " | ? or *.');
+  if (/^\./.test(v)) throw userError_('bad_choice', label + ' cannot start with a dot.');
+  return v;
+}
+
+/** The entry of list that matches value ignoring case, spacing and curly quotes, or ''. */
+function looseFind_(list, value) {
+  var n = norm_(value);
+  return list.filter(function (x) { return norm_(x) === n; })[0] || '';
+}
+
+/** Names of the folders directly in a collection's root (for "add a new one" steps). Cached 5 minutes. */
+function knownFolders_(col) {
+  var cache = CacheService.getScriptCache();
+  var key = 'known:' + col.id;
+  var hit = cache.get(key);
+  if (hit) return JSON.parse(hit);
+  var names = childFolders_(col.rootFolderId).map(function (f) { return f.name; });
+  cache.put(key, JSON.stringify(names), 300);
+  return names;
+}
+
+function childFolders_(parentId) {
+  var out = [], token = '';
+  do {
+    var params = { q: "'" + parentId + "' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+      fields: 'nextPageToken,files(id,name)', pageSize: 1000 };
+    if (token) params.pageToken = token;
+    var res = driveGet_('/files', params);
+    out = out.concat(res.files || []);
+    token = res.nextPageToken || '';
+  } while (token);
+  return out;
+}
+
+/**
+ * Template to folder names. A folder made of several tokens ("{date} - {name}") is kept only
+ * when every token has a value; strict mode refuses a half-filled one, display mode drops it.
+ * One-token folders behave as before: empty means the step does not apply and it drops out.
+ */
+function buildSegments_(template, folders, strict) {
+  var names = [], keys = [], parts = [];
+  template.split('/').forEach(function (part) {
+    var tokens = (part.match(/\{(\w+)\}/g) || []).map(function (t) { return t.slice(1, -1); });
+    var filled = tokens.filter(function (k) { return folders[k]; });
+    if (tokens.length && filled.length < tokens.length) {
+      if (filled.length && strict) throw userError_('bad_choice', 'Something is missing for the folder ' + part + '.');
+      return;
+    }
+    var name = part.replace(/\{(\w+)\}/g, function (m, key) { return folders[key]; }).trim();
+    if (!name) return;
+    names.push(name); keys.push(tokens); parts.push(part);
+  });
+  return { names: names, keys: keys, parts: parts };
 }
 
 function segmentsFromTemplate_(template, folders) {
-  return template.split('/').map(function (part) {
-    return part.replace(/\{(\w+)\}/g, function (m, key) { return folders[key] || ''; }).trim();
-  }).filter(String);
+  return buildSegments_(template, folders, false).names;
+}
+
+/** Reads the token values back out of a folder name made from a template part. */
+function tokensFromName_(part, name) {
+  var keys = [];
+  var re = new RegExp('^' + part.split(/(\{\w+\})/).map(function (bit) {
+    var m = /^\{(\w+)\}$/.exec(bit);
+    if (m) { keys.push(m[1]); return '(.+?)'; }
+    return bit.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }).join('') + '$');
+  var m = re.exec(name);
+  var out = {};
+  if (m) keys.forEach(function (k, i) { out[k] = m[i + 1]; });
+  return out;
 }
 
 // ---------- upload ----------
@@ -158,15 +270,18 @@ function startUpload_(req, who) {
   if (allowed.indexOf(origin) < 0) throw userError_('bad_origin', 'Uploads are not allowed from this address.');
 
   var context = cleanContext_(req.context, col, who);
-  if (!context.what) throw userError_('bad_context', 'Say what happened (class, event or activity).');
+  if (requiredFields_(col).indexOf('what') >= 0 && !context.what) throw userError_('bad_context', 'Say what happened (class, event or activity).');
 
-  var dest = resolveDestination_(col, req.choices, folderDate_(col, context, new Date()));
+  var dest = resolveDestination_(col, req.choices, folderDate_(col, context, new Date()), req.confirmNew);
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   var folder, savedAs;
   try {
-    folder = ensureFolders_(col.rootFolderId, dest.segments);
+    var made = ensureFolders_(col.rootFolderId, dest.segments, dest.loose);
+    folder = made.folder;
+    adoptExistingNames_(dest, made.names);
     savedAs = uniqueName_(folder.id, name);
+    dest.created.forEach(function (c) { addOption_(col, c.step, '', dest.chosen[c.step.id], who); });
   } finally {
     lock.releaseLock();
   }
@@ -175,11 +290,14 @@ function startUpload_(req, who) {
   var properties = { mlCollection: col.id, mlToken: token, year: dest.year, month: dest.month,
     type: /^video\//.test(mime) || /\.(mp4|mov|m4v|avi|mkv|webm|3gp|3g2|mts|m2ts|wmv|mpg|mpeg)$/i.test(name) ? 'video' : 'photo' };
   if (context.date) properties.eventDate = context.date;
-  Object.keys(dest.chosen).forEach(function (k) { properties[k] = dest.chosen[k] === OTHER ? 'Other' : dest.chosen[k]; });
+  Object.keys(dest.chosen).forEach(function (k) {
+    if (dest.chosen[k] === NONE) return;
+    properties[k] = dest.chosen[k] === OTHER ? 'Other' : dest.chosen[k];
+  });
   checkPropertySizes_(properties);
 
   var path = dest.segments.join('/');
-  var meta = { name: savedAs, parents: [folder.id], description: describe_(context, col.label + '/' + path), properties: properties };
+  var meta = { name: savedAs, parents: [folder.id], description: describe_(context, col.label + '/' + path, col), properties: properties };
   var res = UrlFetchApp.fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name', {
     method: 'post',
     contentType: 'application/json; charset=UTF-8',
@@ -199,6 +317,83 @@ function startUpload_(req, who) {
   var headers = res.getAllHeaders();
   var uploadUrl = headers.Location || headers.location;
   return { uploadUrl: uploadUrl, token: token, savedAs: savedAs, path: col.label + '/' + path };
+}
+
+function requiredFields_(col) {
+  return col.contextFields.filter(function (f) { return (col.optionalFields || []).indexOf(f) < 0; });
+}
+
+/**
+ * When a typed name matched a folder that already exists with other capitals or spacing, use the
+ * existing folder's exact name everywhere (path, properties, new Options row).
+ */
+function adoptExistingNames_(dest, actual) {
+  actual.forEach(function (name, i) {
+    if (name === dest.segments[i]) return;
+    dest.segments[i] = name;
+    var values = tokensFromName_(dest.parts[i], name);
+    dest.keys[i].forEach(function (k) {
+      if (values[k] && dest.chosen[k] && dest.chosen[k] !== OTHER && dest.chosen[k] !== NONE) dest.chosen[k] = values[k];
+    });
+  });
+  // A "new" value whose folder turned out to exist already is not new.
+  dest.created = dest.created.filter(function (c) { return c.name === dest.chosen[c.step.id]; });
+}
+
+/** Adds a value to Options (a new campaign) unless it is already there. Caller holds the lock. */
+function addOption_(col, st, parent, value, who) {
+  var ss = SpreadsheetApp.openById(prop_('ADMIN_SHEET_ID', ''));
+  var have = sheetRows_(ss, SHEETS.options.name).some(function (o) {
+    return clean_(o['Collection ID']) === col.id && clean_(o['Step ID']) === st.id &&
+      clean_(o['Parent Value']) === parent && norm_(clean_(o['Value'])) === norm_(value);
+  });
+  if (!have) {
+    appendRows_(ss, SHEETS.options.name, [{ 'Collection ID': col.id, 'Step ID': st.id, 'Parent Value': parent, 'Value': value,
+      'Added By': who && who.email ? who.email : '', 'Added At': Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm') }]);
+  }
+  refreshConfig();
+  CacheService.getScriptCache().remove('known:' + col.id);
+}
+
+/**
+ * Read-only: the folders that already exist for the chosen type and date, so staff can join an
+ * existing event folder instead of typing a near-duplicate. Returns the typed-name part only.
+ */
+function existingFolders_(req) {
+  var col = collection_(req.collection);
+  var st = col.steps.filter(function (x) { return x.id === req.step && x.input === 'text'; })[0];
+  if (!st) throw userError_('bad_request', 'That field has no folders to list.');
+  var choices = {};
+  Object.keys(req.choices || {}).forEach(function (k) { choices[k] = req.choices[k]; });
+  choices[st.id] = 'x'; // placeholder, only the folders above it are looked up
+  var when = folderDate_(col, { date: clean_(req.date) }, new Date());
+  var dest = resolveDestination_(col, choices, when, {});
+  var at = -1;
+  dest.keys.forEach(function (keys, i) { if (at < 0 && keys.indexOf(st.id) >= 0) at = i; });
+  if (at < 0) return { names: [] };
+  var parentId = findFolders_(col.rootFolderId, dest.segments.slice(0, at));
+  if (!parentId) return { names: [] };
+  var wanted = tokensFromName_(dest.parts[at], dest.segments[at]); // the other values in that folder name (the date)
+  var names = [];
+  childFolders_(parentId).forEach(function (f) {
+    var values = tokensFromName_(dest.parts[at], f.name);
+    if (!values[st.id]) return;
+    var same = dest.keys[at].every(function (k) { return k === st.id || values[k] === wanted[k]; });
+    if (same) names.push(values[st.id]);
+  });
+  return { names: names.sort() };
+}
+
+/** Folder id for a trail of names, or '' when any of them is missing. Never creates anything. */
+function findFolders_(rootId, segments) {
+  var parentId = rootId;
+  for (var i = 0; i < segments.length; i++) {
+    var q = "'" + parentId + "' in parents and name = '" + q_(segments[i]) + "' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
+    var found = driveGet_('/files', { q: q, fields: 'files(id)', pageSize: 1 }).files || [];
+    if (!found.length) return '';
+    parentId = found[0].id;
+  }
+  return parentId;
 }
 
 /** Called after Drive confirms the file. Checks it is ours, then writes the log row once. */
@@ -245,10 +440,10 @@ function cleanContext_(raw, col, who) {
 }
 
 /** The Drive description: readable, and searchable through Drive's full-text search. */
-function describe_(c, folderPath) {
+function describe_(c, folderPath, col) {
   var lines = [];
   if (c.what) lines.push('What happened: ' + c.what);
-  if (c.date) lines.push('Class or event date: ' + c.date);
+  if (c.date) lines.push((col && col.dateLabel ? col.dateLabel : 'Class or event date') + ': ' + c.date);
   if (c.staff) lines.push('Instructor or staff: ' + c.staff);
   if (c.notes) lines.push('Notes: ' + c.notes);
   if (c.otherNote) lines.push('Placement note: ' + c.otherNote);
@@ -260,14 +455,14 @@ function describe_(c, folderPath) {
 }
 
 function pathFromProperties_(col, p) {
-  var folders = { year: p.year || '', month: '' };
+  var folders = { year: p.year || '', month: '', date: p.eventDate || '' };
   if (p.year && p.month) {
     var d = new Date(Number(p.year), Number(p.month) - 1, 15);
     folders.month = Utilities.formatDate(d, TZ, 'MM MMMM yyyy');
   }
   col.steps.forEach(function (st) {
     if (!p[st.id]) return;
-    folders[st.id] = p[st.id] === 'Other' ? st.otherFolder : p[st.id];
+    folders[st.id] = p[st.id] === 'Other' && st.otherFolder ? st.otherFolder : p[st.id];
   });
   return col.label + '/' + segmentsFromTemplate_(col.path, folders).join('/');
 }
@@ -278,17 +473,27 @@ function checkPropertySizes_(props) {
   });
 }
 
-/** Finds each folder by exact name under its parent and creates it only when missing. Caller holds the lock. */
-function ensureFolders_(rootId, segments) {
+/**
+ * Finds each folder by exact name under its parent and creates it only when missing. Folders made
+ * from typed names (loose[i]) also match an existing folder that differs only in capitals, spacing
+ * or curly quotes, and then that folder's exact name is used. Caller holds the lock.
+ * Returns { folder, names } (the names actually used).
+ */
+function ensureFolders_(rootId, segments, loose) {
   var parentId = rootId;
   var folder = { id: rootId };
-  segments.forEach(function (name) {
+  var names = [];
+  segments.forEach(function (name, i) {
     var q = "'" + parentId + "' in parents and name = '" + q_(name) + "' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
     var found = driveGet_('/files', { q: q, fields: 'files(id,name)', pageSize: 10 }).files || [];
+    if (!found.length && loose && loose[i]) {
+      found = childFolders_(parentId).filter(function (f) { return norm_(f.name) === norm_(name); });
+    }
     folder = found.length ? found[0] : drivePost_('/files', { name: name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] }, 'id,name');
+    names.push(folder.name || name);
     parentId = folder.id;
   });
-  return folder;
+  return { folder: folder, names: names };
 }
 
 /** Original name, or "name (2).ext", "name (3).ext"... Names handed out in the last 6 hours count as taken. Caller holds the lock. */
