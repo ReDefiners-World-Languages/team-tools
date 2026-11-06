@@ -2,9 +2,11 @@
 // plus the upload log. Run setup() once from the Apps Script editor.
 
 var SHEETS = {
-  collections: { name: 'Collections', headers: ['Collection ID', 'Label', 'Root Folder ID', 'Path', 'Context Fields', 'Active'] },
-  steps: { name: 'Steps', headers: ['Collection ID', 'Step ID', 'Label', 'Depends On', 'Other Folder', 'Ask Note When Other', 'Order'] },
-  options: { name: 'Options', headers: ['Collection ID', 'Step ID', 'Parent Value', 'Value'] },
+  // Columns after 'Active', 'Order' and 'Value' were added for the Events, People and Campaigns sections
+  // (2026-11). upgradeSheets() adds them to an existing sheet; blank cells keep the old behavior.
+  collections: { name: 'Collections', headers: ['Collection ID', 'Label', 'Root Folder ID', 'Path', 'Context Fields', 'Active', 'Date Label', 'Optional Fields'] },
+  steps: { name: 'Steps', headers: ['Collection ID', 'Step ID', 'Label', 'Depends On', 'Other Folder', 'Ask Note When Other', 'Order', 'Input', 'Allow New', 'None Label', 'Max Length'] },
+  options: { name: 'Options', headers: ['Collection ID', 'Step ID', 'Parent Value', 'Value', 'Hint', 'Added By', 'Added At'] },
   log: {
     name: 'Upload Log',
     headers: ['Logged At', 'Collection', 'Folder Path', 'Original Name', 'Saved As', 'File ID', 'Size (MB)', 'Type',
@@ -34,6 +36,7 @@ function setup() {
       sh.getRange(1, 1, 1, spec.headers.length).setFontWeight('bold');
     }
   });
+  upgradeSheets_(ss);
   var first = ss.getSheetByName('Sheet1');
   if (first && ss.getSheets().length > 1 && first.getLastRow() === 0) ss.deleteSheet(first);
 
@@ -45,26 +48,137 @@ function setup() {
 function seedFromDefaults_(ss) {
   var cols = ss.getSheetByName(SHEETS.collections.name);
   if (cols.getLastRow() > 1) return; // already configured: never overwrite edits
-  var steps = ss.getSheetByName(SHEETS.steps.name);
-  var opts = ss.getSheetByName(SHEETS.options.name);
-  DEFAULTS.collections.forEach(function (c) {
-    var rootId = prop_(c.rootFolderProperty, '');
-    if (!rootId) throw new Error('Set the script property ' + c.rootFolderProperty + ' to the Drive folder id of "' + c.label + '", then run setup() again.');
-    DriveApp.getFolderById(rootId); // fails here, not on the first upload, if the id is wrong
-    cols.appendRow([c.id, c.label, rootId, c.path, c.contextFields.join(', '), c.active ? 'Yes' : 'No']);
-    var stepRows = c.steps.map(function (s, i) {
-      return [c.id, s.id, s.label, s.dependsOn, s.otherFolder, s.askNote ? 'Yes' : 'No', i + 1];
+  DEFAULTS.collections.forEach(function (c) { appendCollection_(ss, c, c.active); });
+}
+
+/**
+ * Adds to the columns of an existing admin sheet the headers that are missing (at the end of
+ * each tab). Never moves, clears or rewrites anything. Safe to run again.
+ */
+function upgradeSheets() {
+  var ss = SpreadsheetApp.openById(prop_('ADMIN_SHEET_ID', ''));
+  upgradeSheets_(ss);
+  refreshConfig();
+}
+
+function upgradeSheets_(ss) {
+  Object.keys(SHEETS).forEach(function (key) {
+    var spec = SHEETS[key];
+    var sh = ss.getSheetByName(spec.name);
+    if (!sh || sh.getLastRow() === 0) return;
+    var have = sh.getRange(1, 1, 1, sh.getLastColumn()).getDisplayValues()[0].map(clean_);
+    spec.headers.filter(function (h) { return have.indexOf(h) < 0; }).forEach(function (h) {
+      var c = sh.getLastColumn() + 1;
+      sh.getRange(1, c).setValue(h).setFontWeight('bold');
     });
-    steps.getRange(steps.getLastRow() + 1, 1, stepRows.length, stepRows[0].length).setValues(stepRows);
-    var optRows = [];
-    Object.keys(c.options).forEach(function (stepId) {
-      Object.keys(c.options[stepId]).forEach(function (parent) {
-        c.options[stepId][parent].forEach(function (value) { optRows.push([c.id, stepId, parent, value]); });
+  });
+}
+
+/**
+ * Appends the collections from Defaults.gs that the sheet does not have yet (Events, People,
+ * Campaigns), switched OFF (Active = No): switch each one on in the sheet once the page that can
+ * draw it is live. Needs the script property named in rootFolderProperty for each one.
+ * Never touches rows that are already there.
+ */
+function addNewCollections() {
+  var ss = SpreadsheetApp.openById(prop_('ADMIN_SHEET_ID', ''));
+  upgradeSheets_(ss);
+  var have = sheetRows_(ss, SHEETS.collections.name).map(function (r) { return clean_(r['Collection ID']); });
+  var added = [];
+  DEFAULTS.collections.forEach(function (c) {
+    if (have.indexOf(c.id) >= 0) return;
+    appendCollection_(ss, c, false);
+    added.push(c.label);
+  });
+  refreshConfig();
+  Logger.log(added.length ? 'Added (Active = No): ' + added.join(', ') : 'Nothing to add.');
+}
+
+/** Writes one collection's rows by header name, so column order in the sheet does not matter. */
+function appendCollection_(ss, c, active) {
+  var rootId = prop_(c.rootFolderProperty, '');
+  if (!rootId) throw new Error('Set the script property ' + c.rootFolderProperty + ' to the Drive folder id of "' + c.label + '", then run this again.');
+  DriveApp.getFolderById(rootId); // fails here, not on the first upload, if the id is wrong
+  appendRows_(ss, SHEETS.collections.name, [{
+    'Collection ID': c.id, 'Label': c.label, 'Root Folder ID': rootId, 'Path': c.path,
+    'Context Fields': c.contextFields.join(', '), 'Active': active ? 'Yes' : 'No',
+    'Date Label': c.dateLabel || '', 'Optional Fields': (c.optionalFields || []).join(', ')
+  }]);
+  appendRows_(ss, SHEETS.steps.name, c.steps.map(function (st, i) {
+    return {
+      'Collection ID': c.id, 'Step ID': st.id, 'Label': st.label, 'Depends On': st.dependsOn || '',
+      'Other Folder': st.otherFolder || '', 'Ask Note When Other': st.askNote ? 'Yes' : 'No', 'Order': i + 1,
+      'Input': st.input === 'text' ? 'Text' : 'List', 'Allow New': st.allowNew ? 'Yes' : 'No',
+      'None Label': st.noneLabel || '', 'Max Length': st.maxLength || ''
+    };
+  }));
+  var optRows = [];
+  Object.keys(c.options).forEach(function (stepId) {
+    var st = c.steps.filter(function (x) { return x.id === stepId; })[0] || {};
+    Object.keys(c.options[stepId]).forEach(function (parent) {
+      c.options[stepId][parent].forEach(function (value) {
+        optRows.push({ 'Collection ID': c.id, 'Step ID': stepId, 'Parent Value': parent, 'Value': value, 'Hint': (st.hints || {})[parent] || '' });
       });
     });
-    // Plain text so names like "(9-13)" or "10" are never turned into numbers or dates.
-    var range = opts.getRange(opts.getLastRow() + 1, 1, optRows.length, 4);
-    range.setNumberFormat('@').setValues(optRows);
+  });
+  appendRows_(ss, SHEETS.options.name, optRows);
+}
+
+/**
+ * Appends rows given as { header: value }. Every cell is plain text, so names like "(9-13)" or
+ * "10" never turn into numbers or dates. Caller holds the script lock when staff can write too.
+ */
+function appendRows_(ss, tabName, objects) {
+  if (!objects.length) return;
+  var sh = ss.getSheetByName(tabName);
+  var headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getDisplayValues()[0].map(clean_);
+  var rows = objects.map(function (o) {
+    return headers.map(function (h) { return o.hasOwnProperty(h) && o[h] != null ? String(o[h]) : ''; });
+  });
+  sh.getRange(sh.getLastRow() + 1, 1, rows.length, headers.length).setNumberFormat('@').setValues(rows);
+}
+
+/**
+ * Admin helper: lists the subfolders of every campaign folder in Drive and adds the missing ones
+ * to Options as sub-campaigns (year folders like "2026" are skipped). Adds only; never removes.
+ */
+function syncCampaignSubfolders() { syncSubfolders('campaigns', 'subcampaign'); }
+
+function syncSubfolders(collectionId, stepId) {
+  // Read straight from the sheet: the collection may still be switched off (Active = No), and
+  // loadConfig_() only holds active ones (that is how the first live run added duplicates).
+  var ss = SpreadsheetApp.openById(prop_('ADMIN_SHEET_ID', ''));
+  var row = sheetRows_(ss, SHEETS.collections.name).filter(function (r) { return clean_(r['Collection ID']) === collectionId; })[0];
+  if (!row) throw new Error('No collection ' + collectionId + ' in the sheet.');
+  var existing = sheetRows_(ss, SHEETS.options.name);
+  var rows = [];
+  var parents = DriveApp.getFolderById(clean_(row['Root Folder ID'])).getFolders();
+  while (parents.hasNext()) {
+    var parent = parents.next();
+    var subs = parent.getFolders();
+    while (subs.hasNext()) {
+      var name = subs.next().getName();
+      if (/^\d{4}$/.test(name)) continue; // a year folder, not a sub-campaign
+      var candidate = { 'Collection ID': collectionId, 'Step ID': stepId, 'Parent Value': parent.getName(), 'Value': name };
+      if (optionExists_(existing.concat(rows), candidate)) continue; // already in the sheet, or added a moment ago
+      rows.push(candidate);
+    }
+  }
+  appendRows_(ss, SHEETS.options.name, rows);
+  refreshConfig();
+  Logger.log(rows.length ? 'Added: ' + rows.map(function (r) { return r['Parent Value'] + '/' + r['Value']; }).join('; ') : 'Nothing new.');
+}
+
+/**
+ * True when Options already has this collection + step + parent + value. Ids are compared trimmed and
+ * case-insensitive; parent and value with sameName (capitals, accents, spacing, punctuation ignored).
+ */
+function optionExists_(rows, o) {
+  var key = function (v) { return clean_(v).toLowerCase(); };
+  return rows.some(function (r) {
+    return key(r['Collection ID']) === key(o['Collection ID']) && key(r['Step ID']) === key(o['Step ID']) &&
+      (clean_(r['Parent Value']) === '' ? clean_(o['Parent Value']) === '' : sameName(r['Parent Value'], o['Parent Value'])) &&
+      sameName(r['Value'], o['Value']);
   });
 }
 
@@ -89,6 +203,8 @@ function readConfigFromSheet_() {
       rootFolderId: clean_(c['Root Folder ID']),
       path: clean_(c['Path']),
       contextFields: clean_(c['Context Fields']).split(',').map(clean_).filter(String),
+      optionalFields: clean_(c['Optional Fields']).split(',').map(clean_).filter(String),
+      dateLabel: clean_(c['Date Label']),
       active: true,
       steps: [],
       options: {}
@@ -97,12 +213,20 @@ function readConfigFromSheet_() {
       .sort(function (a, b) { return Number(a['Order']) - Number(b['Order']); })
       .forEach(function (s) {
         var stepId = clean_(s['Step ID']);
+        if (/^(year|month|date|type|mlCollection|mlToken|mlLogged|eventDate)$/.test(stepId)) {
+          throw new Error('Step ID "' + stepId + '" in ' + id + ' is a reserved name. Rename it in the Steps tab (and Options).');
+        }
         col.steps.push({
           id: stepId,
           label: clean_(s['Label']),
           dependsOn: clean_(s['Depends On']),
           otherFolder: clean_(s['Other Folder']),
-          askNote: isYes_(s['Ask Note When Other'])
+          askNote: isYes_(s['Ask Note When Other']),
+          input: /^text$/i.test(clean_(s['Input'])) ? 'text' : 'list',
+          allowNew: isYes_(s['Allow New']),
+          noneLabel: clean_(s['None Label']),
+          maxLength: Number(clean_(s['Max Length'])) || 0,
+          hints: {}
         });
         col.options[stepId] = {};
       });
@@ -111,7 +235,11 @@ function readConfigFromSheet_() {
       var value = clean_(o['Value']);
       if (!col.options[stepId] || !value) return;
       var parent = clean_(o['Parent Value']);
-      (col.options[stepId][parent] = col.options[stepId][parent] || []).push(value);
+      var list = (col.options[stepId][parent] = col.options[stepId][parent] || []);
+      // Duplicate rows (same value apart from capitals or spacing) show once; the first row wins.
+      if (!list.some(function (x) { return sameName(x, value); })) list.push(value);
+      var hint = clean_(o['Hint']);
+      if (hint) col.steps.filter(function (st) { return st.id === stepId; })[0].hints[parent] = hint;
     });
     out.collections.push(col);
   });

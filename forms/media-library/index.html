@@ -130,7 +130,31 @@
   ::placeholder { color: var(--ink-3); opacity: 1; }
   textarea { min-height: 96px; resize: vertical; }
   .pick-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+  .pick-grid .field-wide { grid-column: 1 / -1; }
   @media (max-width: 640px) { .pick-grid { grid-template-columns: 1fr; } }
+  .sub-label { margin-top: 12px; }
+  .name-note:empty { display: none; }
+  .name-note { display: grid; gap: 8px; margin-top: 10px; }
+  .name-msg { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; margin: 0; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+  .name-msg > span { flex: 1 1 0; min-width: 0; }
+  .name-msg svg { flex: none; width: 16px; height: 16px; margin-top: 1px; }
+  .name-msg.is-ok svg { color: var(--mint); }
+  .name-msg.is-warn { color: var(--cream); }
+  .name-msg.is-warn svg { color: var(--amber); }
+  .name-msg.is-error { color: var(--red); }
+  .name-msg .link-btn { padding: 0 2px; text-decoration: underline; }
+  .name-msg .use-btn { margin-right: 10px; font-size: 13px; }
+  .name-msg .after { font-weight: 500; color: var(--ink-2); }
+  .existing { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .existing-label { font-size: 12.5px; color: var(--ink-3); width: 100%; }
+  .chip-sm { min-height: 34px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
+  .chip-sm svg { width: 14px; height: 14px; color: var(--mist); }
+  .chip-sm.is-current { background: var(--mist); color: var(--navy); border-color: transparent; }
+  .chip-sm.is-current svg { color: var(--navy); }
+  .field label.confirm { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; border-radius: var(--radius); border: 1px solid var(--line-2); background: rgba(255,255,255,.03); font-size: 13px; font-weight: 500 !important; color: var(--ink) !important; cursor: pointer; margin: 0 !important; }
+  .confirm input { appearance: auto; -webkit-appearance: checkbox; width: 18px; height: 18px; min-height: 0; margin: 1px 0 0; accent-color: var(--orange); flex: none; }
+  .preview-note { color: var(--mist); font-style: italic; }
+  .find-section { max-width: 360px; margin-bottom: 0; }
 
   .warn {
     display: flex; gap: 10px; align-items: flex-start; margin: 0 0 8px; padding: 10px 14px; border-radius: var(--radius);
@@ -219,6 +243,7 @@
     background: rgba(255,193,0,.14); color: var(--amber);
   }
   .tag.auto { background: rgba(223,240,238,.08); color: var(--ink-3); }
+  .tag.new { background: rgba(63,224,165,.12); color: var(--mint); }
   .dest-foot { padding: 14px 22px 20px; border-top: 1px solid var(--line); background: rgba(255,255,255,.015); display: grid; gap: 12px; }
   .dest-foot p { margin: 0; font-size: 13px; color: var(--ink-2); }
   .dest-foot .missing { color: var(--ink); font-weight: 600; }
@@ -336,7 +361,7 @@
     <div class="brand">
       <img class="brand-logo" src="https://redefinerswl.org/hubfs/Brand%20Kit/OfficialLogo(white).png" alt="ReDefiners World Languages"
            onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'wordmark',textContent:'REDEFINERS'}))">
-      <h1>Media Library<span> Classes and Programs</span></h1>
+      <h1>Media Library<span id="headSection"> Classes and Programs</span></h1>
     </div>
     <div class="top-actions">
       <span class="pill-badge" id="previewBadge" hidden><span class="dot"></span>Preview: nothing is uploaded</span>
@@ -380,11 +405,11 @@
           <fieldset class="card step" id="stepWhere">
             <legend class="step-title"><span class="step-num">1</span>Where do they belong?</legend>
             <div class="field" id="collectionField" hidden>
-              <label for="collection">Type of media</label>
+              <label for="collection">Section</label>
               <select id="collection"></select>
             </div>
             <div class="pick-grid" id="pickers"></div>
-            <p class="hint">Not sure of the site or the class? Choose Other and someone will place the files later.</p>
+            <p class="hint" id="whereHint">Not sure of the site or the class? Choose Other and someone will place the files later.</p>
           </fieldset>
 
           <fieldset class="card step" id="stepFiles">
@@ -435,13 +460,17 @@
       <p>Search by course, site or anything written about the files, or open the folders.</p>
     </div>
     <div class="find-tools">
+      <div class="field find-section" id="findSectionField" hidden>
+        <label for="findSection">Section</label>
+        <select id="findSection"></select>
+      </div>
       <div class="modes" role="tablist" aria-label="Find by">
         <button type="button" role="tab" class="chip" id="modeSearch" aria-selected="true">Search</button>
         <button type="button" role="tab" class="chip" id="modeBrowse" aria-selected="false">Browse folders</button>
       </div>
       <div id="searchPane" class="find-tools">
         <form class="searchbar" id="searchForm" role="search">
-          <input type="search" id="q" aria-label="Search the library" placeholder="Try: cooking day, Brandon, Arabic">
+          <input type="search" id="q" aria-label="Search the library" placeholder="Try: cooking day, Brandon, Fall Festival">
           <button class="btn" type="submit">Search</button>
         </form>
         <div class="filters" id="filters"></div>
@@ -524,14 +553,14 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 function dateParts(value) {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
   if (!m) return null;
-  return { year: m[1], mm: m[2], monthFolder: `${m[2]} ${MONTHS[Number(m[2]) - 1]} ${m[1]}` };
+  return { year: m[1], mm: m[2], iso: value, monthFolder: `${m[2]} ${MONTHS[Number(m[2]) - 1]} ${m[1]}` };
 }
 function todayIso() { const p = nowParts(); return `${p.year}-${p.mm}-${p.dd}`; }
 function nowParts() {
   const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: SETTINGS.timeZone, year: 'numeric', month: '2-digit', day: '2-digit' })
     .formatToParts(new Date()).map(p => [p.type, p.value]));
   const monthName = new Intl.DateTimeFormat('en-US', { timeZone: SETTINGS.timeZone, month: 'long' }).format(new Date());
-  return { year: parts.year, mm: parts.month, dd: parts.day, monthFolder: `${parts.month} ${monthName} ${parts.year}` };
+  return { year: parts.year, mm: parts.month, dd: parts.day, iso: `${parts.year}-${parts.month}-${parts.day}`, monthFolder: `${parts.month} ${monthName} ${parts.year}` };
 }
 
 // Icons: one drawn set, 2px stroke, so the page needs no icon font.
@@ -678,13 +707,105 @@ function signOut() {
 // ---------------------------------------------------------------------------
 let CONFIG = null;
 let col = null;
-const choices = {};
+const choices = {};    // step id -> value, OTHER, NONE, NEW (for "add a new one") or typed text (text steps)
+const newNames = {};   // step id -> typed new name when choices[step] === NEW
+const confirmed = {};  // step id -> the new name the person ticked "create" for
+const NONE = '__none__';
+const NEW = '__new__';
+const NAME_MAX = 60;
+const NAME_BAD = /[\/\\<>:"|?*]/;
+
+// BEGIN name-similarity (same code in Code.gs, index.html and preview-mock.js: change all three)
+// Two names are the SAME when they differ only in capitals, accents, spacing or punctuation.
+// A typed name is SIMILAR to an existing one (a "Did you mean" suggestion) when, ignoring those:
+// one contains the other (3+ letters, so "MCP" finds "MCP Enrollment"), they share a stem
+// ("Fundraise" / "Fundraising"), they share a whole word that is not filler, or they are a
+// small edit apart ("Sumer STEAM").
+var NAME_FILLER = ['the', 'of', 'and', 'for', 'a', 'an', 'to', 'in', 'at', 'on', 'with', 'by', 'our', 'de', 'la', 'el', 'los', 'las', 'y',
+  'day', 'night', 'event', 'events', 'campaign', 'program', 'class'];
+function simpleName(s) {
+  return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function compactName(s) { return simpleName(s).replace(/ /g, ''); }
+function sameName(a, b) { var x = compactName(a); return !!x && x === compactName(b); }
+function nameWords(s) {
+  return simpleName(s).split(' ').filter(function (w) { return w.length >= 3 && NAME_FILLER.indexOf(w) < 0; });
+}
+function editDistance(a, b) {
+  var prev = [], cur, i, j;
+  for (j = 0; j <= b.length; j++) prev[j] = j;
+  for (i = 1; i <= a.length; i++) {
+    cur = [i];
+    for (j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length];
+}
+function similarName(typed, existing) {
+  var a = compactName(typed), b = compactName(existing);
+  if (!a || !b || a === b) return false;
+  var shorter = Math.min(a.length, b.length);
+  if (a.length >= 3 && b.indexOf(a) >= 0) return true;  // typed is a prefix of, or inside, the existing name
+  if (b.length >= 3 && a.indexOf(b) >= 0) return true;  // typed contains the existing name
+  var p = 0;
+  while (p < shorter && a.charAt(p) === b.charAt(p)) p++;
+  if (shorter >= 4 && p >= Math.max(4, Math.ceil(shorter * 0.7))) return true; // same stem
+  var wb = nameWords(existing);
+  if (nameWords(typed).some(function (w) { return wb.indexOf(w) >= 0; })) return true; // a shared whole word
+  return shorter >= 4 && editDistance(a, b) <= Math.max(1, Math.floor(shorter / 5)); // a typo or two
+}
+// END name-similarity
+function tidyName(s) { return String(s || '').replace(/[\u0000-\u001F\u007F]/g, '').replace(/\s+/g, ' ').trim(); }
+/** Problem with a typed name (mirrors cleanName_ in Code.gs), or ''. */
+function nameProblem(value, label, max) {
+  const v = tidyName(value);
+  if (!v) return '';
+  if (v.length > (max || NAME_MAX)) return `${label} is longer than ${max || NAME_MAX} characters.`;
+  if (NAME_BAD.test(v)) return `${label} cannot contain / \\ < > : " | ? or *.`;
+  if (v.startsWith('.')) return `${label} cannot start with a dot.`;
+  return '';
+}
+const pathHas = (c, token) => c.path.includes('{' + token + '}');
+const isText = st => st.input === 'text';
+
+/** What a step finally stands for: the typed name, the matched existing name, or the picked value. */
+function effectiveValue(st) {
+  const v = choices[st.id];
+  if (!v) return '';
+  if (isText(st)) return existingNameFor(st.id) || tidyName(v); // an existing folder keeps its exact name
+  if (v === NEW) {
+    const typed = tidyName(newNames[st.id]);
+    if (!typed) return '';
+    return newMatch(st, typed).name || typed;
+  }
+  return v;
+}
+/** For "add a new one": does the typed name match an existing value or folder? */
+function newMatch(st, typed) {
+  const parent = st.dependsOn ? { [st.dependsOn]: effectiveValue(col.steps.find(s => s.id === st.dependsOn)) } : {};
+  const list = stepList(col, st, parent) || [];
+  const inList = list.find(x => sameName(x, typed));
+  if (inList) return { name: inList, where: 'list' };
+  const known = ((col.known || {})[st.id] || []).find(x => sameName(x, typed));
+  if (known) return { name: known, where: 'drive' };
+  return { name: '', where: '' };
+}
+function effectiveChoices() {
+  const out = {};
+  for (const st of col.steps) {
+    const v = choices[st.id];
+    if (!v) continue;
+    out[st.id] = isText(st) || v === NEW ? effectiveValue(st) : v;
+    if (v === NEW && !out[st.id]) delete out[st.id];
+  }
+  return out;
+}
 
 function stepList(collection, st, picked) {
   if (!st.dependsOn) return (collection.options[st.id] || {})[''] || [];
   const parent = picked[st.dependsOn];
   if (!parent) return null; // parent not chosen yet
-  if (parent === OTHER) return [];
+  if (parent === OTHER || parent === NONE) return [];
   return (collection.options[st.id] || {})[parent] || [];
 }
 
@@ -702,47 +823,90 @@ function activeSteps(collection, picked) {
 /** A step can drop out of the path if some parent value has no list for it (like sub course). */
 function stepCanBeSkipped(st) {
   if (!st.dependsOn) return false;
+  if (st.noneLabel) return true;
   const parentValues = Object.values(col.options[st.dependsOn] || {}).flat();
-  return parentValues.some(v => !((col.options[st.id] || {})[v] || []).length);
+  const parentStep = col.steps.find(s => s.id === st.dependsOn);
+  return (parentStep && parentStep.allowNew) || parentValues.some(v => !((col.options[st.id] || {})[v] || []).length);
+}
+
+/** Is this step answered well enough to upload? */
+function stepDone(st) {
+  const v = choices[st.id];
+  if (!v) return false;
+  if (isText(st)) return !!tidyName(v) && !nameProblem(v, st.label, st.maxLength);
+  if (v === NEW) {
+    const typed = tidyName(newNames[st.id]);
+    if (!typed || nameProblem(typed, st.label, st.maxLength)) return false;
+    return !!newMatch(st, typed).name || sameName(confirmed[st.id], typed);
+  }
+  return true;
 }
 
 /** The folder trail for the current choices, with placeholders for what is still missing. */
 function destination() {
+  const eff = effectiveChoices();
   const segs = {};
   let complete = true;
   for (const st of col.steps) {
-    const list = stepList(col, st, choices);
+    const list = stepList(col, st, eff);
     if (list === null) {
-      // Parent not chosen yet. Steps that only some parents have (sub course) stay out of sight.
       complete = false;
       if (!stepCanBeSkipped(st)) segs[st.id] = { name: st.label, pending: true };
       continue;
     }
     if (!list.length) continue;
     const v = choices[st.id];
-    if (!v) { complete = false; segs[st.id] = { name: st.label, pending: true }; }
-    else segs[st.id] = v === OTHER ? { name: st.otherFolder, other: true } : { name: v };
+    const label = isText(st) ? list[0] : st.label;
+    if (!stepDone(st)) {
+      complete = false;
+      const typed = v === NEW ? tidyName(newNames[st.id]) : '';
+      segs[st.id] = typed && !nameProblem(typed, st.label, st.maxLength)
+        ? { name: typed, pending: true, pendingText: `${typed} (tick the box to create it)` }
+        : { name: label, pending: true };
+      continue;
+    }
+    if (v === NONE) continue;
+    if (v === OTHER) segs[st.id] = { name: st.otherFolder, other: true };
+    else if (v === NEW) segs[st.id] = { name: eff[st.id], fresh: !newMatch(st, eff[st.id]).name };
+    else segs[st.id] = { name: eff[st.id] };
   }
   const when = col.contextFields.includes('date') ? dateParts(classDate()) : nowParts();
   if (when) {
     segs.year = { name: when.year, auto: true };
     segs.month = { name: when.monthFolder, auto: true };
+    segs.date = { name: when.iso, auto: true };
   } else {
     complete = false;
-    segs.year = { name: 'Date of the class', pending: true };
+    segs.year = segs.month = segs.date = { name: dateLabel(), pending: true, date: true };
   }
-  const dateSeg = segs.year.pending ? segs.year : null;
   const trail = [];
+  let dateSeg = null;
   for (const part of col.path.split('/')) {
-    const key = (part.match(/\{(\w+)\}/) || [])[1];
-    if (!key) trail.push({ name: part });
-    else if (segs[key]) trail.push(segs[key]);
+    const keys = [...part.matchAll(/\{(\w+)\}/g)].map(m => m[1]);
+    if (!keys.length) { trail.push({ name: part }); continue; }
+    const got = keys.map(k => segs[k]);
+    if (got.every(g => !g)) continue; // the step does not apply: no folder
+    if (got.some(g => !g || g.pending)) {
+      const missing = keys.filter(k => !segs[k] || segs[k].pending).map(k => segs[k] ? segs[k].name : k);
+      const seg = { name: [...new Set(missing)].join(' and '), pending: true, pendingText: keys.length === 1 ? segs[keys[0]]?.pendingText : '' };
+      if (keys.every(k => ['year', 'month', 'date'].includes(k))) { if (dateSeg) continue; dateSeg = seg; }
+      trail.push(seg);
+      continue;
+    }
+    const name = part.replace(/\{(\w+)\}/g, (m, k) => segs[k].name);
+    const typed = keys.find(k => { const st = col.steps.find(s => s.id === k); return st && isText(st); });
+    trail.push({
+      name,
+      auto: got.every(g => g.auto),
+      other: got.some(g => g.other),
+      tagText: got.some(g => g.fresh) ? 'New campaign' : typed ? (existingNameFor(typed) ? 'Existing folder' : 'New folder') : ''
+    });
   }
   return { trail, complete, dateSeg };
 }
 
 function anyOtherNeedsNote() {
-  return col.steps.some(st => st.askNote && choices[st.id] === OTHER && stepList(col, st, choices)?.length);
+  return col.steps.some(st => st.askNote && choices[st.id] === OTHER && stepList(col, st, effectiveChoices())?.length);
 }
 
 // ---------------------------------------------------------------------------
@@ -751,12 +915,17 @@ function anyOtherNeedsNote() {
 const files = []; // { file, key, state, progress, message, session, savedAs, path }
 let uploading = false;
 
+function dateLabel() { return col.dateLabel || 'Date of the class or event'; }
+function requiredFields() { return col.contextFields.filter(f => !(col.optionalFields || []).includes(f)); }
+const optLabel = f => requiredFields().includes(f) ? null : el('span', { class: 'opt', text: ' (optional)' });
+
 const CONTEXT_FIELDS = {
   what: () => el('div', { class: 'field' },
-    el('label', { for: 'ctx-what', text: 'What happened' }),
-    el('input', { type: 'text', id: 'ctx-what', name: 'what', maxlength: 200, required: true, autocomplete: 'off', placeholder: 'Class, event or activity, for example "Arabic class, cooking day"' })),
+    el('label', { for: 'ctx-what' }, 'What happened', optLabel('what')),
+    el('input', { type: 'text', id: 'ctx-what', name: 'what', maxlength: 200, required: requiredFields().includes('what'), autocomplete: 'off', placeholder: col.id === 'classes' ? 'Class, event or activity, for example "Arabic class, cooking day"' : 'For example "Families at our booth, reading game"' }),
+    PREVIEW && col.id !== 'classes' ? el('p', { class: 'hint preview-note', text: 'Preview note: required here, like Classes. It can be made optional for this section with one cell in the admin sheet (Optional Fields).' }) : null),
   date: () => el('div', { class: 'field' },
-    el('label', { for: 'ctx-date', text: 'Date of the class or event' }),
+    el('label', { for: 'ctx-date', text: dateLabel() }),
     el('input', { type: 'date', id: 'ctx-date', name: 'date', value: todayIso(), min: `${SETTINGS.firstYear}-01-01`, max: todayIso() })),
   staff: () => el('div', { class: 'field' },
     el('label', { for: 'ctx-staff' }, 'Instructor or staff member ', el('span', { class: 'opt', text: '(optional)' })),
@@ -768,19 +937,27 @@ const CONTEXT_FIELDS = {
     el('textarea', { id: 'ctx-notes', name: 'notes', maxlength: 1500, placeholder: 'Anything that helps someone understand these files later' }))
 };
 
+/** The date sits in step 1 when it is part of a folder name ({date}), otherwise in step 3. */
 function renderContextFields() {
   const box = $('contextFields');
   box.replaceChildren();
-  for (const f of ['what', 'date', 'staff', 'notes']) if (col.contextFields.includes(f)) box.append(CONTEXT_FIELDS[f]());
+  const dateInWhere = pathHas(col, 'date') && col.contextFields.includes('date');
+  // Kept as one element and moved, so the picked date survives redraws of the pickers.
+  whereDateField = dateInWhere ? CONTEXT_FIELDS.date() : null;
+  for (const f of ['what', 'date', 'staff', 'notes']) {
+    if (!col.contextFields.includes(f) || (f === 'date' && dateInWhere)) continue;
+    box.append(CONTEXT_FIELDS[f]());
+  }
   box.append(el('div', { class: 'field', id: 'otherNoteField', hidden: true },
     el('label', { for: 'ctx-otherNote' }, 'Which site or class do you think this is? ', el('span', { class: 'opt', text: '(optional)' })),
     el('input', { type: 'text', id: 'ctx-otherNote', name: 'otherNote', maxlength: 300, autocomplete: 'off' }),
     el('p', { class: 'hint', text: 'Helps whoever places these files later.' })));
   $('uploaderLine').replaceChildren(svgIcon('user'),
     el('span', {}, 'Saved as uploaded by ', el('strong', { text: who.name || who.email }), who.name ? ` (${who.email})` : ''));
+  $('whereHint').hidden = !col.steps.some(st => st.otherFolder);
 }
 
-/** The class date, only when it is a real date in the allowed range. */
+/** The date, only when it is a real date in the allowed range. */
 function classDate() {
   const v = $('ctx-date')?.value || '';
   return v && v >= `${SETTINGS.firstYear}-01-01` && v <= todayIso() ? v : '';
@@ -795,47 +972,217 @@ function contextValues() {
   return out;
 }
 
+let whereDateField = null; // the date field when it is part of a folder name: sits next to the first picker
+
+function stepsSignature() { return activeSteps(col, effectiveChoices()).map(({ st, list }) => st.id + ':' + list.join('|')).join(';'); }
+
 function renderPickers() {
   const box = $('pickers');
+  const focused = document.activeElement && box.contains(document.activeElement) ? document.activeElement : null;
+  const keep = focused ? { id: focused.id, start: focused.selectionStart, end: focused.selectionEnd } : null;
   box.replaceChildren();
-  for (const { st, list } of activeSteps(col, choices)) {
+  const eff = effectiveChoices();
+  let first = true;
+  for (const { st, list } of activeSteps(col, eff)) {
+    if (!first && whereDateField && !whereDateField.isConnected) box.append(whereDateField);
+    first = false;
     const id = 'pick-' + st.id;
+    if (isText(st)) {
+      const parent = st.dependsOn ? eff[st.dependsOn] : '';
+      const label = list[0] || st.label;
+      const hint = (st.hints || {})[parent || ''] || '';
+      const input = el('input', { type: 'text', id, 'data-step': st.id, maxlength: (st.maxLength || NAME_MAX) + 20, autocomplete: 'off', required: true, 'aria-describedby': `${id}-hint ${id}-note` });
+      input.value = choices[st.id] || '';
+      input.addEventListener('input', () => { choices[st.id] = input.value; afterTyping(); });
+      box.append(el('div', { class: 'field field-wide' },
+        el('label', { for: id, text: label }), input,
+        hint ? el('p', { class: 'hint', id: `${id}-hint`, text: hint }) : null,
+        el('div', { class: 'name-note', id: `${id}-note`, 'aria-live': 'polite' })));
+      continue;
+    }
     const select = el('select', { id, 'data-step': st.id, required: true },
       el('option', { value: '', text: `Choose a ${st.label.toLowerCase()}` }),
+      st.noneLabel ? el('option', { value: NONE, text: st.noneLabel }) : null,
       list.map(v => el('option', { value: v, text: v })),
-      st.otherFolder ? el('option', { value: OTHER, text: 'Other' }) : null);
+      st.otherFolder ? el('option', { value: OTHER, text: 'Other' }) : null,
+      st.allowNew ? el('option', { value: NEW, text: `+ Add a new ${st.label.toLowerCase()}` }) : null);
     select.value = choices[st.id] || '';
     select.addEventListener('change', () => {
       choices[st.id] = select.value;
       pruneChoices();
       renderPickers();
-      if (finePointer) $(id)?.focus();
+      if (finePointer || select.value === NEW) $(select.value === NEW ? id + '-new' : id)?.focus();
       refreshSummary();
     });
-    box.append(el('div', { class: 'field' }, el('label', { for: id, text: st.label }), select));
+    const field = el('div', { class: 'field' + (choices[st.id] === NEW ? ' field-wide' : '') }, el('label', { for: id, text: st.label }), select);
+    if (choices[st.id] === NEW) {
+      const nid = id + '-new';
+      const input = el('input', { type: 'text', id: nid, maxlength: (st.maxLength || NAME_MAX) + 20, autocomplete: 'off', 'aria-describedby': `${id}-note`, placeholder: `New ${st.label.toLowerCase()} name` });
+      input.value = newNames[st.id] || '';
+      input.addEventListener('input', () => { newNames[st.id] = input.value; afterTyping(); });
+      field.append(el('label', { for: nid, class: 'sub-label', text: `New ${st.label.toLowerCase()} name` }), input,
+        el('div', { class: 'name-note', id: `${id}-note`, 'aria-live': 'polite' }));
+    }
+    box.append(field);
   }
+  if (whereDateField && !whereDateField.isConnected) box.append(whereDateField);
+  renderNameNotes();
+  if (keep && $(keep.id)) {
+    const n = $(keep.id);
+    n.focus();
+    if (keep.start != null && n.setSelectionRange) try { n.setSelectionRange(keep.start, keep.end); } catch (e) { /* not a text field */ }
+  }
+}
+
+/** After typing a name: redraw only when the steps below change (a typed campaign with subfolders). */
+let lastSignature = '';
+function afterTyping() {
+  const sig = stepsSignature();
+  if (sig !== lastSignature) { lastSignature = sig; pruneChoices(); renderPickers(); } else renderNameNotes();
+  refreshSummary();
 }
 
 /** Drops choices that no longer fit after a parent changed. */
 function pruneChoices() {
+  const eff = effectiveChoices();
   for (const st of col.steps) {
-    const list = stepList(col, st, choices);
+    const list = stepList(col, st, eff);
     const v = choices[st.id];
     if (!v) continue;
-    if (!list || !list.length || (v !== OTHER && !list.includes(v)) || (v === OTHER && !st.otherFolder)) delete choices[st.id];
+    if (!list || !list.length) { delete choices[st.id]; continue; }
+    if (isText(st) || v === NEW) continue;
+    if ((v !== OTHER && v !== NONE && !list.includes(v)) || (v === OTHER && !st.otherFolder) || (v === NONE && !st.noneLabel)) delete choices[st.id];
   }
+  lastSignature = stepsSignature();
+}
+
+// ----- names that already exist (same-date folders, campaigns) -----
+const existingCache = {}; // "collection|parent choices|date|step" -> names, or a pending promise
+function existingKey(st) {
+  const date = classDate();
+  if (!pathHas(col, 'date') || !date) return '';
+  const parents = {}; // only the steps above this one (never this step's own value: no loop)
+  for (const s of col.steps) {
+    if (s.id === st.id) break;
+    const v = choices[s.id];
+    if (!v) continue;
+    parents[s.id] = isText(s) ? tidyName(v) : v === NEW ? effectiveValue(s) : v;
+  }
+  if (st.dependsOn && !parents[st.dependsOn]) return '';
+  return [col.id, JSON.stringify(parents), date, st.id].join('|');
+}
+function existingNames(st) {
+  const key = existingKey(st);
+  if (!key) return null;
+  const hit = existingCache[key];
+  if (Array.isArray(hit)) return hit;
+  if (!hit) {
+    const [, parents, date] = key.split('|');
+    existingCache[key] = api('existingFolders', { collection: col.id, step: st.id, choices: JSON.parse(parents), date })
+      .then(r => { existingCache[key] = r.names || []; renderNameNotes(); refreshSummary(); })
+      .catch(() => { existingCache[key] = []; renderNameNotes(); });
+  }
+  return null; // loading
+}
+function existingNameFor(stepId) {
+  const st = col.steps.find(s => s.id === stepId);
+  if (!st || !isText(st) || !pathHas(col, 'date')) return '';
+  const names = existingNames(st) || [];
+  return names.find(n => sameName(n, choices[stepId]));
+}
+
+/** The line under each typed name: problems, folders that already exist, near-duplicates, the confirm box. */
+function renderNameNotes() {
+  const eff = effectiveChoices();
+  for (const { st, list } of activeSteps(col, eff)) {
+    const note = $(`pick-${st.id}-note`);
+    if (!note) continue;
+    const kids = [];
+    if (isText(st)) {
+      const label = list[0] || st.label;
+      const typed = tidyName(choices[st.id]);
+      const problem = nameProblem(typed, label, st.maxLength);
+      const names = existingNames(st);
+      if (problem) kids.push(el('p', { class: 'name-msg is-error', text: problem }));
+      if (names === null && existingKey(st)) kids.push(el('p', { class: 'hint', text: 'Looking for folders already made for this date…' }));
+      else if (names && !existingKey(st)) { /* no date yet */ }
+      if (names && names.length) {
+        const same = names.find(n => sameName(n, typed));
+        const close = !same && typed ? names.filter(n => similarName(typed, n)) : [];
+        if (same) kids.push(el('p', { class: 'name-msg is-ok' }, svgIcon('check'), el('span', {}, 'Goes into the existing folder ', el('strong', { text: `${classDate()} - ${same}` }), '.')));
+        else if (close.length) kids.push(didYouMean(close.map(n => ({ label: n, use: () => { choices[st.id] = n; $(`pick-${st.id}`).value = n; afterTyping(); } })),
+          'A different name makes a separate folder.'));
+        kids.push(el('div', { class: 'existing' },
+          el('span', { class: 'existing-label', text: `Already in Drive for ${classDate()}:` }),
+          names.map(n => el('button', { type: 'button', class: 'chip chip-sm' + (same === n ? ' is-current' : ''), 'aria-pressed': same === n ? 'true' : 'false',
+            onclick: () => { choices[st.id] = n; $(`pick-${st.id}`).value = n; afterTyping(); } }, svgIcon('folder'), n))));
+      } else if (names && typed && !problem) {
+        kids.push(el('p', { class: 'hint', text: `No folder yet for ${classDate()}. A new one will be made.` }));
+      }
+    } else if (choices[st.id] === NEW) {
+      const typed = tidyName(newNames[st.id]);
+      const problem = nameProblem(typed, st.label, st.maxLength);
+      const match = typed ? newMatch(st, typed) : { name: '' };
+      const close = typed && !match.name && !problem ? newSuggestions(st, typed) : [];
+      if (problem) kids.push(el('p', { class: 'name-msg is-error', text: problem }));
+      else if (match.where === 'list') kids.push(el('p', { class: 'name-msg is-ok' }, svgIcon('check'), el('span', {}, el('strong', { text: match.name }), ' is already in the list. Files go into that campaign.')));
+      else if (match.where === 'drive') kids.push(el('p', { class: 'name-msg is-ok' }, svgIcon('check'), el('span', {}, 'A folder named ', el('strong', { text: match.name }), ' already exists in Campaigns. Files go into it.')));
+      else if (typed) {
+        if (close.length) kids.push(didYouMean(close, `If not, tick the box below to make a new ${st.label.toLowerCase()}.`));
+        const box = el('input', { type: 'checkbox', id: `pick-${st.id}-confirm` });
+        box.checked = sameName(confirmed[st.id], typed);
+        box.addEventListener('change', () => { if (box.checked) confirmed[st.id] = typed; else delete confirmed[st.id]; renderFolderPathOnly(); refreshSummary(); });
+        kids.push(el('label', { class: 'confirm', for: `pick-${st.id}-confirm` }, box,
+          el('span', {}, `Create a new ${st.label.toLowerCase()} folder named `, el('strong', { text: `“${typed}”` }), ` in ${col.label}. I checked the spelling.`)));
+      }
+    }
+    note.replaceChildren(...kids);
+  }
+}
+function renderFolderPathOnly() { renderFolderPath(); }
+
+/** "Did you mean: [Use X] [Use Y]" with one click per suggestion. */
+function didYouMean(items, after) {
+  return el('div', { class: 'name-msg is-warn' }, svgIcon('alert'),
+    el('span', {}, el('strong', { text: 'Did you mean: ' }),
+      items.map(it => el('button', { type: 'button', class: 'link-btn use-btn', text: `Use ${it.label}`, onclick: it.use })),
+      after ? el('span', { class: 'after', text: ' ' + after }) : null));
+}
+
+/**
+ * Suggestions for a typed new value (same rule as nameSuggestions_ in Code.gs): listed values and
+ * folders already there, plus sub-folders of them ("MCP Enrollment / Student Referral").
+ */
+function newSuggestions(st, typed) {
+  const out = [], seen = new Set();
+  const add = (label, use) => { if (!seen.has(label)) { seen.add(label); out.push({ label, use }); } };
+  const list = stepList(col, st, {}) || [];
+  const done = () => { pruneChoices(); renderPickers(); refreshSummary(); };
+  const pick = name => {
+    if (list.includes(name)) { choices[st.id] = name; delete newNames[st.id]; }
+    else { choices[st.id] = NEW; newNames[st.id] = name; }
+  };
+  for (const n of [...list, ...((col.known || {})[st.id] || [])]) if (similarName(typed, n)) add(n, () => { pick(n); done(); });
+  for (const child of col.steps.filter(c => c.dependsOn === st.id && !isText(c))) {
+    for (const [parent, subs] of Object.entries(col.options[child.id] || {})) {
+      for (const sub of subs) {
+        if (sameName(typed, sub) || similarName(typed, sub)) add(`${parent} / ${sub}`, () => { pick(parent); choices[child.id] = sub; done(); });
+      }
+    }
+  }
+  return out;
 }
 
 function renderFolderPath() {
   const d = destination();
   const rows = [{ name: col.label, root: true }, ...d.trail];
   $('folderPath').replaceChildren(...rows.map((s, i) => el('li', {
-      class: s.root ? 'root' : s.pending ? 'pending' : s.auto ? 'auto' : s.other ? 'other' : '',
+      class: s.root ? 'root' : s.pending ? 'pending' : s.auto ? 'auto' : s.other ? 'other' : s.tagText ? 'typed' : '',
       style: `--depth:${Math.min(i, 5)}`
     },
     svgIcon('folder'),
-    el('span', { text: s.pending ? `${s.name}: not chosen yet` : s.name }),
-    s.other ? el('span', { class: 'tag', text: 'Other' }) : null)));
+    el('span', { text: s.pending ? (s.pendingText || `${s.name}: not chosen yet`) : s.name }),
+    s.other ? el('span', { class: 'tag', text: 'Other' }) : s.tagText ? el('span', { class: 'tag ' + (s.tagText === 'Existing folder' ? 'auto' : 'new'), text: s.tagText }) : null)));
   return d;
 }
 
@@ -848,13 +1195,16 @@ function refreshSummary() {
   const ctx = contextValues();
   const needs = [];
   const datePending = col.contextFields.includes('date') && !classDate();
-  if (d.trail.some(s => s.pending && s !== d.dateSeg) || activeSteps(col, choices).some(({ st }) => !choices[st.id])) needs.push('where the files go');
-  if (datePending) needs.push('the date of the class');
+  const whereMissing = d.trail.some(s => s.pending && s !== d.dateSeg) || activeSteps(col, effectiveChoices()).some(({ st }) => !stepDone(st));
+  if (whereMissing) needs.push('where the files go');
+  if (datePending) needs.push(dateLabel().charAt(0).toLowerCase() + dateLabel().slice(1));
   if (!queued.length) needs.push('the files');
-  if (col.contextFields.includes('what') && !ctx.what) needs.push('what happened');
-  $('stepWhere').classList.toggle('is-done', !needs.includes('where the files go'));
+  const whatNeeded = requiredFields().includes('what') && !ctx.what;
+  if (whatNeeded) needs.push('what happened');
+  const dateInWhere = pathHas(col, 'date');
+  $('stepWhere').classList.toggle('is-done', !whereMissing && !(dateInWhere && datePending));
   $('stepFiles').classList.toggle('is-done', queued.length > 0);
-  $('stepAbout').classList.toggle('is-done', (!col.contextFields.includes('what') || !!ctx.what) && !datePending);
+  $('stepAbout').classList.toggle('is-done', !whatNeeded && !(datePending && !dateInWhere));
   $('stepCheck').classList.toggle('is-done', !needs.length);
   const btn = $('uploadBtn');
   const text = $('summaryText');
@@ -873,7 +1223,8 @@ function refreshSummary() {
     btn.append(`Upload ${plural(queued.length, 'file', 'files')}`);
     text.append(`${plural(queued.length, 'file', 'files')}, ${fmtBytes(total)}, go into the folder above.`);
   }
-  $('destNote').textContent = d.trail.some(s => s.other) ? 'Files marked Other wait in these folders until someone places them.' : '';
+  $('destNote').textContent = d.trail.some(s => s.other) ? 'Files marked Other wait in these folders until someone places them.'
+    : d.trail.some(s => s.tagText === 'New campaign') ? 'A new campaign folder is made with the first file, and the campaign joins the list for everyone.' : '';
 }
 
 // ----- files -----
@@ -963,11 +1314,22 @@ function writeSession(key, s) {
   try { const all = readSessions(); if (s) all[key] = s; else delete all[key]; localStorage.setItem(SESSION_STORE, JSON.stringify(all)); } catch (e) { /* storage off: resume works only while the page stays open */ }
 }
 function sessionKey(item) {
-  return [who.email, col.id, JSON.stringify(destinationChoices()), (classDate() || todayIso()).slice(0, 7), item.key].join('::');
+  // A folder named after the full date needs the full date in the key (two events in one month).
+  const when = classDate() || todayIso();
+  return [who.email, col.id, JSON.stringify(destinationChoices()), pathHas(col, 'date') ? when : when.slice(0, 7), item.key].join('::');
 }
+/** What the server gets: picked values, typed names, and for a new value the typed name itself. */
 function destinationChoices() {
   const out = {};
-  for (const { st } of activeSteps(col, choices)) out[st.id] = choices[st.id];
+  const eff = effectiveChoices();
+  for (const { st } of activeSteps(col, eff)) out[st.id] = isText(st) || choices[st.id] === NEW ? eff[st.id] : choices[st.id];
+  return out;
+}
+function confirmNewValues() {
+  const out = {};
+  for (const { st } of activeSteps(col, effectiveChoices())) {
+    if (choices[st.id] === NEW && sameName(confirmed[st.id], newNames[st.id])) out[st.id] = tidyName(newNames[st.id]);
+  }
   return out;
 }
 
@@ -994,9 +1356,10 @@ async function uploadOne(item) {
   if (!s) {
     item.state = 'starting'; renderFiles();
     const started = await api('startUpload', {
-      collection: col.id, choices: destinationChoices(), context: contextValues(),
+      collection: col.id, choices: destinationChoices(), confirmNew: confirmNewValues(), context: contextValues(),
       file: { name: file.name, size: file.size, type: file.type }, origin: location.origin
     });
+    rememberNewValues();
     s = { ...started, offset: 0, sent: false, createdAt: Date.now() };
     writeSession(key, s);
   }
@@ -1033,6 +1396,16 @@ async function uploadOne(item) {
   await api('finishUpload', { collection: col.id, fileId: s.fileId, token: s.token, originalName: file.name, context: contextValues() });
   writeSession(key, null);
   item.state = 'done'; item.session = null; renderFiles();
+}
+
+/** A new campaign is in the list from now on (the server added it to the admin sheet). */
+function rememberNewValues() {
+  for (const st of col.steps) {
+    if (choices[st.id] !== NEW || st.dependsOn) continue;
+    const name = effectiveValue(st);
+    const list = (col.options[st.id] = col.options[st.id] || {})[''] = (col.options[st.id][''] || []);
+    if (name && !list.some(x => sameName(x, name))) list.push(name);
+  }
 }
 
 function waitForRetry(seconds) {
@@ -1111,11 +1484,16 @@ function clearDoneFiles() {
   renderFiles(); refreshSummary();
 }
 
+function clearChoices() {
+  for (const o of [choices, newNames, confirmed]) for (const k of Object.keys(o)) delete o[k];
+  lastSignature = '';
+}
+
 function resetAdd() {
   files.length = 0;
-  for (const k of Object.keys(choices)) delete choices[k];
+  clearChoices();
   $('doneArea').replaceChildren();
-  renderPickers(); renderContextFields(); renderFiles(); refreshSummary();
+  renderContextFields(); renderPickers(); renderFiles(); refreshSummary();
   window.scrollTo({ top: 0 });
 }
 
@@ -1139,8 +1517,9 @@ function alignSide() {
 
 function selectCollection(id) {
   col = CONFIG.collections.find(c => c.id === id);
-  for (const k of Object.keys(choices)) delete choices[k];
-  renderPickers(); renderContextFields(); refreshSummary();
+  $('headSection').textContent = ' ' + col.label;
+  clearChoices();
+  renderContextFields(); renderPickers(); refreshSummary();
 }
 
 // ---------------------------------------------------------------------------
@@ -1149,8 +1528,19 @@ function selectCollection(id) {
 let findMode = 'search';
 const findState = { pageToken: '', folderId: '', started: false };
 const filterValues = {};
+let findCol = null; // Find media has its own section switch
 
-function findApi(action, body) { return api(action, { ...body, collection: col.id }); }
+function findApi(action, body) { return api(action, { ...body, collection: findCol.id }); }
+
+function selectFindSection(id) {
+  findCol = CONFIG.collections.find(c => c.id === id);
+  $('headSection').textContent = ' ' + findCol.label;
+  for (const k of Object.keys(filterValues)) delete filterValues[k];
+  findState.folderId = '';
+  $('crumbs').replaceChildren(); $('folders').replaceChildren();
+  renderFilters();
+  if (findState.started) setMode(findMode);
+}
 
 function setMode(mode) {
   findMode = mode;
@@ -1172,8 +1562,8 @@ function renderFilters() {
     select.value = filterValues[id] || '';
     select.addEventListener('change', () => {
       filterValues[id] = select.value;
-      for (const st of col.steps) {
-        const l = stepList(col, st, filterValues);
+      for (const st of findCol.steps) {
+        const l = stepList(findCol, st, filterValues);
         if (filterValues[st.id] && (!l || (filterValues[st.id] !== 'Other' && !l.includes(filterValues[st.id])))) delete filterValues[st.id];
       }
       renderFilters(); runSearch(false);
@@ -1181,16 +1571,17 @@ function renderFilters() {
     });
     box.append(el('div', {}, el('label', { for: 'f-' + id, text: label }), select));
   };
-  for (const st of col.steps) {
-    const list = stepList(col, st, filterValues);
+  for (const st of findCol.steps) {
+    if (isText(st)) continue; // typed names are found by searching for them
+    const list = stepList(findCol, st, filterValues);
     if (!list || !list.length) continue;
     add(st.id, st.label, st.otherFolder ? [...list, { value: 'Other', label: 'Other' }] : list);
   }
   const years = [];
   for (let y = Number(nowParts().year); y >= SETTINGS.firstYear; y--) years.push(String(y));
-  add('year', 'Class year', years);
-  add('month', 'Class month', Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1).padStart(2, '0'), label: new Date(2000, i, 1).toLocaleString('en-US', { month: 'long' }) })));
-  add('type', 'Type', [{ value: 'photo', label: 'Photos' }, { value: 'video', label: 'Videos' }]);
+  add('year', 'Year', years);
+  add('month', 'Month', Array.from({ length: 12 }, (_, i) => ({ value: String(i + 1).padStart(2, '0'), label: new Date(2000, i, 1).toLocaleString('en-US', { month: 'long' }) })));
+  add('type', findCol.steps.some(st => st.label === 'Type') ? 'Photo or video' : 'Type', [{ value: 'photo', label: 'Photos' }, { value: 'video', label: 'Videos' }]);
 }
 
 function setFindStatus(text, isError) {
@@ -1325,6 +1716,8 @@ function showView(which) {
   $('tabFind').setAttribute('aria-selected', !add);
   $('addView').hidden = !add;
   $('findView').hidden = add;
+  const shown = add ? col : findCol;
+  if (shown) $('headSection').textContent = ' ' + shown.label;
   try { history.replaceState(null, '', add ? location.pathname + location.search : '#find'); } catch (e) { /* not allowed in some frames */ }
   if (!add && !findState.started) { renderFilters(); setMode('search'); }
   alignSide();
@@ -1354,6 +1747,11 @@ function startApp() {
   $('collectionField').hidden = CONFIG.collections.length < 2;
   colSelect.addEventListener('change', () => selectCollection(colSelect.value));
   selectCollection(CONFIG.collections[0].id);
+  const findSelect = $('findSection');
+  findSelect.replaceChildren(...CONFIG.collections.map(c => el('option', { value: c.id, text: c.label })));
+  $('findSectionField').hidden = CONFIG.collections.length < 2;
+  findSelect.addEventListener('change', () => selectFindSection(findSelect.value));
+  findCol = CONFIG.collections[0];
   showView(location.hash === '#find' ? 'find' : 'add');
 }
 
@@ -1384,6 +1782,8 @@ async function init() {
   $('uploadBtn').addEventListener('click', startUploads);
   $('contextFields').addEventListener('input', refreshSummary);
   $('contextFields').addEventListener('change', refreshSummary);
+  // The date in step 1 is part of a folder name: redraw the name notes (folders made that day) too.
+  for (const type of ['input', 'change']) $('pickers').addEventListener(type, e => { if (e.target.id === 'ctx-date') { renderNameNotes(); refreshSummary(); } });
   window.addEventListener('beforeunload', e => { if (uploading) { e.preventDefault(); e.returnValue = ''; } });
   setupDrop();
   new ResizeObserver(alignSide).observe(document.body);
