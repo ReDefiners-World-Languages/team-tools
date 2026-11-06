@@ -138,7 +138,12 @@ function tb_writeRows_(t, rows) {
     while (j + 1 < rows.length && rows[j + 1].row === rows[j].row + 1) j++;
     var run = rows.slice(i, j + 1), range = t.sh.getRange(run[0].row, 1, run.length, n);
     var risky = run.some(function (r) { return t.cols.some(function (c, k) { return (c[1] === 'text' || c[1] === 'long') && tb_risky_(r.values[k]); }); });
-    if (risky) { range.setNumberFormats(run.map(function () { return t.cols.map(function (c) { return TB_FORMATS[c[1]]; }); })); calls++; }
+    if (risky) {
+      // Columns of a Sheets table are typed and refuse setNumberFormats ("You can't set the number format of cells in a
+      // typed column"). The typed column already holds text, so on that error write the values as they are.
+      try { range.setNumberFormats(run.map(function () { return t.cols.map(function (c) { return TB_FORMATS[c[1]]; }); })); calls++; }
+      catch (e) { if (String(e && e.message).indexOf('typed column') < 0) throw e; }
+    }
     range.setValues(run.map(function (r) { return r.values; }));
     calls++;
     i = j + 1;
