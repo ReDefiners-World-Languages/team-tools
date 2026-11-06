@@ -71,8 +71,56 @@
 
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const err = (code, message) => Object.assign(new Error(message), { code, retryable: false });
-  const norm = s => String(s || '').replace(/[‘’ʼ`]/g, "'").replace(/\s+/g, ' ').trim().toLowerCase();
-  const looseFind = (list, v) => list.find(x => norm(x) === norm(v)) || '';
+  // BEGIN name-similarity (same code in Code.gs, index.html and preview-mock.js: change all three)
+  // Two names are the SAME when they differ only in capitals, accents, spacing or punctuation.
+  // A typed name is SIMILAR to an existing one (a "Did you mean" suggestion) when, ignoring those:
+  // one contains the other (3+ letters, so "MCP" finds "MCP Enrollment"), they share a stem
+  // ("Fundraise" / "Fundraising"), they share a whole word that is not filler, or they are a
+  // small edit apart ("Sumer STEAM").
+  var NAME_FILLER = ['the', 'of', 'and', 'for', 'a', 'an', 'to', 'in', 'at', 'on', 'with', 'by', 'our', 'de', 'la', 'el', 'los', 'las', 'y',
+    'day', 'night', 'event', 'events', 'campaign', 'program', 'class'];
+  function simpleName(s) {
+    return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+  function compactName(s) { return simpleName(s).replace(/ /g, ''); }
+  function sameName(a, b) { var x = compactName(a); return !!x && x === compactName(b); }
+  function nameWords(s) {
+    return simpleName(s).split(' ').filter(function (w) { return w.length >= 3 && NAME_FILLER.indexOf(w) < 0; });
+  }
+  function editDistance(a, b) {
+    var prev = [], cur, i, j;
+    for (j = 0; j <= b.length; j++) prev[j] = j;
+    for (i = 1; i <= a.length; i++) {
+      cur = [i];
+      for (j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1));
+      prev = cur;
+    }
+    return prev[b.length];
+  }
+  function similarName(typed, existing) {
+    var a = compactName(typed), b = compactName(existing);
+    if (!a || !b || a === b) return false;
+    var shorter = Math.min(a.length, b.length);
+    if (a.length >= 3 && b.indexOf(a) >= 0) return true;  // typed is a prefix of, or inside, the existing name
+    if (b.length >= 3 && a.indexOf(b) >= 0) return true;  // typed contains the existing name
+    var p = 0;
+    while (p < shorter && a.charAt(p) === b.charAt(p)) p++;
+    if (shorter >= 4 && p >= Math.max(4, Math.ceil(shorter * 0.7))) return true; // same stem
+    var wb = nameWords(existing);
+    if (nameWords(typed).some(function (w) { return wb.indexOf(w) >= 0; })) return true; // a shared whole word
+    return shorter >= 4 && editDistance(a, b) <= Math.max(1, Math.floor(shorter / 5)); // a typo or two
+  }
+  // END name-similarity
+  const looseFind = (list, v) => list.find(x => sameName(x, v)) || '';
+  /** Same rule as nameSuggestions_ in Code.gs. */
+  function suggestions(col, st, typed) {
+    const out = [];
+    for (const n of [...((col.options[st.id] || {})[''] || []), ...childNames(col.label)]) if (similarName(typed, n) && !out.includes(n)) out.push(n);
+    for (const child of col.steps.filter(c => c.dependsOn === st.id && c.input !== 'text')) {
+      for (const [parent, subs] of Object.entries(col.options[child.id] || {})) for (const sub of subs) if (sameName(typed, sub) || similarName(typed, sub)) out.push(parent + ' / ' + sub);
+    }
+    return out;
+  }
 
   function cleanName(raw, st, label) {
     const v = String(raw || '').replace(/[\u0000-\u001F\u007F]/g, '').replace(/\s+/g, ' ').trim();
@@ -102,7 +150,10 @@
       if (hit) { chosen[st.id] = vals[st.id] = hit; continue; }
       if (!st.allowNew) throw err('bad_choice', 'Pick a ' + st.label.toLowerCase() + ' from the list.');
       const fresh = cleanName(value, st, st.label);
-      if (norm(confirmNew[st.id]) !== norm(fresh)) throw err('confirm_new', `Confirm that you want a new ${st.label.toLowerCase()} folder named "${fresh}".`);
+      if (!sameName(confirmNew[st.id], fresh)) {
+        const near = suggestions(col, st, fresh);
+        throw err('confirm_new', `Confirm that you want a new ${st.label.toLowerCase()} folder named "${fresh}".` + (near.length ? ' Did you mean: ' + near.join(', ') + '?' : ''));
+      }
       chosen[st.id] = vals[st.id] = fresh;
       created.push(st);
     }
@@ -173,7 +224,7 @@
       const path = [col.label, ...dest.segments].join('/');
       for (const st of dest.created) { // a new campaign joins the list, as the admin sheet row does
         const list = col.options[st.id][''];
-        if (!list.some(x => norm(x) === norm(dest.chosen[st.id]))) list.push(dest.chosen[st.id]);
+        if (!list.some(x => sameName(x, dest.chosen[st.id]))) list.push(dest.chosen[st.id]);
       }
       addFolder(path);
       for (const c of cfg.collections) for (const id of Object.keys(c.known || {})) c.known[id] = childNames(c.label);

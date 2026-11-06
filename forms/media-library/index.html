@@ -143,6 +143,8 @@
   .name-msg.is-warn svg { color: var(--amber); }
   .name-msg.is-error { color: var(--red); }
   .name-msg .link-btn { padding: 0 2px; text-decoration: underline; }
+  .name-msg .use-btn { margin-right: 10px; font-size: 13px; }
+  .name-msg .after { font-weight: 500; color: var(--ink-2); }
   .existing { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .existing-label { font-size: 12.5px; color: var(--ink-3); width: 100%; }
   .chip-sm { min-height: 34px; padding: 0 12px; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
@@ -713,8 +715,46 @@ const NEW = '__new__';
 const NAME_MAX = 60;
 const NAME_BAD = /[\/\\<>:"|?*]/;
 
-/** Same comparison as the server: ignore capitals, spacing and curly quotes. */
-function norm(s) { return String(s || '').replace(/[‘’ʼ`]/g, "'").replace(/\s+/g, ' ').trim().toLowerCase(); }
+// BEGIN name-similarity (same code in Code.gs, index.html and preview-mock.js: change all three)
+// Two names are the SAME when they differ only in capitals, accents, spacing or punctuation.
+// A typed name is SIMILAR to an existing one (a "Did you mean" suggestion) when, ignoring those:
+// one contains the other (3+ letters, so "MCP" finds "MCP Enrollment"), they share a stem
+// ("Fundraise" / "Fundraising"), they share a whole word that is not filler, or they are a
+// small edit apart ("Sumer STEAM").
+var NAME_FILLER = ['the', 'of', 'and', 'for', 'a', 'an', 'to', 'in', 'at', 'on', 'with', 'by', 'our', 'de', 'la', 'el', 'los', 'las', 'y',
+  'day', 'night', 'event', 'events', 'campaign', 'program', 'class'];
+function simpleName(s) {
+  return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function compactName(s) { return simpleName(s).replace(/ /g, ''); }
+function sameName(a, b) { var x = compactName(a); return !!x && x === compactName(b); }
+function nameWords(s) {
+  return simpleName(s).split(' ').filter(function (w) { return w.length >= 3 && NAME_FILLER.indexOf(w) < 0; });
+}
+function editDistance(a, b) {
+  var prev = [], cur, i, j;
+  for (j = 0; j <= b.length; j++) prev[j] = j;
+  for (i = 1; i <= a.length; i++) {
+    cur = [i];
+    for (j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length];
+}
+function similarName(typed, existing) {
+  var a = compactName(typed), b = compactName(existing);
+  if (!a || !b || a === b) return false;
+  var shorter = Math.min(a.length, b.length);
+  if (a.length >= 3 && b.indexOf(a) >= 0) return true;  // typed is a prefix of, or inside, the existing name
+  if (b.length >= 3 && a.indexOf(b) >= 0) return true;  // typed contains the existing name
+  var p = 0;
+  while (p < shorter && a.charAt(p) === b.charAt(p)) p++;
+  if (shorter >= 4 && p >= Math.max(4, Math.ceil(shorter * 0.7))) return true; // same stem
+  var wb = nameWords(existing);
+  if (nameWords(typed).some(function (w) { return wb.indexOf(w) >= 0; })) return true; // a shared whole word
+  return shorter >= 4 && editDistance(a, b) <= Math.max(1, Math.floor(shorter / 5)); // a typo or two
+}
+// END name-similarity
 function tidyName(s) { return String(s || '').replace(/[\u0000-\u001F\u007F]/g, '').replace(/\s+/g, ' ').trim(); }
 /** Problem with a typed name (mirrors cleanName_ in Code.gs), or ''. */
 function nameProblem(value, label, max) {
@@ -724,25 +764,6 @@ function nameProblem(value, label, max) {
   if (NAME_BAD.test(v)) return `${label} cannot contain / \\ < > : " | ? or *.`;
   if (v.startsWith('.')) return `${label} cannot start with a dot.`;
   return '';
-}
-/** Small edit distance, to spot "Fall Fest" vs "Fall Festival" style near-duplicates. */
-function similar(a, b) {
-  a = norm(a); b = norm(b);
-  if (!a || !b || a === b) return false;
-  if (Math.min(a.length, b.length) >= 4 && (a.includes(b) || b.includes(a))) return true;
-  // Most words the same or shortened ("Fall Fest at BGC Dover" / "Fall Festival at BGC Dover").
-  const wa = a.split(' '), wb = b.split(' ');
-  const [short, long] = wa.length <= wb.length ? [wa, wb] : [wb, wa];
-  const shared = short.filter(w => long.some(x => x === w || (w.length >= 3 && (x.startsWith(w) || w.startsWith(x))))).length;
-  if (short.length >= 2 && shared / Math.max(wa.length, wb.length) >= 0.75) return true;
-  if (Math.abs(a.length - b.length) > 3) return false;
-  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
-  for (let i = 1; i <= a.length; i++) {
-    const cur = [i];
-    for (let j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-    prev = cur;
-  }
-  return prev[b.length] <= Math.max(2, Math.floor(Math.min(a.length, b.length) / 6));
 }
 const pathHas = (c, token) => c.path.includes('{' + token + '}');
 const isText = st => st.input === 'text';
@@ -763,9 +784,9 @@ function effectiveValue(st) {
 function newMatch(st, typed) {
   const parent = st.dependsOn ? { [st.dependsOn]: effectiveValue(col.steps.find(s => s.id === st.dependsOn)) } : {};
   const list = stepList(col, st, parent) || [];
-  const inList = list.find(x => norm(x) === norm(typed));
+  const inList = list.find(x => sameName(x, typed));
   if (inList) return { name: inList, where: 'list' };
-  const known = ((col.known || {})[st.id] || []).find(x => norm(x) === norm(typed));
+  const known = ((col.known || {})[st.id] || []).find(x => sameName(x, typed));
   if (known) return { name: known, where: 'drive' };
   return { name: '', where: '' };
 }
@@ -816,7 +837,7 @@ function stepDone(st) {
   if (v === NEW) {
     const typed = tidyName(newNames[st.id]);
     if (!typed || nameProblem(typed, st.label, st.maxLength)) return false;
-    return !!newMatch(st, typed).name || norm(confirmed[st.id]) === norm(typed);
+    return !!newMatch(st, typed).name || sameName(confirmed[st.id], typed);
   }
   return true;
 }
@@ -1067,7 +1088,7 @@ function existingNameFor(stepId) {
   const st = col.steps.find(s => s.id === stepId);
   if (!st || !isText(st) || !pathHas(col, 'date')) return '';
   const names = existingNames(st) || [];
-  return names.find(n => norm(n) === norm(choices[stepId]));
+  return names.find(n => sameName(n, choices[stepId]));
 }
 
 /** The line under each typed name: problems, folders that already exist, near-duplicates, the confirm box. */
@@ -1086,11 +1107,11 @@ function renderNameNotes() {
       if (names === null && existingKey(st)) kids.push(el('p', { class: 'hint', text: 'Looking for folders already made for this date…' }));
       else if (names && !existingKey(st)) { /* no date yet */ }
       if (names && names.length) {
-        const same = names.find(n => norm(n) === norm(typed));
-        const close = !same && typed ? names.filter(n => similar(n, typed)) : [];
+        const same = names.find(n => sameName(n, typed));
+        const close = !same && typed ? names.filter(n => similarName(typed, n)) : [];
         if (same) kids.push(el('p', { class: 'name-msg is-ok' }, svgIcon('check'), el('span', {}, 'Goes into the existing folder ', el('strong', { text: `${classDate()} - ${same}` }), '.')));
-        else if (close.length) kids.push(el('p', { class: 'name-msg is-warn' }, svgIcon('alert'),
-          el('span', {}, `Did you mean ${close.map(c => `“${c}”`).join(' or ')}? A different name makes a separate folder.`)));
+        else if (close.length) kids.push(didYouMean(close.map(n => ({ label: n, use: () => { choices[st.id] = n; $(`pick-${st.id}`).value = n; afterTyping(); } })),
+          'A different name makes a separate folder.'));
         kids.push(el('div', { class: 'existing' },
           el('span', { class: 'existing-label', text: `Already in Drive for ${classDate()}:` }),
           names.map(n => el('button', { type: 'button', class: 'chip chip-sm' + (same === n ? ' is-current' : ''), 'aria-pressed': same === n ? 'true' : 'false',
@@ -1102,16 +1123,14 @@ function renderNameNotes() {
       const typed = tidyName(newNames[st.id]);
       const problem = nameProblem(typed, st.label, st.maxLength);
       const match = typed ? newMatch(st, typed) : { name: '' };
-      const pool = [...new Set([...list, ...((col.known || {})[st.id] || [])])];
-      const close = typed && !match.name ? pool.filter(n => similar(n, typed)) : [];
+      const close = typed && !match.name && !problem ? newSuggestions(st, typed) : [];
       if (problem) kids.push(el('p', { class: 'name-msg is-error', text: problem }));
       else if (match.where === 'list') kids.push(el('p', { class: 'name-msg is-ok' }, svgIcon('check'), el('span', {}, el('strong', { text: match.name }), ' is already in the list. Files go into that campaign.')));
       else if (match.where === 'drive') kids.push(el('p', { class: 'name-msg is-ok' }, svgIcon('check'), el('span', {}, 'A folder named ', el('strong', { text: match.name }), ' already exists in Campaigns. Files go into it.')));
       else if (typed) {
-        if (close.length) kids.push(el('p', { class: 'name-msg is-warn' }, svgIcon('alert'), el('span', {}, `Similar to ${close.map(c => `“${c}”`).join(' or ')}. Check it is not the same campaign.`),
-          ...close.filter(c => list.includes(c)).map(c => el('button', { type: 'button', class: 'link-btn', text: `Use ${c}`, onclick: () => { choices[st.id] = c; delete newNames[st.id]; pruneChoices(); renderPickers(); refreshSummary(); } }))));
+        if (close.length) kids.push(didYouMean(close, `If not, tick the box below to make a new ${st.label.toLowerCase()}.`));
         const box = el('input', { type: 'checkbox', id: `pick-${st.id}-confirm` });
-        box.checked = norm(confirmed[st.id]) === norm(typed);
+        box.checked = sameName(confirmed[st.id], typed);
         box.addEventListener('change', () => { if (box.checked) confirmed[st.id] = typed; else delete confirmed[st.id]; renderFolderPathOnly(); refreshSummary(); });
         kids.push(el('label', { class: 'confirm', for: `pick-${st.id}-confirm` }, box,
           el('span', {}, `Create a new ${st.label.toLowerCase()} folder named `, el('strong', { text: `“${typed}”` }), ` in ${col.label}. I checked the spelling.`)));
@@ -1121,6 +1140,38 @@ function renderNameNotes() {
   }
 }
 function renderFolderPathOnly() { renderFolderPath(); }
+
+/** "Did you mean: [Use X] [Use Y]" with one click per suggestion. */
+function didYouMean(items, after) {
+  return el('div', { class: 'name-msg is-warn' }, svgIcon('alert'),
+    el('span', {}, el('strong', { text: 'Did you mean: ' }),
+      items.map(it => el('button', { type: 'button', class: 'link-btn use-btn', text: `Use ${it.label}`, onclick: it.use })),
+      after ? el('span', { class: 'after', text: ' ' + after }) : null));
+}
+
+/**
+ * Suggestions for a typed new value (same rule as nameSuggestions_ in Code.gs): listed values and
+ * folders already there, plus sub-folders of them ("MCP Enrollment / Student Referral").
+ */
+function newSuggestions(st, typed) {
+  const out = [], seen = new Set();
+  const add = (label, use) => { if (!seen.has(label)) { seen.add(label); out.push({ label, use }); } };
+  const list = stepList(col, st, {}) || [];
+  const done = () => { pruneChoices(); renderPickers(); refreshSummary(); };
+  const pick = name => {
+    if (list.includes(name)) { choices[st.id] = name; delete newNames[st.id]; }
+    else { choices[st.id] = NEW; newNames[st.id] = name; }
+  };
+  for (const n of [...list, ...((col.known || {})[st.id] || [])]) if (similarName(typed, n)) add(n, () => { pick(n); done(); });
+  for (const child of col.steps.filter(c => c.dependsOn === st.id && !isText(c))) {
+    for (const [parent, subs] of Object.entries(col.options[child.id] || {})) {
+      for (const sub of subs) {
+        if (sameName(typed, sub) || similarName(typed, sub)) add(`${parent} / ${sub}`, () => { pick(parent); choices[child.id] = sub; done(); });
+      }
+    }
+  }
+  return out;
+}
 
 function renderFolderPath() {
   const d = destination();
@@ -1277,7 +1328,7 @@ function destinationChoices() {
 function confirmNewValues() {
   const out = {};
   for (const { st } of activeSteps(col, effectiveChoices())) {
-    if (choices[st.id] === NEW && norm(confirmed[st.id]) === norm(newNames[st.id])) out[st.id] = tidyName(newNames[st.id]);
+    if (choices[st.id] === NEW && sameName(confirmed[st.id], newNames[st.id])) out[st.id] = tidyName(newNames[st.id]);
   }
   return out;
 }
@@ -1353,7 +1404,7 @@ function rememberNewValues() {
     if (choices[st.id] !== NEW || st.dependsOn) continue;
     const name = effectiveValue(st);
     const list = (col.options[st.id] = col.options[st.id] || {})[''] = (col.options[st.id][''] || []);
-    if (name && !list.some(x => norm(x) === norm(name))) list.push(name);
+    if (name && !list.some(x => sameName(x, name))) list.push(name);
   }
 }
 

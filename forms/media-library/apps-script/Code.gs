@@ -15,6 +15,47 @@ var FILE_FIELDS = 'id,name,mimeType,size,createdTime,hasThumbnail,description,pr
 var NAME_MAX = 60;                // typed folder names (event, person, moment, new campaign)
 var NAME_BAD = /[\/\\<>:"|?*]/; // break paths, downloads or zip files on Windows
 
+// BEGIN name-similarity (same code in Code.gs, index.html and preview-mock.js: change all three)
+// Two names are the SAME when they differ only in capitals, accents, spacing or punctuation.
+// A typed name is SIMILAR to an existing one (a "Did you mean" suggestion) when, ignoring those:
+// one contains the other (3+ letters, so "MCP" finds "MCP Enrollment"), they share a stem
+// ("Fundraise" / "Fundraising"), they share a whole word that is not filler, or they are a
+// small edit apart ("Sumer STEAM").
+var NAME_FILLER = ['the', 'of', 'and', 'for', 'a', 'an', 'to', 'in', 'at', 'on', 'with', 'by', 'our', 'de', 'la', 'el', 'los', 'las', 'y',
+  'day', 'night', 'event', 'events', 'campaign', 'program', 'class'];
+function simpleName(s) {
+  return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function compactName(s) { return simpleName(s).replace(/ /g, ''); }
+function sameName(a, b) { var x = compactName(a); return !!x && x === compactName(b); }
+function nameWords(s) {
+  return simpleName(s).split(' ').filter(function (w) { return w.length >= 3 && NAME_FILLER.indexOf(w) < 0; });
+}
+function editDistance(a, b) {
+  var prev = [], cur, i, j;
+  for (j = 0; j <= b.length; j++) prev[j] = j;
+  for (i = 1; i <= a.length; i++) {
+    cur = [i];
+    for (j = 1; j <= b.length; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1));
+    prev = cur;
+  }
+  return prev[b.length];
+}
+function similarName(typed, existing) {
+  var a = compactName(typed), b = compactName(existing);
+  if (!a || !b || a === b) return false;
+  var shorter = Math.min(a.length, b.length);
+  if (a.length >= 3 && b.indexOf(a) >= 0) return true;  // typed is a prefix of, or inside, the existing name
+  if (b.length >= 3 && a.indexOf(b) >= 0) return true;  // typed contains the existing name
+  var p = 0;
+  while (p < shorter && a.charAt(p) === b.charAt(p)) p++;
+  if (shorter >= 4 && p >= Math.max(4, Math.ceil(shorter * 0.7))) return true; // same stem
+  var wb = nameWords(existing);
+  if (nameWords(typed).some(function (w) { return wb.indexOf(w) >= 0; })) return true; // a shared whole word
+  return shorter >= 4 && editDistance(a, b) <= Math.max(1, Math.floor(shorter / 5)); // a typo or two
+}
+// END name-similarity
+
 var STAFF_ACTIONS = {
   whoami: function (req, who) { return who; },
   start: function (req, who) { return { who: who, config: getPublicConfig_() }; }, // one round trip after sign-in
@@ -144,8 +185,10 @@ function resolveDestination_(col, choices, when, confirmNew) {
     }
     if (!st.allowNew) throw userError_('bad_choice', 'Pick a ' + st.label.toLowerCase() + ' from the list.');
     var fresh = cleanName_(value, st, st.label);
-    if (norm_(clean_(confirmNew[st.id])) !== norm_(fresh)) {
-      throw userError_('confirm_new', 'Confirm that you want a new ' + st.label.toLowerCase() + ' folder named "' + fresh + '".');
+    if (!sameName(clean_(confirmNew[st.id]), fresh)) {
+      var near = nameSuggestions_(col, st, fresh);
+      throw userError_('confirm_new', 'Confirm that you want a new ' + st.label.toLowerCase() + ' folder named "' + fresh + '".' +
+        (near.length ? ' Did you mean: ' + near.join(', ') + '?' : ''));
     }
     chosen[st.id] = folders[st.id] = fresh;
     loose[st.id] = true;
@@ -182,8 +225,27 @@ function cleanName_(raw, st, label) {
 
 /** The entry of list that matches value ignoring case, spacing and curly quotes, or ''. */
 function looseFind_(list, value) {
-  var n = norm_(value);
-  return list.filter(function (x) { return norm_(x) === n; })[0] || '';
+  return list.filter(function (x) { return sameName(x, value); })[0] || '';
+}
+
+/**
+ * "Did you mean" for a typed new value: listed values and folders already there that are similar,
+ * plus sub-folders of them as "Parent / Sub" (the same rule as newSuggestions in the page).
+ */
+function nameSuggestions_(col, st, typed) {
+  var out = [];
+  ((col.options[st.id] || {})[''] || []).concat(st.dependsOn ? [] : knownFolders_(col)).forEach(function (n) {
+    if (similarName(typed, n) && out.indexOf(n) < 0) out.push(n);
+  });
+  col.steps.filter(function (c) { return c.dependsOn === st.id && c.input !== 'text'; }).forEach(function (child) {
+    var byParent = col.options[child.id] || {};
+    Object.keys(byParent).forEach(function (parent) {
+      byParent[parent].forEach(function (sub) {
+        if (sameName(typed, sub) || similarName(typed, sub)) out.push(parent + ' / ' + sub);
+      });
+    });
+  });
+  return out;
 }
 
 /** Names of the folders directly in a collection's root (for "add a new one" steps). Cached 5 minutes. */
@@ -345,7 +407,7 @@ function addOption_(col, st, parent, value, who) {
   var ss = SpreadsheetApp.openById(prop_('ADMIN_SHEET_ID', ''));
   var have = sheetRows_(ss, SHEETS.options.name).some(function (o) {
     return clean_(o['Collection ID']) === col.id && clean_(o['Step ID']) === st.id &&
-      clean_(o['Parent Value']) === parent && norm_(clean_(o['Value'])) === norm_(value);
+      clean_(o['Parent Value']) === parent && sameName(clean_(o['Value']), value);
   });
   if (!have) {
     appendRows_(ss, SHEETS.options.name, [{ 'Collection ID': col.id, 'Step ID': st.id, 'Parent Value': parent, 'Value': value,
@@ -487,7 +549,7 @@ function ensureFolders_(rootId, segments, loose) {
     var q = "'" + parentId + "' in parents and name = '" + q_(name) + "' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
     var found = driveGet_('/files', { q: q, fields: 'files(id,name)', pageSize: 10 }).files || [];
     if (!found.length && loose && loose[i]) {
-      found = childFolders_(parentId).filter(function (f) { return norm_(f.name) === norm_(name); });
+      found = childFolders_(parentId).filter(function (f) { return sameName(f.name, name); });
     }
     folder = found.length ? found[0] : drivePost_('/files', { name: name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] }, 'id,name');
     names.push(folder.name || name);
