@@ -569,7 +569,7 @@ const FORMATS=["Reel","Static post","Carousel","Story","Video","Email","Blog art
 const PLATS=["Instagram","Facebook","LinkedIn","TikTok","YouTube","Email","Website","Meta Ads"];
 const AB={Instagram:"IG",Facebook:"FB",LinkedIn:"IN",TikTok:"TT",YouTube:"YT",Email:"EM",Website:"WEB","Meta Ads":"AD"};
 const USUAL=f=>f.some(x=>["Reel","Video"].includes(x))?["Instagram","Facebook","LinkedIn","TikTok","YouTube"]:f.includes("Story")?["Instagram","Facebook"]:f.includes("Email")?["Email"]:f.includes("Blog article")?["Website"]:f.length?["Instagram","Facebook","LinkedIn"]:[];
-const PERSONAS=[["Yolanda Reyes","Adult ESOL & Conversation-Course Learner"],["Carmen Ibarra","Parent & Caregiver"],["Priya Anand","Employer & Workforce Training Buyer"],["Walter Ostrowski","Individual Donor"],["Renata Voss","Institutional & Grant Funder"],["Jamal Coleman","Priority Community Neighbor"]];
+let PERSONAS=[["Yolanda Reyes","Adult ESOL & Conversation-Course Learner"],["Carmen Ibarra","Parent & Caregiver"],["Priya Anand","Employer & Workforce Training Buyer"],["Walter Ostrowski","Individual Donor"],["Renata Voss","Institutional & Grant Funder"],["Jamal Coleman","Priority Community Neighbor"]];
 const LINKKINDS=["Canva design","HubSpot email","Drive folder","Blog draft","Other"];
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MIXCATS=[["e","Educational","#FFC100"],["c","Community","#3FE0A5"],["p","Program / Enrollment","#FF7400"],["o","Organizational","#B18CFF"]];
@@ -657,7 +657,7 @@ function ideas(){
  return `<div class="row" style="justify-content:space-between;margin-bottom:4px"><h2>Ideas</h2><button class="btn" data-act="newcard">New idea</button></div>
  <p class="sub">Every piece starts here. Open an idea to add the brief, the questions to ask, the footage you need, the caption and the links. Then move it along the board.</p>
  <form class="row" id="quick" style="margin-bottom:14px"><input type="text" class="grow" id="qi" placeholder="Quick idea in one line, press Enter" aria-label="Quick idea"><button class="btn ghost" type="submit">Add</button></form>
- ${filters()}<div class="list" style="margin-top:6px">${list.map(c=>cardHtml(c)).join("")||'<div class="empty">No ideas for this filter.</div>'}</div>`;
+ ${filters()}<div class="list" style="margin-top:6px">${list.map(c=>cardHtml(c)).join("")||`<div class="empty">${state.camp==="All"&&state.owner==="All"?"No ideas yet. Add one above.":"No ideas for this filter."}</div>`}</div>`;
 }
 function board(){
  const list=shown();const n=k=>list.filter(c=>c.status===k).length;
@@ -740,7 +740,7 @@ function mixList(){return MIXKEYS.map(k=>{const m=MIX[k];return `<button class="
 function mixEditor(){
  const k=state.mixKey,m=MIX[k],a=actualMix(k);
  return `<div class="panel"><h3>${mlabel(k)}</h3>
- <p class="sub" style="margin:2px 0 10px;font-size:13.5px">${esc(m.camps)}</p>
+ ${m.camps?`<p class="sub" style="margin:2px 0 10px;font-size:13.5px">${esc(m.camps)}</p>`:""}${(m.e+m.c+m.p+m.o)===0?'<p class="empty" style="padding:0 0 10px">No target set for this month yet. Pick a preset or move a slider.</p>':""}
  ${MIXCATS.map(([c,l,col])=>`<div class="sl"><span><span class="dot" style="--c:${col}"></span><b style="font-size:13px;text-align:left;white-space:nowrap">${l}</b></span><input type="range" min="0" max="100" step="1" value="${m[c]}" data-mix="${c}" aria-label="${l} percent" ${m.lock.includes(c)?"disabled":""}><b id="mv-${c}">${m[c]}%</b><label class="lk2"><input type="checkbox" data-lock="${c}" ${m.lock.includes(c)?"checked":""}> Lock</label></div>`).join("")}
  <div id="mxbar">${stackHtml(m,26)}</div>
  <div class="row" style="margin:10px 0"><span class="lbl">Presets</span><button class="btn ghost sm" data-act="preset" data-v="40,30,20,10">Default 40/30/20/10</button><button class="btn ghost sm" data-act="preset" data-v="20,20,50,10">Enrollment window 20/20/50/10</button></div>
@@ -804,7 +804,7 @@ function topicsView(){
   <div class="lbl">Pillars</div><div class="bar" style="margin:0">${pillars.map(p=>`<button class="chip sm" data-act="thpil" data-i="${i}" data-v="${esc(p)}" aria-pressed="${t.pil.includes(p)}">${esc(p)}</button>`).join("")}</div>
   ${freqCtl("th",i,t)}
   <div class="covline"><span class="covtxt"><b>${n}</b> of ${g} this month</span>${n>=g?'<span class="badge ok">covered</span>':'<span class="badge warn">needs content</span>'}</div><div class="cov ${n<g?"low":""}" style="margin-top:0"><i style="width:${pc}%"></i></div>
-  <button class="btn ghost sm" style="justify-self:start;align-self:flex-start" data-act="thoff" data-i="${i}">Move to Not in use</button></div>`}).join("")}</div>
+  <button class="btn ghost sm" style="justify-self:start;align-self:flex-start" data-act="thoff" data-i="${i}">Move to Not in use</button></div>`}).join("")||'<p class="empty">No recurring themes yet. Add one with New theme below.</p>'}</div>
  <div class="lower">
  <section class="lower-col" aria-labelledby="h-newtheme"><h3 class="lower-h" id="h-newtheme">New theme</h3>
  <p class="sub lower-sub">Add an always-on theme, choose its pillars and set how often it should appear.</p>
@@ -1022,7 +1022,7 @@ document.addEventListener("click",e=>{
  else if(a==="signout"){saveNow();PRESENCE_ADAPTER.setSelf(null);ME=null;ID_TOKEN="";try{if(window.google)google.accounts.id.disableAutoSelect()}catch(err){}BOARD.status="signedout";SYNC_STATUS=null;loadBoard({},0);const bt=$("#bannerText");if(bt)bt.textContent="The board loads after you sign in.";setSaveState("");state.panel=null;state.modal=null;layer();render();toast("Signed out")}
  else if(a==="pmore"||a==="pav"){togglePresencePop()}
  else if(a==="swatch"){state.newCamp.c=v;layer()}
- else if(a==="cmonth"||a==="fmonth"||a==="tmonth"){const ky=a==="cmonth"?"y":a==="fmonth"?"cy":"ty",km=a==="cmonth"?"m":a==="fmonth"?"cm":"tm";if(v==="0"){state[ky]=2026;state[km]=10}else{let m=state[km]+ +v,y=state[ky];if(m<0){m=11;y--}if(m>11){m=0;y++}state[ky]=y;state[km]=m}render()}
+ else if(a==="cmonth"||a==="fmonth"||a==="tmonth"){const ky=a==="cmonth"?"y":a==="fmonth"?"cy":"ty",km=a==="cmonth"?"m":a==="fmonth"?"cm":"tm";if(v==="0"){const td=new Date();state[ky]=td.getFullYear();state[km]=td.getMonth()}else{let m=state[km]+ +v,y=state[ky];if(m<0){m=11;y--}if(m>11){m=0;y++}state[ky]=y;state[km]=m}render()}
  else if(a==="selday"){state.sel=v;render()}
  else if(a==="gotovisit"){goTab("visits",()=>{state.sel=v;const d=new Date(v+"T12:00:00");state.cy=d.getFullYear();state.cm=d.getMonth()})}
  else if(a==="fprog"){state.fprog=v;render()}else if(a==="faud"){state.faud=v;render()}
@@ -1331,8 +1331,9 @@ function loadBoard(b,rev){
  cards=(b.cards||[]).map(o=>C(o)).sort((x,y)=>{const nx=x.id>=1e9,ny=y.id>=1e9;return nx!==ny?(nx?-1:1):nx?y.id-x.id:x.id-y.id});
  PEOPLE.splice(0,PEOPLE.length,...((b.people&&b.people.length)?b.people:["Unassigned"]));
  Object.keys(pillarType).forEach(k=>delete pillarType[k]);Object.assign(pillarType,b.pillarType||{});pillars.forEach(p=>{if(!pillarType[p])pillarType[p]=/blog/i.test(p)?"blog":"social"});
- Object.keys(MIX).forEach(k=>delete MIX[k]);MIXKEYS.forEach(k=>MIX[k]=(b.mix&&b.mix[k])||{e:25,c:25,p:25,o:25,lock:[],camps:"",why:""});
+ Object.keys(MIX).forEach(k=>delete MIX[k]);MIXKEYS.forEach(k=>MIX[k]=(b.mix&&b.mix[k])||{e:0,c:0,p:0,o:0,lock:[],camps:"",why:""});
  Object.keys(META).forEach(k=>delete META[k]);Object.assign(META,b.meta||{});
+ if(Array.isArray(b.personas)&&b.personas.length)PERSONAS=b.personas.filter(p=>Array.isArray(p)&&p[0]);
  TEXTS=b.texts||{};MEDIA_LIB=(b.links&&b.links.mediaLibrary)||"";
  const bt=$("#bannerText");if(bt)bt.textContent=TEXTS.banner||"";
  const ll=$("#libLink");if(ll){if(MEDIA_LIB){ll.href=MEDIA_LIB;ll.hidden=false}else ll.hidden=true}
@@ -1344,7 +1345,7 @@ function boardItems(){
  docs.forEach(x=>add("docs",x.id,x));visits.forEach(x=>add("visits",x.id,x));
  cards.forEach(x=>{if(x.fresh&&!String(x.title).trim())return;const o=Object.assign({},x);delete o.fresh;add("cards",x.id,o)});
  Object.keys(MIX).forEach(k=>add("mix",k,MIX[k]));Object.keys(META).forEach(k=>add("meta",k,META[k]));
- add("single","people",PEOPLE);add("single","pillars",pillars);add("single","pillarType",pillarType);
+ add("single","people",PEOPLE);add("single","personas",PERSONAS);add("single","pillars",pillars);add("single","pillarType",pillarType);
  return m;
 }
 function scheduleSave(){if(BOARD.status!=="ready")return;clearTimeout(SYNC.timer);SYNC.timer=setTimeout(saveNow,1200)}

@@ -24,7 +24,7 @@ var SHEET_TAB = 'Board backup data';
 var HEADER = ['collection', 'id', 'data', 'updated at', 'updated by'];
 var ROW_FORMATS = [['@', '@', '@', 'yyyy-mm-dd hh:mm:ss', '@']];
 var KEYED = ['camps', 'themes', 'topics', 'docs', 'classes', 'visits', 'cards', 'mix', 'meta'];
-var SINGLES = ['people', 'pillars', 'pillarType', 'texts', 'links'];
+var SINGLES = ['people', 'pillars', 'pillarType', 'texts', 'links', 'personas'];
 var MAX_OPS = 300, MAX_JSON = 45000, PRESENCE_TTL_MS = 45000;
 
 var ACTIONS = {

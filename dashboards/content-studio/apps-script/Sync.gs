@@ -17,11 +17,23 @@
 // never banner rows, the header rows above them, the Due Date column (except carrying a row's own Due Date when a
 // card moves month), or any tab not listed below. Empty board values never blank a cell. Status cells that already
 // say Published or Cancelled are never changed. Deleted or undated cards mark their row Cancelled (rows are kept).
-// Themes not in use, deleted topics' months stay; deleted themes and documents have their rows removed.
+// Deleted themes and documents have their rows removed; themes not in use stay with "In use" = No.
+// Undated cards live on the "Ideas (no date)" tab; a card that gets or loses a date moves between Ideas and its
+// month's calendar tab (same Board ID). The eight board-mirror tabs (Campaigns, Personas, Pillars, Owners, Classes,
+// Visits, Topics, Board Settings) are fully owned by the board: their data rows are rewritten to match it.
+//
+// STATUS (the board leads, one way): each board stage maps to exactly one matrix Status (STAGE_STATUS). The sync never
+// writes Published or Cancelled and never changes a cell that already holds one of them. It skips the write when the
+// cell's current value already maps to the card's stage (READ_STATUS: e.g. "Not Started" counts as idea). If someone
+// changes a synced row's Status by hand to a value that maps to a DIFFERENT stage, the board wins: the cell is set back
+// to the board's status the next time that calendar is synced (any card or campaign save, or Sync now). The "stage
+// that is further along wins" rule applies only to the one-time first load of the board from the matrix (the seed),
+// never to this sync. The sync never reads data back from the matrix into the board.
 
 var SYNC = {
   // Calendar tabs the sync writes, by month. September and October 2026 are hand-managed and NOT synced.
   CAL_TABS: { '2026-11': 'November 2026 Calendar', '2026-12': 'December 2026 Calendar' },
+  IDEAS_TAB: 'Ideas (no date)',
   TOPICS_TAB: 'Monthly Topics',
   MIX_TAB: 'The Content Mix',
   DOCS_TAB: 'Document Map',
@@ -29,7 +41,7 @@ var SYNC = {
   MARKER_HEADER: 'From board',
   MARKER: 'From board',
   LEASE_MS: 6 * 60 * 1000,
-  // Fictional personas from the board (public, same as the personas page) for the Audience column.
+  // Fallback persona table (fictional, public). The board's own "personas" single row is used when present.
   PERSONAS: {
     'Yolanda Reyes': 'Adult ESOL & Conversation-Course Learner',
     'Carmen Ibarra': 'Parent & Caregiver',
@@ -51,17 +63,35 @@ var SYNC = {
     'Blog article': { Website: 'Blog Article' },
     'Ad': { 'Meta Ads': 'Meta Ad' }
   },
-  STAGE_STATUS: { idea: 'Planned', scripting: 'In Progress', tocapture: 'In Progress', captured: 'In Progress', editing: 'In Progress',
-    review: 'Ready for Review', tobesched: 'Ready for Schedule', scheduled: 'Ready for Schedule' },
+  // One to one: board stage -> matrix Status.
+  STAGE_STATUS: { idea: 'Planned', scripting: 'In Progress', tocapture: 'To Capture', captured: 'Captured', editing: 'Editing',
+    review: 'Ready for Review', tobesched: 'Ready for Schedule', scheduled: 'Scheduled' },
+  // Matrix Status -> board stage, used only to decide whether a write is needed (never to change the board).
+  READ_STATUS: { 'Not Started': 'idea', 'Planned': 'idea', 'In Progress': 'scripting', 'To Capture': 'tocapture', 'Captured': 'captured',
+    'Editing': 'editing', 'Ready for Review': 'review', 'Ready for Schedule': 'tobesched', 'Scheduled': 'scheduled' },
+  MIX_NAMES: { e: 'Educational', c: 'Community', p: 'Program/Enrollment', o: 'Organizational' },
   PROTECTED_STATUS: ['Published', 'Cancelled'],
   DOC_STATUS: { 'Current/Active': 'Current/Active', 'Draft': 'Draft', 'Needs update': 'Needs Update', 'Needs Update': 'Needs Update',
     'Ended': 'Ended', 'Reserved': 'Planned', 'Planned': 'Planned', 'Retired': 'Discontinued', 'Discontinued': 'Discontinued', 'In progress': 'Draft' },
   LEVEL_LABELS: { '1': '1. Marketing Plan', '2': '2. Campaign Briefs', '3': '3. Content Plan', '4': '4. Channel Playbooks', 'S': 'Supporting' }
 };
-var SYNC_KEYS = ['cal', 'topics1', 'topics2', 'mix', 'docs'];
+// Board-mirror tabs: header row (row 4) names in order; the last column must be "From board".
+var MIRRORS = {
+  m_campaigns: { tab: 'Campaigns', headers: ['Board ID', 'Campaign', 'Colour', 'CTA', 'Hashtags'] },
+  m_personas: { tab: 'Personas', headers: ['Persona', 'Role'] },
+  m_pillars: { tab: 'Pillars', headers: ['Pillar', 'Type'] },
+  m_owners: { tab: 'Owners', headers: ['Owner'] },
+  m_classes: { tab: 'Classes', headers: ['Board ID', 'Program', 'Class', 'Site', 'Day', 'Time', 'Audience', 'End date', 'End note', 'Enrolled', 'Attended', 'n (board field)'] },
+  m_visits: { tab: 'Visits', headers: ['Board ID', 'Date', 'Site', 'Who', 'Classes', 'Shots'] },
+  m_topics: { tab: 'Topics', headers: ['Board ID', 'Month', 'Date', 'Label', 'Kind'] },
+  m_settings: { tab: 'Board Settings', headers: ['Key', 'Value'] }
+};
+var SYNC_KEYS = ['cal', 'topics1', 'topics2', 'mix', 'docs'].concat(Object.keys(MIRRORS));
 // Which tab blocks a changed collection affects.
-var DIRTY_MAP = { cards: ['cal'], camps: ['cal'], topics: ['topics2'], meta: ['topics2'], mix: ['topics2', 'mix'],
-  themes: ['topics1'], pillars: ['topics1', 'cal'], pillarType: ['topics1'], docs: ['docs'] };
+var DIRTY_MAP = { cards: ['cal'], camps: ['cal', 'm_campaigns'], personas: ['cal', 'm_personas'], themes: ['topics1', 'cal'],
+  topics: ['topics2', 'm_topics'], meta: ['topics2'], mix: ['topics2', 'mix'], pillars: ['topics1', 'cal', 'm_pillars'],
+  pillarType: ['topics1', 'm_pillars'], docs: ['docs'], people: ['m_owners'], classes: ['m_classes'], visits: ['m_visits'],
+  texts: ['m_settings'], links: ['m_settings'] };
 
 // ---------- entry points ----------
 
@@ -216,17 +246,21 @@ function hash_(o) {
 var BUILD_ = {
   cal: function (state, ctx) {
     var camps = {}; (state.camps || []).forEach(function (c) { camps[c.n] = c; });
+    var look = { camps: camps, personas: personasMap_(state), themes: {} };
+    (state.themes || []).forEach(function (t) { look.themes[t.id] = t.n; });
     var rows = {}, cancel = {};
     (state.cards || []).forEach(function (c) {
       var bid = 'card:' + c.id, month = c.post ? String(c.post).slice(0, 7) : '';
-      if (month && SYNC.CAL_TABS[month]) rows[bid] = { tab: SYNC.CAL_TABS[month], date: c.post, cells: cardCells_(c, camps, ctx) };
-      else cancel[bid] = month ? 'month ' + month + ' is not synced' : 'no post date';
+      if (!month) rows[bid] = { tab: SYNC.IDEAS_TAB, date: '', stage: c.status || 'idea', cells: cardCells_(c, look, ctx, true) };
+      else if (SYNC.CAL_TABS[month]) rows[bid] = { tab: SYNC.CAL_TABS[month], date: c.post, stage: c.status || 'idea', cells: cardCells_(c, look, ctx, false) };
+      else cancel[bid] = 'month ' + month + ' is not synced';
     });
     return { rows: rows, cancel: cancel };
   },
   topics1: function (state) {
-    return { rows: (state.themes || []).filter(function (t) { return !t.off; }).map(function (t) {
-      return { id: String(t.id), cells: [t.n || '', t.cov || '', (t.pil || []).join('; '), freqText_(t)] };
+    return { rows: (state.themes || []).map(function (t) {
+      return { id: String(t.id), cells: [t.n || '', t.cov || '', (t.pil || []).join('; '), freqText_(t),
+        Math.max(1, Math.min(10, Number(t.fn) || 1)), t.fp === 'week' ? 'week' : 'month', t.off ? 'No' : 'Yes'] };
     }) };
   },
   topics2: function (state) {
@@ -236,7 +270,8 @@ var BUILD_ = {
     (state.topics || []).forEach(function (t) { if (t.m) months[t.m] = true; });
     return { rows: Object.keys(months).filter(function (k) { return /^\d{4}-\d{2}$/.test(k); }).sort().map(function (k) {
       var meta = (state.meta || {})[k] || {}, mix = (state.mix || {})[k] || {};
-      return { id: k, cells: [monthStart_(k), meta.theme || '', topicLines_(state.topics || [], k), mix.camps || ''] };
+      return { id: k, cells: [monthStart_(k), meta.theme || '', topicLines_(state.topics || [], k), meta.mtcamps || mix.camps || '',
+        (meta.camps || []).join('; ')] };
     }) };
   },
   mix: function (state) {
@@ -255,27 +290,72 @@ var BUILD_ = {
   }
 };
 
-function cardCells_(c, camps, ctx) {
-  var camp = camps[c.camp] || {};
+BUILD_.m_campaigns = function (s) { return { rows: (s.camps || []).map(function (c) { return [String(c.id || c.n), c.n || '', c.c || '', c.cta || '', c.tags || '']; }) }; };
+BUILD_.m_personas = function (s) { var m = personasMap_(s); return { rows: Object.keys(m).map(function (n) { return [n, m[n]]; }) }; };
+BUILD_.m_pillars = function (s) { return { rows: (s.pillars || []).map(function (p) { return [p, (s.pillarType || {})[p] || (/blog/i.test(p) ? 'blog' : 'social')]; }) }; };
+BUILD_.m_owners = function (s) { return { rows: (s.people || []).map(function (p) { return [p]; }) }; };
+BUILD_.m_classes = function (s) {
+  return { rows: (s.classes || []).map(function (c) {
+    return [String(c.id), c.prog || '', c.name || '', c.site || '', c.day == null ? '' : Number(c.day) + 1, c.time || '', c.aud || '',
+      c.end ? dateOnly_(c.end) : '', c.endTxt || '', c.enr == null ? '' : c.enr, c.att == null ? '' : c.att, c.n == null ? '' : c.n];
+  }) };
+};
+BUILD_.m_visits = function (s) {
+  return { rows: (s.visits || []).map(function (v) {
+    return [String(v.id), v.date ? dateOnly_(v.date) : '', v.site || '', v.who || '', (v.cls || []).join(', '),
+      (v.shots || []).map(function (x) { return [x.t || '', x.k == null ? '' : x.k, x.d ? 'yes' : 'no'].join(' | '); }).join('\n')];
+  }) };
+};
+BUILD_.m_topics = function (s) {
+  return { rows: (s.topics || []).map(function (t) { return [String(t.id), t.m || '', t.date ? dateOnly_(t.date) : '', t.label || '', t.kind || '']; }) };
+};
+BUILD_.m_settings = function (s) {
+  var rows = [];
+  Object.keys(s.texts || {}).forEach(function (k) { rows.push([k, String(s.texts[k] == null ? '' : s.texts[k])]); });
+  Object.keys(s.links || {}).forEach(function (k) { rows.push([k, String(s.links[k] == null ? '' : s.links[k])]); });
+  return { rows: rows };
+};
+
+// The board's persona table ("personas" single row: [[name, role], ...]); falls back to the built-in fictional list.
+function personasMap_(s) {
+  var m = {};
+  if (Array.isArray(s.personas) && s.personas.length) s.personas.forEach(function (p) { if (p && p[0]) m[p[0]] = p[1] || ''; });
+  else Object.keys(SYNC.PERSONAS).forEach(function (n) { m[n] = SYNC.PERSONAS[n]; });
+  return m;
+}
+
+function cardCells_(c, look, ctx, undated) {
+  var camp = look.camps[c.camp] || {};
   var types = contentTypes_(c, ctx);
-  var caption = c.caption || '';
-  if (c.cta) caption = caption ? caption + '\n\n' + c.cta : c.cta;
-  if (c.capEs) caption = (caption ? caption + '\n\n' : '') + 'Espanol:\n' + c.capEs;
   var canva = (c.links || []).filter(function (l) { return l.k === 'Canva design' && validUrl_(l.u); })[0];
+  var other = (c.links || []).filter(function (l) { return l !== canva; });
   return {
     'Owner': c.owner && c.owner !== 'Unassigned' ? c.owner : '',
-    'Post Date': dateOnly_(c.post),
-    'Best Post Time': timeFraction_(c.time),
+    'Post Date': undated ? '' : dateOnly_(c.post),
+    'Best Post Time': undated ? '' : timeFraction_(c.time),
     'Status': SYNC.STAGE_STATUS[c.status] || 'Planned',
     'Content': c.goal ? 'Goal: ' + c.goal : '',
-    'Audience (Persona)': (c.pers || []).map(function (n) { return SYNC.PERSONAS[n] ? n + ' (' + SYNC.PERSONAS[n] + ')' : n; }).join(', '),
+    'Audience (Persona)': (c.pers || []).map(function (n) { return look.personas[n] ? n + ' (' + look.personas[n] + ')' : n; }).join(', '),
     'Content Type': types.join(', '),
     'Distribution Format': distribution_(c.formats || []),
     'Campaign': c.camp || '',
     'Pillar': String(c.pillar || '').replace(/\s*\(Pillar \d+\)\s*$/, ''),
-    'Caption Copy + CTA': caption,
+    'Caption Copy + CTA': c.caption || '',
     'Hashtags': c.tags || camp.tags || '',
-    'Design Link': canva ? hyperlink_(canva.u, canva.t || 'Canva design') : ''
+    'Design Link': canva ? hyperlink_(canva.u, canva.t || 'Canva design') : '',
+    'Title': c.title || '',
+    'Format(s)': (c.formats || []).join(', '),
+    'Platform(s)': (c.plats || []).join(', '),
+    'Content Theme': c.theme ? (look.themes[c.theme] || '') : '',
+    'Mix Category': SYNC.MIX_NAMES[c.mix] || '',
+    'CTA': c.cta || '',
+    'Spanish Caption': c.capEs || '',
+    'Needs': c.need || '',
+    'Questions': c.questions || '',
+    'Voiceover': c.vo || '',
+    'Notes': (c.notes || []).map(function (n) { return (n[0] || '') + ': ' + (n[1] || ''); }).join('\n'),
+    'Other Links': other.map(function (l) { return [l.k || '', l.t || '', l.u || ''].join(' | '); }).join('\n'),
+    'Visit': c.visit || ''
   };
 }
 
@@ -415,7 +495,9 @@ function mergeCell_(name, next, cur, curFormula, always) {
 // ---------- applying: calendars (November, December) ----------
 
 var CAL_OWNED = ['Owner', 'Post Date', 'Best Post Time', 'Status', 'Content', 'Audience (Persona)', 'Content Type',
-  'Distribution Format', 'Campaign', 'Pillar', 'Caption Copy + CTA', 'Hashtags', 'Design Link'];
+  'Distribution Format', 'Campaign', 'Pillar', 'Caption Copy + CTA', 'Hashtags', 'Design Link',
+  'Title', 'Format(s)', 'Platform(s)', 'Content Theme', 'Mix Category', 'CTA', 'Spanish Caption', 'Needs', 'Questions',
+  'Voiceover', 'Notes', 'Other Links', 'Visit'];
 var CAL_ALWAYS = ['Post Date', 'Status'];
 
 function calRead_(ss, tabName) {
@@ -432,7 +514,7 @@ function calRead_(ss, tabName) {
 
 var APPLY_ = {};
 APPLY_.cal = function (ss, target, ctx) {
-  var names = Object.keys(SYNC.CAL_TABS).map(function (k) { return SYNC.CAL_TABS[k]; });
+  var names = Object.keys(SYNC.CAL_TABS).map(function (k) { return SYNC.CAL_TABS[k]; }).concat([SYNC.IDEAS_TAB]);
   var info = {}, carryDue = {};
   names.forEach(function (n) { info[n] = calRead_(ss, n); });
   // 1. Per tab: rows to cancel, rows to remove (moved to the other synced month).
@@ -442,7 +524,7 @@ APPLY_.cal = function (ss, target, ctx) {
       var r = t.ids[bid], want = target.rows[bid];
       if (want && want.tab === n) return;
       if (want && want.tab !== n) {
-        if (h.col['Due Date'] != null) carryDue[bid] = { v: t.tab.values[r][h.col['Due Date']], f: t.tab.formulas[r][h.col['Due Date']] };
+        if (h.col['Due Date'] != null && n !== SYNC.IDEAS_TAB && want.tab !== SYNC.IDEAS_TAB) carryDue[bid] = { v: t.tab.values[r][h.col['Due Date']], f: t.tab.formulas[r][h.col['Due Date']] };
         removeRows.push(r); ctx.counts.moved++;
         return;
       }
@@ -461,7 +543,7 @@ APPLY_.cal = function (ss, target, ctx) {
   names.forEach(function (n) {
     var t = info[n];
     var missing = Object.keys(target.rows).filter(function (bid) { return target.rows[bid].tab === n && t.ids[bid] == null; });
-    var inserts = missing.map(function (bid) { return { bid: bid, after: weekAnchor_(t, target.rows[bid].date) }; })
+    var inserts = missing.map(function (bid) { return { bid: bid, after: n === SYNC.IDEAS_TAB ? lastDataRow_(t) : weekAnchor_(t, target.rows[bid].date) }; })
       .sort(function (a, b) { return b.after - a.after; });
     inserts.forEach(function (ins) {
       ctx.counts.created++;
@@ -493,7 +575,17 @@ APPLY_.cal = function (ss, target, ctx) {
       CAL_OWNED.forEach(function (name) {
         var c = h.col[name];
         if (c == null) { if (want.cells[name]) ctx.note(n + ': no "' + name + '" column, value skipped'); return; }
-        var m = mergeCell_(name, want.cells[name], t.tab.values[r][c], t.tab.formulas[r][c], CAL_ALWAYS);
+        var cur = t.tab.values[r][c];
+        if (n === SYNC.IDEAS_TAB && (name === 'Post Date' || name === 'Best Post Time')) return; // undated: leave empty cells alone
+        if (name === 'Status') {
+          var cs = String(cur).trim();
+          if (SYNC.PROTECTED_STATUS.indexOf(cs) >= 0) return;           // Published / Cancelled: never touched
+          if (SYNC.READ_STATUS[cs] === want.stage) return;               // already maps to the board stage: skip
+          cells[c] = want.cells[name];                                   // otherwise the board leads
+          return;
+        }
+        if (name === 'Owner' && String(cur).trim() === '') return;      // never fill a blank Owner cell
+        var m = mergeCell_(name, want.cells[name], cur, t.tab.formulas[r][c], CAL_ALWAYS);
         if (!m.keep) cells[c] = m.value;
       });
       cells[h.col[SYNC.MARKER_HEADER]] = SYNC.MARKER;
@@ -502,6 +594,12 @@ APPLY_.cal = function (ss, target, ctx) {
     writeRuns_(t.sh, t.tab, out, cols, ctx, n);
   });
 };
+
+function lastDataRow_(t) {
+  var last = t.h.row;
+  for (var r = t.h.row + 1; r < t.tab.values.length; r++) if (t.tab.values[r].some(function (v) { return String(v) !== ''; })) last = r;
+  return last;
+}
 
 // 0-based row index after which a card dated `date` is inserted: inside the week whose banner covers the date,
 // after the last row in that week with a Post Date on or before it (else right after the banner).
@@ -620,11 +718,11 @@ function lastIdRow_(t) {
 }
 
 APPLY_.topics1 = function (ss, target, ctx) {
-  applyBlock_(ss, { tab: SYNC.TOPICS_TAB, header: ['Recurring Theme', 'What It Covers'], owned: [0, 1, 2, 3],
+  applyBlock_(ss, { tab: SYNC.TOPICS_TAB, header: ['Recurring Theme', 'What It Covers'], owned: [0, 1, 2, 3, 4, 5, 6],
     stopAtBlank: true, removeGone: true }, target, ctx);
 };
 APPLY_.topics2 = function (ss, target, ctx) {
-  applyBlock_(ss, { tab: SYNC.TOPICS_TAB, header: ['Month', 'Monthly Theme'], owned: [0, 1, 2, 3],
+  applyBlock_(ss, { tab: SYNC.TOPICS_TAB, header: ['Month', 'Monthly Theme'], owned: [0, 1, 2, 3, 4],
     stopAtBlank: true, removeGone: false }, target, ctx);
 };
 APPLY_.mix = function (ss, target, ctx) {
@@ -654,3 +752,48 @@ APPLY_.docs = function (ss, target, ctx) {
       return last >= 0 ? last : lastIdRow_(t);
     } }, target, ctx);
 };
+
+// ---------- applying: the eight board-mirror tabs ----------
+// The board fully owns these tabs: the data rows under the header are rewritten to match the board (rows added or
+// removed at the end, then one write). Safety: if any non-empty data row lacks the "From board" marker (a hand row),
+// the tab is skipped with an error instead of being overwritten. Blank board values are written (reference lists).
+Object.keys(MIRRORS).forEach(function (key) {
+  APPLY_[key] = function (ss, target, ctx) { applyMirror_(ss, MIRRORS[key], target.rows, ctx); };
+});
+
+function applyMirror_(ss, spec, rows, ctx) {
+  var sh = needSheet_(ss, spec.tab), tab = readTab_(sh);
+  var h = findHeader_(tab, spec.headers.concat([SYNC.MARKER_HEADER]), 0);
+  if (!h) throw new Error('Tab "' + spec.tab + '": header ' + spec.headers.concat([SYNC.MARKER_HEADER]).join(' | ') + ' not found');
+  var cols = spec.headers.map(function (n) { return h.col[n]; }).concat([h.col[SYNC.MARKER_HEADER]]);
+  var lo = Math.min.apply(null, cols), hi = Math.max.apply(null, cols), first = h.row + 1, cur = 0;
+  for (var r = first; r < tab.values.length; r++) {
+    var row = tab.values[r], used = cols.some(function (c) { return String(row[c]) !== ''; });
+    if (!used) continue;
+    if (String(row[h.col[SYNC.MARKER_HEADER]]).trim() !== SYNC.MARKER) throw new Error('Tab "' + spec.tab + '" row ' + (r + 1) + ' has no "' + SYNC.MARKER + '" marker (hand row); tab skipped');
+    cur = r - first + 1;
+  }
+  var want = rows.map(function (vals) { var full = vals.slice(); full.push(SYNC.MARKER); return full; });
+  if (cur > want.length) {
+    var del = cur - want.length; ctx.counts.removed += del;
+    ctx.write(spec.tab + ': remove ' + del + ' rows', function () { sh.deleteRows(first + want.length + 1, del); });
+  } else if (want.length > cur) {
+    var add = want.length - cur; ctx.counts.created += add;
+    ctx.write(spec.tab + ': add ' + add + ' rows', function () { sh.insertRowsAfter(first + Math.max(cur, 1) - (cur ? 0 : 1), add); });
+  }
+  if (!want.length) return;
+  if (!ctx.dry && want.length !== cur) tab = readTab_(sh);
+  var changed = 0, block = want.map(function (vals, i) {
+    var r = first + i, out = [];
+    for (var c = lo; c <= hi; c++) {
+      var k = cols.indexOf(c), cv = (tab.values[r] || [])[c], cf = (tab.formulas[r] || [])[c] || '';
+      if (k < 0) { out.push(cf || (cv == null ? '' : cv)); continue; }
+      if (!sameCell_(cv == null ? '' : cv, cf, vals[k])) changed++;
+      out.push(vals[k]);
+    }
+    return out;
+  });
+  if (!changed) { ctx.counts.skipped++; return; }
+  ctx.counts.updated += want.length;
+  ctx.write(spec.tab + ': write ' + want.length + ' rows', function () { sh.getRange(first + 1, lo + 1, block.length, hi - lo + 1).setValues(block); });
+}
