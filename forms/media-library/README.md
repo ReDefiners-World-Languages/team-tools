@@ -1,6 +1,6 @@
 # ReDefiners Media Library page
 
-Live at https://redefiners-world-languages.github.io/team-tools/forms/media-library/ (moved from `tools/media-library/` on 2026-10-23; the old address redirects here).
+Live at https://tools.redefinerswl.org/forms/media-library/ (moved from `tools/media-library/` on 2026-10-23; the old address redirects here).
 
 A page where staff file photos and videos (classes and programs, events, people, campaigns) into the ReDefiners Media Library in Google Drive, with context, and later find them again.
 
@@ -84,10 +84,10 @@ Done 2026-10-23. Kept here for a re-deploy or a move to another account. Each st
 1. **Apps Script project.** script.google.com > New project, named `ReDefiners Media Library API`, signed in as the owner of the Media Library folders. Project Settings > tick "Show appsscript.json". Paste the four files from `apps-script/` (same names).
 2. **Folder id.** Project Settings > Script properties > add `CLASSES_ROOT_FOLDER_ID` = the id of the `Classes and Programs` folder (the last part of its Drive address). It is kept out of this public repo on purpose.
 3. **Run `setup()`** once from the editor and accept the permissions. The log prints the admin sheet address.
-4. **Sign-in client (free, no billing).** console.cloud.google.com > create a project (for example `redefiners-media-library`) > Google Auth Platform / OAuth consent screen: **Internal** > Clients > Create client > Web application > Authorized JavaScript origin `https://redefiners-world-languages.github.io`. Copy the client id.
-5. **Script properties** (Project Settings > Script properties): `GOOGLE_CLIENT_ID` = that client id. `setup()` already set `STAFF_DOMAIN` = `redefinerswl.org`, `ALLOWED_ORIGINS` = `https://redefiners-world-languages.github.io`, `MAX_FILE_GB` = `10`.
+4. **Sign-in client (free, no billing).** console.cloud.google.com > create a project (for example `redefiners-media-library`) > Google Auth Platform / OAuth consent screen: **Internal** > Clients > Create client > Web application > Authorized JavaScript origins `https://tools.redefinerswl.org` (and the old `https://redefiners-world-languages.github.io` while it still redirects). Copy the client id.
+5. **Script properties** (Project Settings > Script properties): `GOOGLE_CLIENT_ID` = that client id. `setup()` already set `STAFF_DOMAIN` = `redefinerswl.org`, `ALLOWED_ORIGINS` = `https://tools.redefinerswl.org,https://redefiners-world-languages.github.io` (comma separated), `MAX_FILE_GB` = `10`.
 6. **Deploy** > New deployment > Web app > Execute as: Me > Who has access: Anyone. (Google does not limit this to staff itself; the script refuses every call without a staff sign-in.) Copy the `/exec` address. (If "Anyone" is not offered, the Workspace admin setting for Apps Script web apps blocks it.)
-7. Put the `/exec` address and the client id in `SETTINGS` at the top of `index.html`, merge, and the page is live at `https://redefiners-world-languages.github.io/team-tools/forms/media-library/`.
+7. Put the `/exec` address and the client id in `SETTINGS` at the top of `index.html`, merge, and the page is live at `https://tools.redefinerswl.org/forms/media-library/`.
 
 After a code change in Apps Script: Deploy > Manage deployments > edit > New version (the address stays the same).
 

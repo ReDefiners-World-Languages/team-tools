@@ -539,7 +539,7 @@ html.gated main{padding-bottom:40px}
     <div class="tabs" role="tablist" aria-label="Views" id="tabs"></div>
     <div class="shortcuts">
       <a class="btn ghost sm" id="libLink" href="#" target="_blank" rel="noopener" hidden>Media Library</a>
-      <a class="btn ghost sm" href="https://redefiners-world-languages.github.io/team-tools/forms/media-library/" target="_blank" rel="noopener">Media Upload app</a>
+      <a class="btn ghost sm" href="https://tools.redefinerswl.org/forms/media-library/" target="_blank" rel="noopener">Media Upload app</a>
       <button class="btn ghost sm" data-act="camps">Campaigns</button>
       <button class="btn ghost sm" data-act="signin" id="signinBtn">Sign in</button>
       <div class="theme-sw" role="group" aria-label="Theme" id="themesw"></div>
@@ -574,7 +574,7 @@ const pillarType={};
 const MIXKEYS=["2026-10","2026-11","2026-12","2027-01","2027-02","2027-03","2027-04","2027-05","2027-06","2027-07","2027-08","2027-09"];
 const MIX={},META={};
 let topics=[];
-const DAY0="https://redefiners-world-languages.github.io/team-tools/";
+const DAY0="https://tools.redefinerswl.org/";
 const LEVELS=[{k:"1",n:"Marketing Plan",q:"Why, and where are we going?"},{k:"2",n:"Campaign Briefs",q:"What outcome, by when?"},{k:"3",n:"Content Plan and Content Matrix",q:"What do we create, for whom, why and when?"},{k:"4",n:"Channel Playbooks",q:"How does each channel operate?"},{k:"S",n:"Supporting",q:"Reference, data, brand and recaps"}];
 const DSTAT=["Current/Active","In progress","Needs update","Draft","Reserved","Ended","Retired"];
 let docs=[],classes=[],SITES=[],visits=[],cards=[];
@@ -903,7 +903,7 @@ function moreHtml(){
  <div class="sheet-list">${MORE.map(([k,l,d])=>it(k,l,d)).join("")}</div>
  <span class="lbl">Shortcuts</span>
  <div class="sheet-list">${MEDIA_LIB?`<a class="sheet-item" href="${esc(MEDIA_LIB)}" target="_blank" rel="noopener">${ICON.library}<span><b>Media Library</b><small>Shared Drive folder, opens in a new tab</small></span></a>`:""}
- <a class="sheet-item" href="https://redefiners-world-languages.github.io/team-tools/forms/media-library/" target="_blank" rel="noopener">${ICON.upload}<span><b>Media Upload app</b><small>Opens in a new tab</small></span></a>
+ <a class="sheet-item" href="https://tools.redefinerswl.org/forms/media-library/" target="_blank" rel="noopener">${ICON.upload}<span><b>Media Upload app</b><small>Opens in a new tab</small></span></a>
  <button class="sheet-item" data-act="camps">${ICON.camps}<span><b>Campaigns</b><small>Colors, default calls to action and hashtags</small></span></button>
  <button class="sheet-item" data-act="signin">${ICON.user}<span><b>${ME?"Signed in":"Sign in"}</b><small>${ME?esc(ME.email):"Google account, @redefinerswl.org"}</small></span></button></div>
  <span class="lbl">Theme</span>${themeButtons("seg",true)}</div></div>`;
