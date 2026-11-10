@@ -24,7 +24,7 @@ function setup() {
   var ss = id ? SpreadsheetApp.openById(id) : SpreadsheetApp.create('ReDefiners Media Library Admin');
   props.setProperty('ADMIN_SHEET_ID', ss.getId());
   if (!props.getProperty('STAFF_DOMAIN')) props.setProperty('STAFF_DOMAIN', 'redefinerswl.org');
-  if (!props.getProperty('ALLOWED_ORIGINS')) props.setProperty('ALLOWED_ORIGINS', 'https://redefiners-world-languages.github.io');
+  if (!props.getProperty('ALLOWED_ORIGINS')) props.setProperty('ALLOWED_ORIGINS', 'https://tools.redefinerswl.org,https://redefiners-world-languages.github.io');
   if (!props.getProperty('MAX_FILE_GB')) props.setProperty('MAX_FILE_GB', '10');
 
   Object.keys(SHEETS).forEach(function (key) {
