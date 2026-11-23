@@ -2,11 +2,15 @@
 // can be reviewed without touching Google Drive. Nothing leaves the browser.
 // The lists come from apps-script/Defaults.gs, so the preview shows the real names. Folder checks
 // follow Code.gs (typed names, new campaigns, folders that already exist) on a small fake Drive.
-// Test names: a file whose name contains "drop" loses its connection once at about half way.
+// Test names: a file whose name contains "drop" loses its connection once at about half way;
+// "short" comes back from Drive with a smaller size once; "trash" is found in the Drive trash once.
 (function () {
   let config = null;
   const uploads = {}; // url -> { size, received, dropped, meta }
   const library = [];  // files "uploaded" in this preview, plus a few samples
+  const addedFolders = new Set(); // folders someone made in Drive directly ("Added in Drive")
+  const failedOnce = {}; // test hooks: file name -> already failed once
+  window.MockLog = []; // what the page sent to reportFailure (look at it in the console)
   const folders = new Set(); // fake Drive: every folder path, "Campaigns/MCP Enrollment/Student Referral"
   const OTHER = '__other__', NONE = '__none__';
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -25,6 +29,7 @@
       for (const st of c.steps) if (st.allowNew && !st.dependsOn) c.known[st.id] = childNames(c.label);
     }
     seedSamples();
+    seedAddedInDrive();
     return config;
   }
 
@@ -67,6 +72,20 @@
       addFolder([col.label, ...dest.segments].join('/'));
       library.push(makeFile(col, dest, name, kind, { what, date }, placeholder(kind === 'video' ? 'Sample video' : 'Sample photo', 20 + i * 40)));
     });
+  }
+
+  /** Things put into Drive by hand: they carry no page properties, so Search misses them and Browse marks them. */
+  function seedAddedInDrive() {
+    const col = config.collections.find(c => c.id === 'classes');
+    if (!col) return;
+    const inMonth = library.find(f => f.col === 'classes');
+    if (inMonth) {
+      library.push({ id: 'drive1', col: 'classes', name: 'Sign-in sheet scan.pdf', kind: 'file', path: inMonth.path, size: 412000, link: '', hasThumbnail: false, thumb: '', description: '', props: {}, added: true });
+      library.push({ id: 'drive2', col: 'classes', name: 'IMG_9001.HEIC', kind: 'photo', path: inMonth.path, size: 2400000, link: '', hasThumbnail: true, thumb: placeholder('Added by hand', 300), description: '', props: {}, added: true });
+    }
+    addFolder('Classes and Programs/MCP/Old photos from the shared drive');
+    addedFolders.add('Classes and Programs/MCP/Old photos from the shared drive');
+    library.push({ id: 'drive3', col: 'classes', name: 'Group photo.jpg', kind: 'photo', path: 'Classes and Programs/MCP/Old photos from the shared drive', size: 3100000, link: '', hasThumbnail: true, thumb: placeholder('Added by hand', 330), description: '', props: {}, added: true });
   }
 
   const wait = ms => new Promise(r => setTimeout(r, ms));
@@ -235,14 +254,32 @@
       const url = 'mock:' + Math.random().toString(36).slice(2);
       const kind = /^video\//.test(body.file.type) ? 'video' : 'photo';
       uploads[url] = { size: body.file.size, received: 0, dropped: false, meta: { name: body.file.name } };
-      library.push({ ...makeFile(col, dest, savedAs, kind, body.context || {}, ''), pending: url });
-      return { uploadUrl: url, token: 't', savedAs, path };
+      library.push({ ...makeFile(col, dest, savedAs, kind, body.context || {}, ''), pending: url, size: body.file.size, original: body.file.name });
+      return { uploadUrl: url, token: 't', savedAs, path, folderId: path, size: body.file.size };
     }
-    if (action === 'finishUpload') return { logged: true };
+    if (action === 'finishUpload') {
+      const f = library.find(x => x.id === body.fileId);
+      if (!f) return { verified: false, reason: 'missing', logged: false };
+      const orig = (body.originalName || '').toLowerCase();
+      const show = (verified, reason, size) => ({ verified, reason, size, name: f.name, path: f.path, logged: verified });
+      if (/short/.test(orig) && !failedOnce[orig]) { failedOnce[orig] = 1; return show(false, 'size_mismatch', Math.floor(f.size * 0.6)); }
+      if (/trash/.test(orig) && !failedOnce[orig]) { failedOnce[orig] = 1; return show(false, 'trashed', f.size); }
+      return show(true, '', f.size);
+    }
+    if (action === 'verifyUploads') {
+      return { results: (body.items || []).map(it => {
+        const f = library.find(x => x.id === it.fileId);
+        return f ? { fileId: it.fileId, verified: true, reason: '', size: f.size, name: f.name, path: f.path } : { fileId: it.fileId, verified: false, reason: 'missing', size: 0, name: '', path: '' };
+      }) };
+    }
+    if (action === 'reportFailure') {
+      for (const it of body.items || []) window.MockLog.push({ result: ['not_media', 'empty', 'duplicate', 'too_big'].includes(it.reason) ? 'Not added' : 'Failed', ...it });
+      return { logged: (body.items || []).length };
+    }
     const visible = library.filter(f => !f.pending && f.col === col.id);
     if (action === 'search') {
       const words = (body.q || '').toLowerCase().split(/\s+/).filter(Boolean);
-      const hits = visible.filter(f => words.every(w => (f.name + ' ' + f.description).toLowerCase().includes(w)) &&
+      const hits = visible.filter(f => !f.added && words.every(w => (f.name + ' ' + f.description).toLowerCase().includes(w)) &&
         Object.entries(body.filters || {}).every(([k, v]) => !v || f.props[k] === v));
       return { files: hits.map(out), nextPageToken: '' };
     }
@@ -251,7 +288,7 @@
       const here = prefix.split('/');
       return {
         crumbs: here.map((name, i) => ({ id: here.slice(0, i + 1).join('/'), name })),
-        folders: childNames(prefix).map(name => ({ id: prefix + '/' + name, name })),
+        folders: childNames(prefix).map(name => ({ id: prefix + '/' + name, name, addedInDrive: addedFolders.has(prefix + '/' + name) })),
         files: visible.filter(f => f.path === prefix).map(out), nextPageToken: ''
       };
     }
@@ -268,7 +305,7 @@
   };
 
   function out(f) {
-    return { id: f.id, name: f.name, path: f.path, size: f.size, kind: f.kind, hasThumbnail: f.hasThumbnail, description: f.description, link: f.link };
+    return { id: f.id, name: f.name, path: f.path, size: f.size, kind: f.kind, hasThumbnail: f.hasThumbnail, description: f.description, link: f.link, addedInDrive: !!f.added };
   }
 
   // Stands in for the PUT to Google's resumable upload URL.
