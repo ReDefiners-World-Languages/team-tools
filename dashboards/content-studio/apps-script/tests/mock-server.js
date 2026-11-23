@@ -59,6 +59,14 @@ http.createServer((req, res) => {
     return;
   }
   if (url.pathname === '/reset') { seed(url.searchParams.get('data') === 'empty' ? 'empty' : 'loaded'); res.writeHead(200, cors); return res.end('ok'); }
+  if (url.pathname === '/expire') { Object.keys(env.tokens).forEach((k) => delete env.tokens[k]); [...env.cacheMap.keys()].filter((k) => k.startsWith('tok:')).forEach((k) => env.cacheMap.delete(k)); res.writeHead(200, cors); return res.end('ok'); } // every token stops being accepted, as after the hour is up
+  if (url.pathname === '/newtoken') { // a fresh token for the same person (what Google's silent sign-in would return)
+    const exp = String(Math.floor(Date.now() / 1000) + Number(url.searchParams.get('secs') || 3600));
+    const claims = Object.assign({}, env.tokens[tok] || JSON.parse(Buffer.from(tok.split('.')[1], 'base64url').toString()), { exp });
+    tok = 'h.' + Buffer.from(JSON.stringify(claims)).toString('base64url') + '.s' + Math.random().toString(36).slice(2);
+    env.tokens[tok] = claims;
+    res.writeHead(200, cors); return res.end(tok);
+  }
   if (url.pathname === '/token') { res.writeHead(200, cors); return res.end(tok); }
   if (url.pathname === '/tables') { // peek at the typed tables for the tests
     const out = {};
@@ -68,7 +76,7 @@ http.createServer((req, res) => {
   if (url.pathname === '/tick') { env.run('syncTick()'); res.writeHead(200, cors); return res.end('ok'); }
   if (url.pathname === '/' || url.pathname === '/index.html') {
     let html = fs.readFileSync(PAGE, 'utf8');
-    const inject = `<script>window.CSB_MOCK_TOKEN=${JSON.stringify(tok)};window.CSB_MOCK_API=async function(action,payload){let r;try{r=await fetch('/api',{method:'POST',body:JSON.stringify(payload)})}catch(e){throw new ApiError('network','No connection to the board storage.')}const j=await r.json();if(!j.ok)throw new ApiError(j.error,j.message);return j.data};</script>`;
+    const inject = `<script>window.CSB_MOCK_TOKEN=${JSON.stringify(tok)};window.CSB_MOCK_API=async function(action,payload){let r;try{r=await fetch('/api',{method:'POST',body:JSON.stringify(payload)})}catch(e){throw new ApiError('network','No connection to the board storage.')}const j=await r.json();if(!j.ok){if(j.error==='sign_in_required')onTokenExpired();throw new ApiError(j.error,j.message)}return j.data};window.CSB_PROMPTS=0;window.google={accounts:{id:{prompt(){window.CSB_PROMPTS++;if(window.CSB_PROMPT_OK)fetch('/newtoken').then(r=>r.text()).then(t=>onGoogleCredential({credential:t}))},disableAutoSelect(){}}}};</script>`;
     html = html.replace('<body>', '<body>' + inject);
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); return res.end(html);
   }

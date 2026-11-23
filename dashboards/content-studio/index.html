@@ -518,6 +518,15 @@ html.gated main{padding-bottom:40px}
 #gsiButton,#gsiGate,#gsiButton iframe,#gsiGate iframe{color-scheme:light;background:transparent}
 .savestate{font-weight:600;margin-left:6px;opacity:.85}
 .savestate.warn{color:var(--crit);opacity:1}
+/* save problems (v15) */
+.savealert{position:fixed;left:max(16px,env(safe-area-inset-left,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:30;width:min(560px,calc(100% - 32px));max-height:50vh;overflow:auto;box-sizing:border-box;padding:12px 14px;border:1px solid var(--crit);border-radius:12px;background:color-mix(in srgb,var(--crit) 10%,var(--surface));color:var(--ink);box-shadow:var(--shadow);font-size:13.5px;line-height:1.45}
+.savealert[hidden],.savealert [hidden]{display:none!important}
+.savealert b{display:block;margin-bottom:2px}
+.savealert p{margin:4px 0 0}
+.savealert ul{margin:4px 0 0;padding-left:18px}
+.savealert .sa-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}
+.savealert .sa-actions .gsi{min-height:0}
+@media (max-width:700px){.savealert{bottom:calc(84px + env(safe-area-inset-bottom,0px))}.savealert .sa-actions .btn{min-height:40px}}
 /* docs level label */
 .drow{grid-template-columns:minmax(0,1.3fr) 210px minmax(0,1.2fr) 140px minmax(0,1fr) 28px}
 @media (max-width:860px){
@@ -550,6 +559,7 @@ html.gated main{padding-bottom:40px}
 <main class="wrap" id="view" role="tabpanel" aria-label="Current view"></main>
 <nav class="bnav" id="bnav" aria-label="Views"></nav>
 <div id="layer"></div>
+<div class="savealert" id="saveAlert" role="alert" hidden><b id="saTitle"></b><div id="saBody"></div><div class="sa-actions"><button class="btn sm" type="button" data-act="saretry" id="saRetry">Retry</button><button class="btn ghost sm" type="button" data-act="saconmine" id="saConMine" hidden>Use my version</button><button class="btn ghost sm" type="button" data-act="saconkeep" id="saConKeep" hidden>Keep the saved version</button><span class="gsi" id="gsiAgain" hidden></span></div></div>
 <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 <script>
 const STAGES=[["idea","Ideas"],["scripting","Scripting"],["tocapture","To capture"],["captured","Captured"],["editing","Editing"],["review","Final review"],["tobesched","To be scheduled"],["scheduled","Scheduled"]];
@@ -905,7 +915,7 @@ function moreHtml(){
  <div class="sheet-list">${MEDIA_LIB?`<a class="sheet-item" href="${esc(MEDIA_LIB)}" target="_blank" rel="noopener">${ICON.library}<span><b>Media Library</b><small>Shared Drive folder, opens in a new tab</small></span></a>`:""}
  <a class="sheet-item" href="https://tools.redefinerswl.org/forms/media-library/" target="_blank" rel="noopener">${ICON.upload}<span><b>Media Upload app</b><small>Opens in a new tab</small></span></a>
  <button class="sheet-item" data-act="camps">${ICON.camps}<span><b>Campaigns</b><small>Colors, default calls to action and hashtags</small></span></button>
- <button class="sheet-item" data-act="signin">${ICON.user}<span><b>${ME?"Signed in":"Sign in"}</b><small>${ME?esc(ME.email):"Google account, @redefinerswl.org"}</small></span></button></div>
+ <button class="sheet-item" data-act="signin">${ICON.user}<span><b>${ME&&ID_TOKEN?"Signed in":"Sign in"}</b><small>${ME?esc(ME.email):"Google account, @redefinerswl.org"}</small></span></button></div>
  <span class="lbl">Theme</span>${themeButtons("seg",true)}</div></div>`;
 }
 const FK=["data-act","data-v","data-id","data-i","data-k","data-f","data-d","data-th","data-mix","data-lock","data-cf","data-meta","data-vf","data-pers","data-act-link","data-mixwhy","data-td","data-fq","data-pil","data-tdate","name"];
@@ -1025,8 +1035,9 @@ document.addEventListener("click",e=>{
  else if(a==="usetags"){const c=byId(state.modal),cp=campOf(c.camp);if(cp&&cp.tags){c.tags=cp.tags;layer();toast("Campaign hashtags added")}else toast("This campaign has no default hashtags")}
  else if(a==="del"){if(state.delSure){cards=cards.filter(x=>x.id!==state.modal);state.modal=null;state.delSure=false;layer();render();toast("Card deleted")}else{state.delSure=true;layer()}}
  else if(a==="camps"){state.more=false;state.panel="camps";layer()}
- else if(a==="signin"){state.more=false;state.signErr="";state.panel="signin";layer();if(!ME)mountGoogleButton("gsiButton")}
- else if(a==="signout"){saveNow();PRESENCE_ADAPTER.setSelf(null);ME=null;ID_TOKEN="";try{if(window.google)google.accounts.id.disableAutoSelect()}catch(err){}BOARD.status="signedout";loadBoard({},0);const bt=$("#bannerText");if(bt)bt.textContent="The board loads after you sign in.";setSaveState("");state.panel=null;state.modal=null;layer();render();toast("Signed out")}
+ else if(a==="signin"){state.more=false;state.signErr="";state.panel="signin";layer();if(!ME||!ID_TOKEN)mountGoogleButton("gsiButton")}
+ else if(a==="saretry"){retryNow()}else if(a==="saconmine"){resolveConflicts(true)}else if(a==="saconkeep"){resolveConflicts(false)}
+ else if(a==="signout"){persistDraft();const kept=BOARD.status==="ready"?pendingKeys().length:0;saveNow();PRESENCE_ADAPTER.setSelf(null);ME=null;ID_TOKEN="";TOKEN_EXP=0;SA.conf=[];SA.problem="";SIGN.need=false;SIGN.err="";try{if(window.google)google.accounts.id.disableAutoSelect()}catch(err){}BOARD.status="signedout";loadBoard({},0);const bt=$("#bannerText");if(bt)bt.textContent="The board loads after you sign in.";setSaveState("");state.panel=null;state.modal=null;layer();render();renderSaveAlert();toast(kept?"Signed out. "+kept+" unsaved change"+(kept>1?"s are":" is")+" kept in this browser and will save when you sign in again.":"Signed out")}
  else if(a==="pmore"||a==="pav"){togglePresencePop()}
  else if(a==="swatch"){state.newCamp.c=v;layer()}
  else if(a==="cmonth"||a==="fmonth"||a==="tmonth"){const ky=a==="cmonth"?"y":a==="fmonth"?"cy":"ty",km=a==="cmonth"?"m":a==="fmonth"?"cm":"tm";if(v==="0"){const td=new Date();state[ky]=td.getFullYear();state[km]=td.getMonth()}else{let m=state[km]+ +v,y=state[ky];if(m<0){m=11;y--}if(m>11){m=0;y++}state[ky]=y;state[km]=m}render()}
@@ -1244,7 +1255,7 @@ function avatarHtml(p,cls,act){
  return `<button type="button" class="pav ${cls||""} ${p.you?"you":""} ${presJoined.has(p.id)?"join":""}" data-act="${act||"pav"}" data-name="${esc(lab)}" aria-label="${esc(lab)}" style="--av:${avColor(p)}">${p.avatarUrl?`<img src="${esc(p.avatarUrl)}" alt="">`:`<span aria-hidden="true">${esc(initials(p.name))}</span>`}</button>`}
 function renderPresence(){
  const box=$("#presence");if(!box)return;const all=presencePeople(),n=all.length,cap=presenceCap();
- const sb=$("#signinBtn");if(sb)sb.textContent=ME?"Signed in":"Sign in";
+ const sb=$("#signinBtn");if(sb)sb.textContent=ME&&ID_TOKEN?"Signed in":"Sign in";
  if(!n){box.innerHTML="";box.hidden=true;return}box.hidden=false;
  const shown=n>cap?all.slice(0,cap-1):all,rest=n-shown.length,label=n===1?"1 person here":n+" people here";
  box.innerHTML=`<div class="pstack" role="group" aria-label="${label}${PRESENCE_ADAPTER.sample?" (sample preview)":""}">${shown.map(p=>avatarHtml(p)).join("")}${rest?`<button type="button" class="pav pmore" data-act="pmore" data-name="${rest} more" aria-label="Show everyone here, ${rest} more" aria-haspopup="true" aria-expanded="false" style="--av:#DFF0EE"><span>+${rest}</span></button>`:""}</div>
@@ -1291,25 +1302,60 @@ function loadGsi(){
  return gsiLoad;
 }
 function jwtPayload(t){try{const p=t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/");return JSON.parse(decodeURIComponent(atob(p).split("").map(c=>"%"+("00"+c.charCodeAt(0).toString(16)).slice(-2)).join("")))}catch(e){return null}}
+let TOKEN_EXP=0,renewAt=0,renewTries=0;
+const SIGN={need:false,err:""};
+const RENEW_BEFORE_MS=6*60*1000;
+/* Ask Google for a fresh ID token without a click. Google signs the person in again by itself when they are still
+   signed in to Google and have used this board before (browser rules apply, so this can fail: then the Sign in button stays). */
+function askGoogleRenew(force){
+ const n=Date.now();if(!force&&(n-renewAt<90000||renewTries>=3))return;renewAt=n;renewTries++;
+ if(window.CSB_MOCK_API){try{if(window.google&&google.accounts&&google.accounts.id)google.accounts.id.prompt()}catch(e){}return}
+ loadGsi().then(()=>{try{google.accounts.id.prompt()}catch(e){}}).catch(()=>{});
+}
+function mountAgainButton(){const w=$("#gsiAgain");if(w){w.hidden=false;mountGoogleButton("gsiAgain")}}
 async function onGoogleCredential(resp){
  const p=resp&&resp.credential?jwtPayload(resp.credential):null;
- if(!p||p.hd!==SETTINGS.staffDomain){state.signErr="Use your @"+SETTINGS.staffDomain+" Google account.";BOARD.error=state.signErr;if(state.panel==="signin")layer();render();return}
+ if(!p||p.hd!==SETTINGS.staffDomain){state.signErr="Use your @"+SETTINGS.staffDomain+" Google account.";BOARD.error=state.signErr;SIGN.err=BOARD.status==="ready"?state.signErr:"";if(state.panel==="signin")layer();render();renderSaveAlert();return}
  const again=!!ME&&BOARD.status==="ready";
- ID_TOKEN=resp.credential;state.signErr="";
- if(again){ME.name=p.name||ME.name;flushSoon();return}/* token refreshed: keep working */
+ if(again&&String(p.email||"").toLowerCase()!==ME.email){SIGN.err="That Google account is not the one this board was opened with ("+ME.email+"). Sign in with the same account; your unsaved changes are kept.";renderSaveAlert();return}
+ ID_TOKEN=resp.credential;TOKEN_EXP=(+p.exp||0)*1000;renewTries=0;SIGN.need=false;SIGN.err="";state.signErr="";
+ if(again){ME.name=p.name||ME.name;const w=$("#gsiAgain");if(w)w.hidden=true;if(state.panel==="signin")layer();renderPresence();SA.problem="";renderSaveAlert();if(pendingLocal()){flushSoon();toast("Signed in again. Saving your changes.")}return}
  BOARD.status="loading";BOARD.error="";state.panel=null;layer();render();
  try{const r=await api("start");
   ME={id:r.who.id,name:r.who.name,email:String(p.email||"").toLowerCase(),avatarUrl:r.who.picture||""};
   loadBoard(r.board,r.rev,r.lists);BOARD.status="ready";
-  PRESENCE_ADAPTER.setSelf({id:ME.id,name:ME.name,avatarUrl:ME.avatarUrl});render();toast("Signed in as "+ME.name)}
+  PRESENCE_ADAPTER.setSelf({id:ME.id,name:ME.name,avatarUrl:ME.avatarUrl});render();touchAlive();
+  const restored=restoreDrafts();if(!restored)toast("Signed in as "+ME.name)}
  catch(e){ID_TOKEN="";ME=null;BOARD.status="signedout";BOARD.error=e.code==="not_staff"?"Use your @"+SETTINGS.staffDomain+" Google account.":e.message;render()}
 }
-function onTokenExpired(){ID_TOKEN="";setSaveState("Signed out: sign in again to keep saving.",true);try{if(window.google)google.accounts.id.prompt()}catch(e){}}
+function onTokenExpired(){
+ ID_TOKEN="";if(BOARD.status!=="ready")return;
+ SIGN.need=true;SA.problem="sign_in";renderPresence();if(state.panel==="signin")layer();renderSaveAlert();askGoogleRenew();mountAgainButton();
+}
+/* every 15 s and whenever the tab comes back: renew the token before it ends, and retry a failed save */
+function tokenWatch(){
+ touchAlive();
+ if(BOARD.status!=="ready"||!ME)return;
+ if(!ID_TOKEN){if(!SIGN.need){SIGN.need=true;SA.problem="sign_in";renderSaveAlert();mountAgainButton()}askGoogleRenew();return}
+ if(TOKEN_EXP&&TOKEN_EXP-Date.now()<RENEW_BEFORE_MS)askGoogleRenew();
+}
+function retryIfPending(){if(BOARD.status==="ready"&&ID_TOKEN&&SA.problem&&SA.problem!=="outdated"&&pendingLocal()){clearTimeout(SYNC.timer);SYNC.fails=0;saveNow()}}
+setInterval(tokenWatch,15000);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){tokenWatch();retryIfPending()}else persistDraft()});
+window.addEventListener("online",()=>{retryIfPending()});
+window.addEventListener("pagehide",()=>{persistDraft();dropAlive()});
+window.addEventListener("beforeunload",e=>{if(BOARD.status==="ready"&&!SA.draftOk&&pendingLocal()){e.preventDefault();e.returnValue=""}});
+/* open the page already signed in when Google allows it (no click) */
+function startAutoSignIn(){
+ if(window.CSB_MOCK_API){try{if(window.google&&google.accounts&&google.accounts.id)google.accounts.id.prompt()}catch(e){}return}
+ if(!SETTINGS.apiUrl||!SETTINGS.googleClientId)return;
+ loadGsi().then(()=>{if(BOARD.status==="signedout"&&!ID_TOKEN)google.accounts.id.prompt()}).catch(()=>{});
+}
 function signinHtml(){
  const e=state.signErr||"";
- return `<div class="ov top2" id="ov2"><div class="modal signin" role="dialog" aria-modal="true" aria-labelledby="si-h" tabindex="-1"><div class="mh"><div class="head"><h3 id="si-h">${ME?"Signed in":"Sign in"}</h3><button class="x" data-act="closepanel" aria-label="Close">${ICON.x}</button></div>
+ return `<div class="ov top2" id="ov2"><div class="modal signin" role="dialog" aria-modal="true" aria-labelledby="si-h" tabindex="-1"><div class="mh"><div class="head"><h3 id="si-h">${ME&&ID_TOKEN?"Signed in":"Sign in"}</h3><button class="x" data-act="closepanel" aria-label="Close">${ICON.x}</button></div>
  <p class="si-note">The board's content is stored privately and loads only for @${SETTINGS.staffDomain} accounts.</p></div>
- <div class="mb">${ME?`<div class="si-me">${avatarHtml({...ME,you:true},"lg","noop")}<div><b>${esc(ME.name)}</b><br><small>${esc(ME.email)}</small></div></div>
+ <div class="mb">${ME&&ID_TOKEN?`<div class="si-me">${avatarHtml({...ME,you:true},"lg","noop")}<div><b>${esc(ME.name)}</b><br><small>${esc(ME.email)}</small></div></div>
  <div class="row si-actions"><button class="btn ghost" data-act="signout">Sign out</button><button class="btn" data-act="closepanel">Done</button></div>`:
  `<p class="si-help" style="margin:0 0 12px">Use your @${SETTINGS.staffDomain} Google account.</p><div class="gsi" id="gsiButton"></div>
  <p class="si-err" id="si-err" role="alert">${esc(e)}</p>
@@ -1358,26 +1404,143 @@ function boardItems(){
  add("single","people",PEOPLE);add("single","personas",PERSONAS);add("single","pillars",pillars);add("single","pillarType",pillarType);
  return m;
 }
-function scheduleSave(){if(BOARD.status!=="ready")return;clearTimeout(SYNC.timer);SYNC.timer=setTimeout(saveNow,Math.max(1200,(SYNC.last||0)+3000-Date.now()))}
+const DR={t:null,tab:(function(){let t="";try{t=sessionStorage.getItem("csb-tab")||"";if(!t){t=Math.random().toString(36).slice(2,10);sessionStorage.setItem("csb-tab",t)}}catch(e){}return t||Math.random().toString(36).slice(2,10)})()};
+const SA={lastSaved:0,problem:"",msg:"",draftOk:true,conf:[],rej:{},hadFail:false,shown:""};
+const DELMARK="\u0000del";
+function scheduleSave(){if(BOARD.status!=="ready")return;clearTimeout(SYNC.timer);SYNC.timer=setTimeout(saveNow,Math.max(1200,(SYNC.last||0)+3000-Date.now()));clearTimeout(DR.t);DR.t=setTimeout(()=>persistDraft(),500)}
 function flushSoon(){clearTimeout(SYNC.timer);SYNC.timer=setTimeout(saveNow,200)}
 const PERMANENT=new Set(["bad_request","bad_value","too_big","outdated","full"]);
+const BATCH=250;
+function pendingOf(now){const ks=[];Object.keys(now).forEach(k=>{if(SYNC.snap[k]!==now[k])ks.push(k)});Object.keys(SYNC.snap).forEach(k=>{if(!(k in now))ks.push(k)});return ks}
+function pendingKeys(){return pendingOf(boardItems())}
+/* ---- local draft: unsaved edits are kept in this browser until the back end has them ---- */
+function draftKey(){return ME?"csb-draft:"+ME.id+":"+DR.tab:""}
+function touchAlive(){try{localStorage.setItem("csb-alive:"+DR.tab,String(Date.now()))}catch(e){}}
+function dropAlive(){try{localStorage.removeItem("csb-alive:"+DR.tab)}catch(e){}}
+function persistDraft(now){
+ if(BOARD.status!=="ready"||!ME)return;
+ try{now=now||boardItems();const items={};
+  Object.keys(now).forEach(k=>{if(SYNC.snap[k]!==now[k])items[k]={b:k in SYNC.snap?SYNC.snap[k]:null,m:now[k]}});
+  Object.keys(SYNC.snap).forEach(k=>{if(!(k in now))items[k]={b:SYNC.snap[k],m:null}});
+  SA.conf.forEach(c=>{if(!(c.k in items))items[c.k]={b:c.b,m:c.m}});
+  const key=draftKey();
+  if(!Object.keys(items).length)localStorage.removeItem(key);else localStorage.setItem(key,JSON.stringify({v:1,at:Date.now(),items}));
+  SA.draftOk=true}
+ catch(e){SA.draftOk=false}
+}
+const cardSort=(x,y)=>{const nx=x.id>=1e9,ny=y.id>=1e9;return nx!==ny?(nx?-1:1):nx?y.id-x.id:x.id-y.id};
+/* put one stored item (JSON text) into the live board; undefined = deleted */
+function setItem(c,id,v){
+ const del=v===undefined;
+ const upd=(arr,match,make)=>{const i=arr.findIndex(match);if(del){if(i>=0)arr.splice(i,1)}else if(i>=0)arr[i]=make(v);else arr.push(make(v))};
+ if(c==="cards"){upd(cards,x=>String(x.id)===id,o=>C(o));cards.sort(cardSort)}
+ else if(c==="camps")upd(camps,x=>String(x.id||x.n)===id,o=>o);
+ else if(c==="themes")upd(themes,x=>String(x.id)===id,normTheme);
+ else if(c==="topics")upd(topics,x=>String(x.id)===id,o=>o);
+ else if(c==="docs")upd(docs,x=>String(x.id)===id,o=>o);
+ else if(c==="visits")upd(visits,x=>String(x.id)===id,o=>o);
+ else if(c==="mix"){MIX[id]=del?{e:0,c:0,p:0,o:0,lock:[],camps:"",why:""}:v;if(!MIXKEYS.includes(id)){MIXKEYS.push(id);MIXKEYS.sort()}}
+ else if(c==="meta"){if(del)delete META[id];else META[id]=v}
+ else if(c==="single"&&!del){if(id==="people")PEOPLE.splice(0,PEOPLE.length,...v);else if(id==="personas")PERSONAS=v;else if(id==="pillars")pillars=v;else if(id==="pillarType"){Object.keys(pillarType).forEach(k=>delete pillarType[k]);Object.assign(pillarType,v)}}
+}
+function applyKey(k,json){const[c,id]=k.split("\u0001");setItem(c,id,json==null?undefined:JSON.parse(json))}
+/* after sign-in: bring back what this person had not saved yet (from this tab, or from a closed tab of theirs) */
+function restoreDrafts(){
+ if(!ME)return false;
+ const own=draftKey(),prefix="csb-draft:"+ME.id+":",found=[];
+ try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith(prefix))found.push(k)}}catch(e){return false}
+ const merged={},foreign=[];
+ found.forEach(k=>{let d;try{d=JSON.parse(localStorage.getItem(k))}catch(e){return}
+  if(!d||!d.items)return;
+  if(k!==own){let a=0;try{a=+localStorage.getItem("csb-alive:"+k.slice(prefix.length))||0}catch(e){}if(Date.now()-a<180000)return;foreign.push(k)}
+  Object.keys(d.items).forEach(ik=>{const it=d.items[ik];if(!merged[ik]||(d.at||0)>=merged[ik].at)merged[ik]={b:it.b,m:it.m,at:d.at||0}})});
+ let applied=0;const conf=[];
+ Object.keys(merged).forEach(k=>{const it=merged[k],cur=k in SYNC.snap?SYNC.snap[k]:null;
+  if(cur===it.m)return;/* the back end already has it */
+  if(cur===it.b){try{applyKey(k,it.m);applied++}catch(e){conf.push({k,b:it.b,m:it.m})}}
+  else conf.push({k,b:it.b,m:it.m})});
+ SA.conf=conf;
+ if(applied||conf.length){render();persistDraft()}
+ foreign.forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});/* their items are in this tab's draft now */
+ renderSaveAlert();
+ if(applied){flushSoon();toast("Welcome back. "+applied+" unsaved change"+(applied>1?"s were":" was")+" restored from this browser and "+(applied>1?"are":"is")+" saving now.")}
+ return applied>0||conf.length>0;
+}
+function resolveConflicts(useMine){
+ const conf=SA.conf;SA.conf=[];if(!conf.length)return;
+ if(useMine){conf.forEach(c=>{try{applyKey(c.k,c.m)}catch(e){}});render();flushSoon();toast("Your version is kept and is saving now.")}
+ else{
+  try{localStorage.setItem("csb-kept-copy",JSON.stringify({at:Date.now(),items:conf.map(c=>({k:c.k,mine:c.m}))}))}catch(e){}
+  try{const blob=new Blob([JSON.stringify({note:"Your version of items that someone else changed meanwhile. Nothing here was saved to the board.",items:conf.map(c=>({item:labelOf(c.k),mine:c.m==null?null:JSON.parse(c.m)}))},null,1)],{type:"application/json"});
+   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="my-unsaved-board-changes-"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}catch(e){}
+  toast("Saved version kept. A copy of your version was downloaded.")}
+ persistDraft();renderSaveAlert();
+}
+/* ---- messages ---- */
+function labelOf(k){const[c,id]=k.split("\u0001");
+ if(c==="cards"){const x=cards.find(y=>String(y.id)===id);return 'card "'+String((x&&x.title)||"Untitled").slice(0,50)+'"'}
+ return ({camps:"a campaign",themes:"a theme",topics:"a topic",docs:"a document",visits:"a visit",mix:"a content mix",meta:"month settings",single:"a board list"})[c]||"an item"}
+const WHY={sign_in:"Your Google sign-in ended, so the board cannot save. The board is trying to sign you in again by itself. If the Sign in button below shows, press it.",
+ network:"There is no connection to the board's storage. The board keeps trying and saves as soon as it reconnects.",
+ busy:"The board's storage was busy (another save was running). The board tries again by itself.",
+ verify_unavailable:"Google could not confirm your sign-in just now. The board tries again by itself.",
+ server_error:"The board's storage had a problem. The board tries again by itself.",
+ outdated:"This page is out of date. Reload it to get the latest version."};
+function renderSaveAlert(){
+ const box=$("#saveAlert");if(!box)return;
+ const hide=()=>{if(!box.hidden){box.hidden=true;SA.shown=""}};
+ if(BOARD.status!=="ready"){hide();return}
+ const now=boardItems(),ks=pendingOf(now),nc=SA.conf.length;
+ const refused=ks.filter(k=>SA.rej[k]&&SA.rej[k].json===(k in now?now[k]:DELMARK));
+ const waiting=ks.filter(k=>!refused.includes(k));
+ const problem=waiting.length&&SA.problem?SA.problem:"";
+ setSaveState(ks.length?(problem||refused.length?ks.length+" not saved":"Saving"):"All changes saved",!!(problem||refused.length));
+ if(!problem&&!refused.length&&!nc&&!SIGN.err){hide();return}
+ const names=a=>a.slice(0,3).map(labelOf).join(", ")+(a.length>3?" and "+(a.length-3)+" more":"");
+ const n=ks.length,parts=[];
+ let title=n?n+" change"+(n>1?"s":"")+" not saved yet":"Unsaved changes need a decision";
+ if(SA.lastSaved&&refused.length)title+=". "+SA.lastSaved+" saved";
+ if(refused.length){parts.push("<p>Not saved because the board refused "+(refused.length>1?"them":"it")+":</p><ul>"+refused.slice(0,4).map(k=>"<li>"+esc(SA.rej[k].message)+"</li>").join("")+(refused.length>4?"<li>and "+(refused.length-4)+" more</li>":"")+"</ul><p>Change the text or value named above and it saves by itself.</p>")}
+ if(problem){parts.push("<p>"+(waiting.length?"Waiting to save: "+esc(names(waiting))+". ":"")+esc(WHY[problem]||SA.msg||"The save did not go through. The board tries again by itself.")+"</p>")}
+ if(nc)parts.push("<p>"+nc+" item"+(nc>1?"s":"")+" you edited before ("+esc(names(SA.conf.map(c=>c.k)))+") "+(nc>1?"were":"was")+" also changed by someone else meanwhile. Choose which version to keep. If you keep the saved version, a copy of yours is downloaded first.</p>")
+ if(SIGN.err)parts.push("<p>"+esc(SIGN.err)+"</p>");
+ if(n)parts.push("<p>"+(SA.draftOk?"Your edits are kept in this browser, so nothing is lost if you reload or close the tab.":"This browser could not keep a copy of your edits. Do not close this page until they are saved.")+"</p>");
+ const key=title+"|"+parts.join("")+"|"+problem+"|"+nc;
+ if(box.hidden||SA.shown!==key){$("#saTitle").textContent=title;$("#saBody").innerHTML=parts.join("");SA.shown=key;box.hidden=false}
+ const rb=$("#saRetry");rb.textContent=problem==="outdated"?"Reload page":"Retry";rb.hidden=!(n&&(problem||refused.length));
+ $("#saConMine").hidden=!nc;$("#saConKeep").hidden=!nc;
+ const w=$("#gsiAgain");if(w)w.hidden=!(SIGN.need||problem==="sign_in");
+}
+function retryNow(){
+ if(SA.problem==="outdated"){location.reload();return}
+ SA.rej={};SYNC.fails=0;clearTimeout(SYNC.timer);SIGN.err="";
+ if(!ID_TOKEN){SIGN.need=true;SA.problem="sign_in";renewTries=0;askGoogleRenew(true);mountAgainButton();renderSaveAlert();toast("Sign in again to save your changes.");return}
+ setSaveState("Saving");saveNow();
+}
 async function saveNow(){
  if(BOARD.status!=="ready")return;if(SYNC.saving){SYNC.again=true;return}
- const now=boardItems(),ops=[];
- Object.keys(now).forEach(k=>{if(SYNC.snap[k]!==now[k]){const[c,id]=k.split("\u0001");ops.push({c,id,v:JSON.parse(now[k])})}});
- Object.keys(SYNC.snap).forEach(k=>{if(!(k in now)){const[c,id]=k.split("\u0001");ops.push({c,id,del:true})}});
- if(!ops.length)return;
- if(!ID_TOKEN){setSaveState("Not saved: sign in again to keep saving.",true);return}
+ const now=boardItems(),all=[];
+ Object.keys(now).forEach(k=>{if(SYNC.snap[k]!==now[k]){const r=SA.rej[k];if(r&&r.json===now[k])return;const[c,id]=k.split("\u0001");all.push({c,id,v:JSON.parse(now[k])})}});
+ Object.keys(SYNC.snap).forEach(k=>{if(!(k in now)){const r=SA.rej[k];if(r&&r.json===DELMARK)return;const[c,id]=k.split("\u0001");all.push({c,id,del:true})}});
+ persistDraft(now);
+ if(!all.length){renderSaveAlert();return}
+ if(!ID_TOKEN){SIGN.need=true;SA.problem="sign_in";renderSaveAlert();askGoogleRenew();mountAgainButton();return}
+ const ops=all.slice(0,BATCH);
  SYNC.saving=true;SYNC.last=Date.now();setSaveState("Saving");
  try{const r=await api("save",{ops,baseRev:SYNC.rev});
   const rej=new Map((r.rejected||[]).map(x=>[x.c+"\u0001"+x.id,x]));
-  ops.forEach(o=>{const k=o.c+"\u0001"+o.id;if(rej.has(k))return;if(o.del)delete SYNC.snap[k];else SYNC.snap[k]=now[k]});
-  SYNC.rev=r.rev;
-  if(rej.size){const first=[...rej.values()][0];setSaveState("Not saved: "+first.message+(rej.size>1?" ("+(rej.size-1)+" more item"+(rej.size>2?"s":"")+" not saved)":""),true)}
-  else setSaveState("All changes saved")}
- catch(e){if(PERMANENT.has(e.code))setSaveState("Not saved: "+e.message,true);
-  else{setSaveState("Not saved yet: "+e.message+" Retrying.",true);clearTimeout(SYNC.timer);SYNC.timer=setTimeout(saveNow,8000)}}
- finally{SYNC.saving=false;if(SYNC.again){SYNC.again=false;scheduleSave()}}
+  ops.forEach(o=>{const k=o.c+"\u0001"+o.id,x=rej.get(k);
+   if(x){SA.rej[k]={json:o.del?DELMARK:now[k],code:x.error,message:x.message};return}
+   delete SA.rej[k];if(o.del)delete SYNC.snap[k];else SYNC.snap[k]=now[k]});
+  SYNC.rev=r.rev;SA.lastSaved=ops.length-rej.size;SA.problem="";SA.msg="";SYNC.fails=0;
+  if(all.length>ops.length)SYNC.again=true;
+  if(SA.hadFail&&!rej.size&&!all.slice(BATCH).length){SA.hadFail=false;toast("All changes saved")}}
+ catch(e){
+  SYNC.fails=(SYNC.fails||0)+1;SA.lastSaved=0;SA.hadFail=true;SA.msg=e.message;
+  SA.problem=e.code==="sign_in_required"?"sign_in":(e.code||"server_error");
+  if(SA.problem==="sign_in"){SIGN.need=true;mountAgainButton()}
+  else if(!PERMANENT.has(e.code)){clearTimeout(SYNC.timer);SYNC.timer=setTimeout(saveNow,Math.min(60000,4000*Math.pow(2,SYNC.fails-1)))}}
+ finally{SYNC.saving=false;persistDraft();renderSaveAlert();if(SYNC.again){SYNC.again=false;scheduleSave()}}
 }
 function setSaveState(t,warn){const el=$("#saveState");if(el){el.textContent=t;el.classList.toggle("warn",!!warn)}}
 function pendingLocal(){const now=boardItems();return Object.keys(now).some(k=>SYNC.snap[k]!==now[k])||Object.keys(SYNC.snap).some(k=>!(k in now))}
@@ -1390,6 +1553,7 @@ async function onRemoteRev(rev){
 renderPresence();
 $("#themesw").outerHTML=themeButtons("theme-sw",false);
 render();
+startAutoSignIn();
 </script>
 </body>
 </html>

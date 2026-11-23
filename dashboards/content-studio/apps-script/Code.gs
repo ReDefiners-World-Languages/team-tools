@@ -65,6 +65,9 @@ function doPost(e) {
   } catch (err) {
     if (err.userCode) return json_({ ok: false, error: err.userCode, message: err.message });
     console.error(err && err.stack ? err.stack : err);
+    if (/too many times|rate limit|quota|service invoked|try again later/i.test(String(err && err.message))) {
+      return json_({ ok: false, error: 'busy', message: 'The board storage is busy. Trying again in a moment.' });
+    }
     return json_({ ok: false, error: 'server_error', message: 'Something went wrong on our side. Try again in a minute.' });
   }
 }
@@ -78,8 +81,17 @@ function verifyStaff_(idToken) {
   var key = 'tok:' + Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, idToken));
   var hit = cache.get(key);
   if (hit) return JSON.parse(hit);
-  var res = UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken), { muteHttpExceptions: true });
-  if (res.getResponseCode() !== 200) throw userError_('sign_in_required', 'Your sign-in expired. Sign in again.');
+  var res;
+  try {
+    res = UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken), { muteHttpExceptions: true });
+  } catch (err) {
+    throw userError_('verify_unavailable', 'Google could not confirm your sign-in just now. Trying again in a moment.');
+  }
+  var code = res.getResponseCode();
+  // 400 = Google says this token is expired or not valid. Anything else (429, 5xx, a hiccup) is NOT a sign-out:
+  // the page keeps the person signed in and retries.
+  if (code === 400 || code === 401) throw userError_('sign_in_required', 'Your sign-in expired. Sign in again.');
+  if (code !== 200) throw userError_('verify_unavailable', 'Google could not confirm your sign-in just now. Trying again in a moment.');
   var t = JSON.parse(res.getContentText());
   var nowSec = Math.floor(nowMs_() / 1000);
   var ok = t.aud === prop_('GOOGLE_CLIENT_ID', '') &&

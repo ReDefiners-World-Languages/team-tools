@@ -317,3 +317,17 @@ test('start and board also send the Lists tab values so the page dropdowns follo
   assert.deepEqual(r.lists.dstatus, ['Planned', 'Draft', 'Current/Active', 'Discontinued', 'Ended', 'Needs Update']);
   assert.equal(call('board').data.lists.format.length, 8);
 });
+
+test('sign-in check: only an invalid token signs the person out; a Google hiccup says retry', () => {
+  const { env, call } = fresh();
+  assert.equal(call('heartbeat', { view: 'a' }).ok, true);
+  const t = env.token('sam@redefinerswl.org');
+  env.fetchHandler = () => ({ code: 503, body: '' });
+  assert.equal(env.call('heartbeat', {}, t).error, 'verify_unavailable');
+  env.fetchHandler = () => { throw new Error('Address unavailable'); };
+  assert.equal(env.call('heartbeat', {}, t).error, 'verify_unavailable');
+  env.fetchHandler = () => ({ code: 400, body: { error: 'invalid_token' } });
+  assert.equal(env.call('heartbeat', {}, 'expired-token').error, 'sign_in_required');
+  env.fetchHandler = env.defaultFetch;
+  assert.equal(env.call('heartbeat', {}, t).ok, true);
+});
