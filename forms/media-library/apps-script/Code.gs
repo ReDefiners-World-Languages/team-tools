@@ -12,6 +12,26 @@ var MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July
 var MEDIA_EXT = /\.(jpe?g|png|gif|webp|heic|heif|tiff?|bmp|dng|cr2|cr3|nef|arw|raf|orf|rw2|mp4|mov|m4v|avi|mkv|webm|3gp|3g2|mts|m2ts|wmv|mpg|mpeg)$/i;
 var FIELD_LIMITS = { what: 200, date: 10, staff: 120, notes: 1500, otherNote: 300 };
 var FILE_FIELDS = 'id,name,mimeType,size,createdTime,hasThumbnail,description,properties,parents,webViewLink';
+var CHECK_FIELDS = 'id,name,size,trashed,properties';  // what a verification asks Drive for
+var IMAGE_EXT = /\.(jpe?g|png|gif|webp|heic|heif|tiff?|bmp|dng|cr2|cr3|nef|arw|raf|orf|rw2)$/i;
+var VIDEO_EXT = /\.(mp4|mov|m4v|avi|mkv|webm|3gp|3g2|mts|m2ts|wmv|mpg|mpeg)$/i;
+// Plain-words reasons written to the Upload Log (the page sends only the code, never free text).
+var REASONS = {
+  missing: 'Drive no longer has this file.',
+  trashed: 'The file is in the Drive trash.',
+  size_mismatch: 'Drive has a different size than the file that was chosen, so the copy may be cut short.',
+  size_unknown: 'The size in Drive could not be compared with the original.',
+  network: 'The connection dropped and did not come back, so the file did not finish uploading.',
+  sign_in: 'The sign-in ran out before the upload could be finished and checked.',
+  refused: 'Google Drive refused the file.',
+  busy: 'Google Drive or the library was busy and did not answer after several tries.',
+  expired: 'The upload expired before it finished.',
+  too_big: 'The file is larger than the limit.',
+  not_media: 'The file is not a photo or video the library accepts.',
+  empty: 'The file is empty.',
+  duplicate: 'The same file was already in the list, so it was left out.',
+  other: 'The upload stopped for a reason the page could not read.'
+};
 var NAME_MAX = 60;                // typed folder names (event, person, moment, new campaign)
 var NAME_BAD = /[\/\\<>:"|?*]/; // break paths, downloads or zip files on Windows
 
@@ -60,6 +80,7 @@ var STAFF_ACTIONS = {
   whoami: function (req, who) { return who; },
   start: function (req, who) { return { who: who, config: getPublicConfig_() }; }, // one round trip after sign-in
   config: getPublicConfig_, startUpload: startUpload_, finishUpload: finishUpload_,
+  verifyUploads: verifyUploads_, reportFailure: reportFailure_,
   search: search_, browse: browse_, thumbnail: thumbnail_, thumbnails: thumbnails_,
   existingFolders: existingFolders_
 };
@@ -349,7 +370,7 @@ function startUpload_(req, who) {
   }
 
   var token = Utilities.getUuid();
-  var properties = { mlCollection: col.id, mlToken: token, year: dest.year, month: dest.month,
+  var properties = { mlCollection: col.id, mlToken: token, mlSize: String(size), year: dest.year, month: dest.month,
     type: /^video\//.test(mime) || /\.(mp4|mov|m4v|avi|mkv|webm|3gp|3g2|mts|m2ts|wmv|mpg|mpeg)$/i.test(name) ? 'video' : 'photo' };
   if (context.date) properties.eventDate = context.date;
   Object.keys(dest.chosen).forEach(function (k) {
@@ -378,7 +399,7 @@ function startUpload_(req, who) {
   }
   var headers = res.getAllHeaders();
   var uploadUrl = headers.Location || headers.location;
-  return { uploadUrl: uploadUrl, token: token, savedAs: savedAs, path: col.label + '/' + path };
+  return { uploadUrl: uploadUrl, token: token, savedAs: savedAs, path: col.label + '/' + path, folderId: folder.id, size: size };
 }
 
 function requiredFields_(col) {
@@ -455,34 +476,141 @@ function findFolders_(rootId, segments) {
   return parentId;
 }
 
-/** Called after Drive confirms the file. Checks it is ours, then writes the log row once. */
+/**
+ * Called after Drive says the last byte arrived. Asks Drive again for the file and compares it with
+ * what was promised (not in the trash, same size as the original), then writes one log row.
+ * Answers { verified, reason, size, name, path, logged }. An old page that ignores the new
+ * fields still works: it only looks at the call succeeding.
+ */
 function finishUpload_(req, who) {
   var col = collection_(req.collection);
   var fileId = clean_(req.fileId);
   if (!/^[\w-]{10,}$/.test(fileId)) throw userError_('bad_request', 'Missing file id.');
-  var f = driveGet_('/files/' + fileId, { fields: 'id,name,mimeType,size,parents,properties' });
+  var f;
+  try {
+    f = driveGet_('/files/' + fileId, { fields: CHECK_FIELDS });
+  } catch (err) {
+    if (err.userCode !== 'not_found') throw err;
+    logResult_(col, who, { originalName: req.originalName, fileId: fileId, result: 'Not verified', details: REASONS.missing });
+    return { verified: false, reason: 'missing', logged: false };
+  }
   var p = f.properties || {};
   if (p.mlCollection !== col.id || p.mlToken !== clean_(req.token)) throw userError_('bad_request', 'That upload could not be matched.');
-  if (p.mlLogged) return { logged: true };
+  var path = pathFromProperties_(col, p);
+  var v = verdict_(f, req.expectedSize);
+  var out = { verified: v.verified, reason: v.reason, size: v.size, name: f.name, path: path, logged: false };
+  if (!v.verified) {
+    if (p.mlFlag !== v.reason) { // one failure row per file and reason, however many times the page asks
+      logResult_(col, who, { originalName: req.originalName, savedAs: f.name, fileId: f.id, path: path, sizeBytes: v.size, type: p.type, result: 'Not verified', details: REASONS[v.reason] });
+      try { drivePatch_('/files/' + fileId, { properties: { mlFlag: v.reason } }); } catch (e2) { /* a file in the trash may refuse the mark */ }
+    }
+    return out;
+  }
+  if (p.mlLogged) { out.logged = true; return out; }
 
   var context = cleanContext_(req.context, col, who);
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
     var again = driveGet_('/files/' + fileId, { fields: 'properties' }).properties || {};
-    if (again.mlLogged) return { logged: true };
-    var ss = SpreadsheetApp.openById(prop_('ADMIN_SHEET_ID', ''));
-    var row = [new Date(), col.label, pathFromProperties_(col, p), clean_(req.originalName).slice(0, 300), f.name, f.id,
-      Math.round(Number(f.size || 0) / 10485.76) / 100, p.type || '', context.what, context.date, context.staff, context.notes,
-      context.otherNote, context.uploaderName, context.uploaderEmail];
-    // Plain text: stops a typed "=..." from running as a formula in the sheet.
-    var sh = ss.getSheetByName(SHEETS.log.name);
-    sh.getRange(sh.getLastRow() + 1, 1, 1, row.length).setNumberFormats([row.map(function (v, i) { return i === 0 ? 'yyyy-mm-dd hh:mm' : (i === 6 ? '0.00' : '@'); })]).setValues([row]);
-    drivePatch_('/files/' + fileId, { properties: { mlLogged: '1' } });
+    if (!again.mlLogged) {
+      logResult_(col, who, { originalName: req.originalName, savedAs: f.name, fileId: f.id, path: path, sizeBytes: v.size, type: p.type,
+        result: 'Uploaded and verified', details: 'Drive has the file and its size matches the original (' + v.size + ' bytes).', context: context }, true);
+      drivePatch_('/files/' + fileId, { properties: { mlLogged: '1', mlFlag: null } });
+    }
   } finally {
     lock.releaseLock();
   }
-  return { logged: true };
+  out.logged = true;
+  return out;
+}
+
+/** Drive's own answer for one file: verified only when it is not in the trash and its size is the promised one. */
+function verdict_(f, expectedSize) {
+  var p = f.properties || {};
+  var size = Number(f.size || 0);
+  var want = Number(p.mlSize || expectedSize || 0);
+  var v = { verified: false, reason: '', size: size };
+  if (f.trashed) v.reason = 'trashed';
+  else if (!(want > 0)) v.reason = 'size_unknown';
+  else if (size !== want) v.reason = 'size_mismatch';
+  else v.verified = true;
+  return v;
+}
+
+/**
+ * Re-checks up to 50 uploaded files in one call (Drive is asked for all of them at once).
+ * Read-only: nothing is written to Drive or the log.
+ */
+function verifyUploads_(req) {
+  var col = collection_(req.collection);
+  var items = (req.items || []).slice(0, 50).filter(function (it) { return it && /^[\w-]{10,}$/.test(clean_(it.fileId)); });
+  if (!items.length) return { results: [] };
+  var auth = { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() };
+  var res = UrlFetchApp.fetchAll(items.map(function (it) {
+    return { url: DRIVE + '/files/' + clean_(it.fileId) + '?fields=' + CHECK_FIELDS, headers: auth, muteHttpExceptions: true };
+  }));
+  return {
+    results: items.map(function (it, i) {
+      var code = res[i].getResponseCode();
+      var out = { fileId: clean_(it.fileId), verified: false, reason: '', size: 0, name: '', path: '' };
+      if (code === 404) { out.reason = 'missing'; return out; }
+      if (code !== 200) { out.reason = 'busy'; return out; }
+      var f = JSON.parse(res[i].getContentText());
+      var p = f.properties || {};
+      if (p.mlCollection !== col.id || p.mlToken !== clean_(it.token)) { out.reason = 'missing'; return out; }
+      var v = verdict_(f, it.expectedSize);
+      out.verified = v.verified; out.reason = v.reason; out.size = v.size; out.name = f.name; out.path = pathFromProperties_(col, p);
+      return out;
+    })
+  };
+}
+
+/**
+ * Writes failure lines to the Upload Log for files that never reached Drive (or could not be
+ * checked). The page sends the file name, size, folder text and a reason CODE; the plain-words
+ * text comes from REASONS here. Up to 50 files per call.
+ */
+function reportFailure_(req, who) {
+  var col = collection_(req.collection);
+  var items = (req.items || []).slice(0, 50);
+  var rows = items.map(function (it) {
+    var code = REASONS.hasOwnProperty(clean_(it.reason)) ? clean_(it.reason) : 'other';
+    var skipped = code === 'not_media' || code === 'empty' || code === 'duplicate' || code === 'too_big';
+    return { originalName: it.name, sizeBytes: Number(it.size) || 0, path: it.path, result: skipped ? 'Not added' : 'Failed',
+      details: REASONS[code] + (code === 'other' && it.detail ? ' ' + clean_(it.detail).slice(0, 200) : '') };
+  });
+  if (!rows.length) return { logged: 0 };
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    rows.forEach(function (r) { logResult_(col, who, r, true); });
+  } finally {
+    lock.releaseLock();
+  }
+  return { logged: rows.length };
+}
+
+/**
+ * One Upload Log row, as plain text (a typed "=..." never runs as a formula). Columns A-O are the
+ * ones the log always had; P (Result) and Q (Details) are added by upgradeSheets().
+ * Caller holds the lock unless it passes held = false (then this takes it).
+ */
+function logResult_(col, who, r, held) {
+  var lock = null;
+  if (!held) { lock = LockService.getScriptLock(); lock.waitLock(30000); }
+  try {
+    var c = r.context || {};
+    var row = [new Date(), col.label, clean_(r.path).slice(0, 400), clean_(r.originalName).slice(0, 300), clean_(r.savedAs), clean_(r.fileId),
+      Math.round(Number(r.sizeBytes || 0) / 10485.76) / 100, clean_(r.type), clean_(c.what), clean_(c.date), clean_(c.staff), clean_(c.notes),
+      clean_(c.otherNote), who && who.name ? String(who.name).slice(0, 120) : '', who && who.email ? String(who.email) : '',
+      clean_(r.result), clean_(r.details)];
+    var ss = SpreadsheetApp.openById(prop_('ADMIN_SHEET_ID', ''));
+    var sh = ss.getSheetByName(SHEETS.log.name);
+    sh.getRange(sh.getLastRow() + 1, 1, 1, row.length).setNumberFormats([row.map(function (v, i) { return i === 0 ? 'yyyy-mm-dd hh:mm' : (i === 6 ? '0.00' : '@'); })]).setValues([row]);
+  } finally {
+    if (lock) lock.releaseLock();
+  }
 }
 
 function cleanContext_(raw, col, who) {
@@ -548,7 +676,7 @@ function ensureFolders_(rootId, segments, loose) {
     if (!found.length && loose && loose[i]) {
       found = childFolders_(parentId).filter(function (f) { return sameName(f.name, name); });
     }
-    folder = found.length ? found[0] : drivePost_('/files', { name: name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] }, 'id,name');
+    folder = found.length ? found[0] : drivePost_('/files', { name: name, mimeType: 'application/vnd.google-apps.folder', parents: [parentId], properties: { mlMade: '1' } }, 'id,name');
     names.push(folder.name || name);
     parentId = folder.id;
   });
@@ -621,7 +749,8 @@ function browse_(req) {
   var folderId = clean_(req.folderId) || col.rootFolderId;
   var crumbs = breadcrumbs_(folderId, col);
   var params = {
-    q: "'" + folderId + "' in parents and trashed = false and (mimeType = 'application/vnd.google-apps.folder' or mimeType contains 'image/' or mimeType contains 'video/')",
+    // Everything in the folder, whether or not it came through the page (no filter on file properties or type).
+    q: "'" + folderId + "' in parents and trashed = false",
     fields: 'nextPageToken,files(' + FILE_FIELDS + ')',
     orderBy: 'folder,name',
     pageSize: 200
@@ -631,7 +760,7 @@ function browse_(req) {
   var here = crumbs.map(function (c) { return c.name; }).join('/');
   var folders = [], files = [];
   (res.files || []).forEach(function (f) {
-    if (f.mimeType === 'application/vnd.google-apps.folder') folders.push({ id: f.id, name: f.name });
+    if (f.mimeType === 'application/vnd.google-apps.folder') folders.push({ id: f.id, name: f.name, addedInDrive: !madeByPage_(col, f) });
     else files.push(fileOut_(f, here));
   });
   return { crumbs: crumbs, folders: folders, files: files, nextPageToken: res.nextPageToken || '' };
@@ -699,11 +828,34 @@ function breadcrumbs_(folderId, col, depth) {
 
 function fileOut_(f, path) {
   var p = f.properties || {};
+  var kind = /^video\//.test(f.mimeType) || p.type === 'video' || VIDEO_EXT.test(f.name) ? 'video'
+    : /^image\//.test(f.mimeType) || p.type === 'photo' || IMAGE_EXT.test(f.name) ? 'photo' : 'file';
   return {
-    id: f.id, name: f.name, path: path, size: Number(f.size || 0), createdTime: f.createdTime,
-    kind: /^video\//.test(f.mimeType) || p.type === 'video' ? 'video' : 'photo',
-    hasThumbnail: !!f.hasThumbnail, description: f.description || '', link: f.webViewLink || ''
+    id: f.id, name: f.name, path: path, size: Number(f.size || 0), createdTime: f.createdTime, kind: kind,
+    hasThumbnail: !!f.hasThumbnail, description: f.description || '', link: f.webViewLink || '',
+    addedInDrive: !p.mlCollection // no page properties: put in Drive directly, or before the page existed
   };
+}
+
+/**
+ * True when a folder looks like one the page makes (the page marks the folders it creates; older
+ * ones are recognised by name: a list value, a year, a month folder, a dated event folder).
+ * A folder that fails this is shown as "Added in Drive". For folders this is a best guess.
+ */
+function madeByPage_(col, f) {
+  if ((f.properties || {}).mlMade) return true;
+  var name = f.name;
+  if (/^\d{4}$/.test(name)) return true;
+  if (/^\d{2} (January|February|March|April|May|June|July|August|September|October|November|December) \d{4}$/.test(name)) return true;
+  if (col.path.indexOf('{date}') >= 0 && /^\d{4}-\d{2}-\d{2} - .+/.test(name)) return true;
+  var known = [];
+  col.steps.forEach(function (st) {
+    if (st.otherFolder) known.push(st.otherFolder);
+    if (st.input === 'text') return; // the Options rows of a typed step are labels, not folder names
+    var byParent = col.options[st.id] || {};
+    Object.keys(byParent).forEach(function (parent) { known = known.concat(byParent[parent]); });
+  });
+  return known.some(function (n) { return sameName(n, name); });
 }
 
 // ---------- helpers ----------

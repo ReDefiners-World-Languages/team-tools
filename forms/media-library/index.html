@@ -218,7 +218,7 @@
   .total-bar span { background: var(--mint); }
   .total-meta { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; color: var(--ink-2); }
   .total-meta strong { color: var(--mint); font-weight: 800; }
-  .is-error .file-meta { color: var(--red); font-weight: 600; }
+  .is-error .file-meta, .is-unverified .file-meta { color: var(--red); font-weight: 600; }
   .is-done .file-meta { color: var(--mint); font-weight: 600; }
   .is-done .file-icon { background: rgba(63,224,165,.12); color: var(--mint); }
   .file-list .link-btn { font-size: 12.5px; }
@@ -260,6 +260,29 @@
   .done-panel.has-errors h3 svg { color: var(--amber); }
   .done-panel p { margin: 0 0 14px; color: var(--ink-2); overflow-wrap: anywhere; }
   .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  /* result list after a batch: one row per file, with what Drive says about it */
+  .result-list { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 8px; max-height: min(60vh, 520px); overflow: auto; }
+  .result-list li {
+    display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 10px; align-items: start;
+    padding: 10px 12px; border-radius: var(--radius); background: rgba(255,255,255,.03); border: 1px solid var(--line);
+  }
+  .result-list li svg { width: 20px; height: 20px; margin-top: 1px; }
+  .result-list li.is-ok svg { color: var(--mint); }
+  .result-list li.is-bad { border-color: rgba(255,107,107,.35); }
+  .result-list li.is-bad svg { color: var(--red); }
+  .res-name { font-weight: 700; font-size: 13.5px; overflow-wrap: anywhere; }
+  .res-meta { font-size: 12.5px; color: var(--ink-3); overflow-wrap: anywhere; }
+  .res-check { font-size: 12.5px; font-weight: 600; margin-top: 2px; overflow-wrap: anywhere; }
+  .is-ok .res-check { color: var(--mint); }
+  .is-bad .res-check { color: var(--red); }
+  .res-when { font-size: 12.5px; color: var(--ink-3); margin: -6px 0 14px; }
+  /* "Added in Drive": a neutral label (not Amber: it sits inside a clickable folder button too) */
+  .added-tag {
+    display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: var(--pill); width: fit-content;
+    border: 1px solid var(--line-2); color: var(--ink-2); background: rgba(255,255,255,.05);
+  }
+  .folder-btn .added-tag { margin-left: auto; flex: none; }
+  .search-hint { margin: 0; }
 
   .notice {
     display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; padding: 12px 16px;
@@ -474,6 +497,7 @@
           <button class="btn" type="submit">Search</button>
         </form>
         <div class="filters" id="filters"></div>
+        <p class="hint search-hint">Search finds files that were uploaded with this page. Files put into Drive another way are under <button type="button" class="link-btn" id="hintBrowse">Browse folders</button>.</p>
       </div>
       <div id="browsePane" class="find-tools" hidden>
         <nav class="crumbs" id="crumbs" aria-label="Folder path"></nav>
@@ -569,6 +593,7 @@ const ICONS = {
   photo: 'M4 5h16v14H4zM4 15l4.5-4.5 4 4 3-3L20 16M9 9.5h.01',
   video: 'M3 6h12v12H3zM15 10l6-3.5v11L15 14',
   folder: 'M3 6.5h6.5l2 2H21V19H3z',
+  file: 'M6 3h8l4 4v14H6zM14 3v4h4',
   upload: 'M12 16V4M7 9l5-5 5 5M4 15v5h16v-5',
   check: 'M20 6 9 17l-5-5',
   lock: 'M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
@@ -601,10 +626,20 @@ let who = null;
 let gsiReady = null;
 let signInWaiters = [];
 
+/** Seconds until the sign-in token expires (read from the token itself, only to time a fresh sign-in). Infinity when unreadable. */
+function tokenSecondsLeft() {
+  try {
+    const part = idToken.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(atob(part)).exp - Date.now() / 1000;
+  } catch (e) { return Infinity; }
+}
+
 async function api(action, body) {
   if (!idToken) throw new ApiError('sign_in_required', 'Sign in again to continue.', true);
   const payload = { action, idToken, ...(body || {}) };
   if (PREVIEW) return window.MockApi(action, payload);
+  // The Google sign-in token lasts about an hour. Ask for a fresh one before it runs out, not after a call fails.
+  if (tokenSecondsLeft() < 90) { needSignIn(); throw new ApiError('sign_in_required', 'Your sign-in is about to run out. Sign in again to continue.', true); }
   let res;
   try {
     // text/plain keeps this a "simple" request, which Apps Script answers without a CORS preflight.
@@ -1213,7 +1248,7 @@ function refreshSummary() {
   if (uploading) {
     btn.disabled = true;
     btn.append('Uploading');
-    text.append('Keep this page open until every file says Uploaded.');
+    text.append('Keep this page open until the result list appears. Each file is checked in Drive at the end.');
   } else if (needs.length) {
     btn.disabled = true;
     btn.append('Upload files');
@@ -1230,21 +1265,27 @@ function refreshSummary() {
 // ----- files -----
 function fileKey(f) { return [f.name, f.size, f.lastModified].join('|'); }
 
+/** Files that were not added to the list (wrong type, empty, too big, already listed). Shown, logged, and listed in the result panel. */
+const skipped = []; // { name, size, reason, text, reported }
+function skip(file, reason, text, why) { skipped.push({ name: file.name, size: file.size || 0, reason, text, why, reported: false }); }
+function renderRejects() {
+  const box = $('rejects');
+  box.hidden = !skipped.length;
+  box.replaceChildren(...skipped.map(r => el('div', { text: r.text })));
+}
+
 function addFiles(list) {
-  const rejected = [];
   const maxBytes = (CONFIG.maxFileGb || 10) * 1073741824;
   for (const file of list) {
     const isMedia = /^(image|video)\//.test(file.type) || MEDIA_EXT.test(file.name);
-    if (!isMedia) { rejected.push(`${file.name} is not a photo or video.`); continue; }
-    if (!file.size) { rejected.push(`${file.name} is empty.`); continue; }
-    if (file.size > maxBytes) { rejected.push(`${file.name} is larger than ${CONFIG.maxFileGb} GB.`); continue; }
+    if (!isMedia) { skip(file, 'not_media', `${file.name} is not a photo or video, so it was not added.`, 'It is not a photo or video.'); continue; }
+    if (!file.size) { skip(file, 'empty', `${file.name} is empty, so it was not added.`, 'The file is empty.'); continue; }
+    if (file.size > maxBytes) { skip(file, 'too_big', `${file.name} is larger than ${CONFIG.maxFileGb} GB, so it was not added.`, 'It is larger than the size limit.'); continue; }
     const key = fileKey(file);
-    if (files.some(f => f.key === key && f.state !== 'done')) continue;
+    if (files.some(f => f.key === key && f.state !== 'done')) { skip(file, 'duplicate', `${file.name} is already in the list (same name, size and date), so it was left out.`, 'The same file (name, size and date) is already in the list.'); continue; }
     files.push({ file, key, state: 'ready', progress: 0, message: '' });
   }
-  const box = $('rejects');
-  box.hidden = !rejected.length;
-  box.replaceChildren(...rejected.map(r => el('div', { text: r })));
+  renderRejects();
   renderFiles();
   refreshSummary();
 }
@@ -1273,19 +1314,20 @@ function renderFiles() {
       starting: ['wait', 'Getting the folder ready'],
       uploading: [null, `${Math.floor(item.progress * 100)}% of ${fmtBytes(item.file.size)}`],
       waiting: ['wait', item.message],
-      done: ['check', item.savedAs && item.savedAs !== item.file.name ? `Uploaded as ${item.savedAs} (that name was taken)` : 'Uploaded'],
+      done: ['check', item.savedAs && item.savedAs !== item.file.name ? `Checked in Drive, saved as ${item.savedAs} (that name was taken)` : 'Checked in Drive (size matches)'],
+      unverified: ['alert', item.message],
       error: ['alert', item.message]
     }[item.state];
     const busy = ['uploading', 'waiting', 'starting'].includes(item.state);
     return el('li', { class: 'is-' + item.state },
-      el('span', { class: 'file-icon' }, svgIcon(item.state === 'done' ? 'check' : isVideo(item.file) ? 'video' : 'photo')),
+      el('span', { class: 'file-icon' }, svgIcon(item.state === 'done' ? 'check' : ['error', 'unverified'].includes(item.state) ? 'alert' : isVideo(item.file) ? 'video' : 'photo')),
       el('div', { style: 'min-width:0' },
         el('div', { class: 'file-name', text: item.file.name }),
         el('div', { class: 'file-meta' }, meta[0] ? svgIcon(meta[0]) : null, el('span', { text: meta[1] })),
         busy ? el('div', { class: 'bar' }, el('span', { style: `width:${(item.progress * 100).toFixed(1)}%` })) : null),
       item.state === 'ready' && !uploading
         ? el('button', { type: 'button', class: 'link-btn', 'aria-label': `Remove ${item.file.name}`, text: 'Remove', onclick: () => { files.splice(files.indexOf(item), 1); renderFiles(); refreshSummary(); } })
-        : item.state === 'error' && !uploading ? el('button', { type: 'button', class: 'link-btn', text: 'Try again', onclick: () => retryOne(item) }) : el('span'));
+        : ['error', 'unverified'].includes(item.state) && !uploading ? el('button', { type: 'button', class: 'link-btn', text: 'Retry', onclick: () => retryOne(item) }) : el('span'));
   }));
 }
 
@@ -1352,6 +1394,7 @@ function rangeEnd(range) { const m = /bytes=0-(\d+)/.exec(range || ''); return m
 async function uploadOne(item) {
   const file = item.file;
   const key = sessionKey(item);
+  item.sessKey = key; item.colId = col.id;
   let s = item.session || readSessions()[key];
   if (!s) {
     item.state = 'starting'; renderFiles();
@@ -1360,10 +1403,11 @@ async function uploadOne(item) {
       file: { name: file.name, size: file.size, type: file.type }, origin: location.origin
     });
     rememberNewValues();
-    s = { ...started, offset: 0, sent: false, createdAt: Date.now() };
+    // The session also keeps what is needed to finish and check the file later (after a reload or a sign-in that ran out).
+    s = { ...started, offset: 0, sent: false, createdAt: Date.now(), collection: col.id, originalName: file.name, expectedSize: file.size, context: contextValues() };
     writeSession(key, s);
   }
-  item.session = s; item.savedAs = s.savedAs; item.path = s.path;
+  item.session = s; item.savedAs = s.savedAs; item.path = s.path; item.folderId = s.folderId || '';
   item.state = 'uploading'; item.progress = s.offset / file.size; renderFiles();
 
   if (!s.fileId) {
@@ -1393,9 +1437,43 @@ async function uploadOne(item) {
     writeSession(key, s);
   }
   item.progress = 1; renderFiles();
-  await api('finishUpload', { collection: col.id, fileId: s.fileId, token: s.token, originalName: file.name, context: contextValues() });
-  writeSession(key, null);
-  item.state = 'done'; item.session = null; renderFiles();
+  // Drive said the last byte arrived. Now ask Drive (through the library) whether the file is really there with the right size.
+  const fin = await api('finishUpload', { collection: s.collection || col.id, fileId: s.fileId, token: s.token, originalName: s.originalName || file.name,
+    context: s.context || contextValues(), expectedSize: s.expectedSize || file.size });
+  applyVerdict(item, fin);
+}
+
+/** The reasons, in plain words (the same codes the library writes to the Upload Log). */
+const REASON_TEXT = {
+  missing: 'Drive no longer has this file.',
+  trashed: 'The file is in the Drive trash.',
+  size_mismatch: 'Drive has a different size than the file you chose, so the copy may be cut short. Retry uploads a fresh copy; the first copy stays in Drive until someone removes it.',
+  size_unknown: 'Drive could not be asked about this file yet. Choose Check again or Retry.',
+  network: 'The connection dropped and did not come back, so the file did not finish uploading.',
+  sign_in: 'The sign-in ran out before the file could be checked. Sign in again and choose Retry.',
+  refused: 'Google Drive refused the file.',
+  busy: 'Google Drive or the library was busy and did not answer after several tries.',
+  expired: 'The upload expired before it finished.',
+  other: 'The upload stopped for a reason the page could not read.'
+};
+function plainReason(code, detail) { return (REASON_TEXT[code] || REASON_TEXT.other) + (code === 'other' && detail ? ' ' + detail : ''); }
+function reasonFromError(e) {
+  return { sign_in_required: 'sign_in', network: 'network', drive_refused: 'refused', drive_error: 'busy', server_error: 'busy' }[e.code] || 'other';
+}
+
+/** A file counts as uploaded only when Drive confirmed it: found, not in the trash, same size as the original. */
+function applyVerdict(item, fin) {
+  item.driveSize = (fin && fin.size) || 0;
+  if (fin && fin.verified === true) {
+    writeSession(item.sessKey, null);
+    item.session = null; item.state = 'done'; item.verified = true; item.reason = ''; item.message = '';
+    if (fin.path) item.path = fin.path;
+  } else {
+    const reason = (fin && fin.reason) || 'size_unknown';
+    item.state = 'unverified'; item.verified = false; item.reason = reason; item.message = plainReason(reason);
+    if (['missing', 'trashed', 'size_mismatch'].includes(reason)) { writeSession(item.sessKey, null); item.session = null; } // Retry starts a new upload
+  }
+  renderFiles();
 }
 
 /** A new campaign is in the list from now on (the server added it to the admin sheet). */
@@ -1430,7 +1508,8 @@ async function runItem(item) {
       }
       if (!e.retryable || attempt >= 12) {
         item.state = 'error';
-        item.message = e.retryable ? 'Could not reach Google Drive. Check the connection, then choose Try again.' : e.message;
+        item.reason = reasonFromError(e); item.detail = e.retryable ? '' : e.message;
+        item.message = e.retryable ? 'Could not reach Google Drive after several tries. Check the connection, then choose Retry.' : e.message;
         renderFiles();
         return;
       }
@@ -1448,39 +1527,169 @@ async function runUploads(items) {
   uploading = true;
   runItems = items.filter(item => item.state !== 'done');
   $('addForm').inert = true;
+  holdScreenAwake();
   refreshSummary();
   renderTotal();
   for (const item of items) if (item.state !== 'done') await runItem(item);
   uploading = false;
+  releaseScreen();
   $('addForm').inert = false;
   renderFiles();
-  showDone();
+  showResult();
   refreshSummary();
+  reportProblems();
 }
 function startUploads() { runUploads(files); }
 function retryOne(item) { runUploads([item]); }
 
-function showDone() {
-  const done = files.filter(f => f.state === 'done');
-  const failed = files.filter(f => f.state === 'error');
+// Keep a phone from going to sleep during an upload (a sleeping phone drops the connection). Not every browser has this.
+let screenLock = null;
+async function holdScreenAwake() {
+  try { if ('wakeLock' in navigator) screenLock = await navigator.wakeLock.request('screen'); } catch (e) { screenLock = null; }
+}
+function releaseScreen() { try { if (screenLock) screenLock.release(); } catch (e) { /* already released */ } screenLock = null; }
+document.addEventListener('visibilitychange', () => {
+  if (uploading && document.visibilityState === 'visible' && (!screenLock || screenLock.released)) holdScreenAwake();
+});
+
+// ----- the result of a batch: one row per file, with what Drive says -----
+let recoveredRows = []; // files finished from an earlier visit (see recoverPending)
+
+function resultRows() {
+  const rows = files.filter(i => ['done', 'unverified', 'error'].includes(i.state)).map(item => ({
+    item, name: item.file.name, size: item.file.size, path: item.path || '', savedAs: item.savedAs || '', driveSize: item.driveSize || 0,
+    status: item.state === 'done' ? 'ok' : item.state === 'unverified' ? 'unverified' : 'failed',
+    why: item.state === 'done' ? '' : (item.message || plainReason(item.reason, item.detail))
+  }));
+  for (const r of skipped) rows.push({ name: r.name, size: r.size, path: '', savedAs: '', driveSize: 0, status: 'notadded', why: r.why });
+  for (const r of recoveredRows) rows.push(r);
+  const order = { failed: 0, unverified: 1, notadded: 2, ok: 3 };
+  return rows.sort((a, b) => order[a.status] - order[b.status]);
+}
+
+function checkLine(r) {
+  if (r.status === 'ok') return `In Drive: yes. Size matches (${fmtBytes(r.driveSize || r.size)}).`;
+  if (r.status === 'unverified') return `In Drive: not confirmed. ${r.why}`;
+  if (r.status === 'failed') return `In Drive: no. ${r.why}`;
+  return `Not added. ${r.why}`;
+}
+
+function showResult(note) {
   const area = $('doneArea');
   area.replaceChildren();
-  if (!done.length && !failed.length) return;
-  const path = (done[0] || failed[0]).path || '';
-  area.append(el('div', { class: 'card done-panel' + (failed.length ? ' has-errors' : ''), role: 'status' },
-    el('h3', {}, svgIcon(failed.length ? 'alert' : 'check'),
-      failed.length ? `${plural(done.length, 'file', 'files')} uploaded, ${failed.length} not yet` : `${plural(done.length, 'file', 'files')} uploaded`),
-    path ? el('p', {}, 'Saved in ', el('strong', { text: path.split('/').join(' / ') })) : null,
-    failed.length ? el('p', { text: 'Choose Try again next to each file that did not upload.' }) : null,
+  const rows = resultRows();
+  if (!rows.length) return;
+  const okRows = rows.filter(r => r.status === 'ok');
+  const bad = rows.length - okRows.length;
+  const retryable = files.filter(i => ['error', 'unverified'].includes(i.state));
+  const checkable = files.filter(i => i.state === 'unverified' && i.session && i.session.fileId);
+  const folders = [...new Set(okRows.map(r => r.path).filter(Boolean))];
+  const firstOk = okRows.find(r => r.item && r.item.folderId);
+  const when = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', timeZone: SETTINGS.timeZone });
+  area.append(el('div', { class: 'card done-panel' + (bad ? ' has-errors' : ''), role: 'status' },
+    el('h3', {}, svgIcon(bad ? 'alert' : 'check'),
+      bad ? `${okRows.length} of ${plural(rows.length, 'file', 'files')} confirmed in Drive. ${bad} need${bad === 1 ? 's' : ''} attention.`
+        : `All ${plural(rows.length, 'file', 'files')} confirmed in Drive`),
+    el('p', {}, bad ? 'Only files marked yes below are in Drive. Nothing is called uploaded until Drive confirms it. ' : 'Each file was found in Drive and its size matches the original. ',
+      folders.length === 1 ? el('span', {}, 'Saved in ', el('strong', { text: folders[0].split('/').join(' / ') }), '.') : folders.length > 1 ? 'The folder is shown on each file.' : ''),
+    note ? el('p', { text: note }) : null,
+    el('div', { class: 'res-when', text: `Checked at ${when}.` }),
+    el('ul', { class: 'result-list' }, rows.map(r => el('li', { class: r.status === 'ok' ? 'is-ok' : 'is-bad' },
+      svgIcon(r.status === 'ok' ? 'check' : 'alert'),
+      el('div', { style: 'min-width:0' },
+        el('div', { class: 'res-name', text: r.name }),
+        r.savedAs && r.savedAs !== r.name ? el('div', { class: 'res-meta', text: `Saved as ${r.savedAs} (that name was taken)` }) : null,
+        el('div', { class: 'res-meta', text: [fmtBytes(r.size), r.path ? r.path.split('/').join(' / ') : 'No folder yet'].join(' · ') }),
+        el('div', { class: 'res-check', text: checkLine(r) })),
+      r.item && ['error', 'unverified'].includes(r.item.state) && !uploading
+        ? el('button', { type: 'button', class: 'link-btn', text: 'Retry', 'aria-label': `Retry ${r.name}`, onclick: () => runUploads([r.item]) }) : el('span')))),
     el('div', { class: 'actions' },
-      el('button', { type: 'button', class: 'btn', onclick: () => { clearDoneFiles(); area.replaceChildren(); $('fileInput').click(); } }, svgIcon('plus'), 'Add more to this folder'),
+      retryable.length ? el('button', { type: 'button', class: 'btn', onclick: () => runUploads(retryable) }, svgIcon('upload'), `Retry ${retryable.length === 1 ? 'this file' : 'these ' + retryable.length}`) : null,
+      checkable.length ? el('button', { type: 'button', class: 'btn btn-ghost', text: 'Check again', onclick: recheck }) : null,
+      firstOk ? el('button', { type: 'button', class: 'btn btn-ghost', text: 'Open the folder in Find media', onclick: () => showFolderInFind(firstOk.item.colId, firstOk.item.folderId) }) : null,
+      el('button', { type: 'button', class: 'btn btn-ghost', text: 'Copy this list', onclick: e => copyResult(rows, e.currentTarget) }),
+      el('button', { type: 'button', class: 'btn btn-ghost', onclick: () => { clearDoneFiles(); area.replaceChildren(); $('fileInput').click(); } }, svgIcon('plus'), 'Add more to this folder'),
       el('button', { type: 'button', class: 'btn btn-ghost', text: 'Start a new upload', onclick: () => resetAdd() }))));
   // Instant on purpose: a smooth scroll stops halfway when the page changes height under it.
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
+/** Asks Drive again about files that could not be confirmed (Drive or the library was busy). */
+async function recheck() {
+  const items = files.filter(i => i.state === 'unverified' && i.session && i.session.fileId);
+  if (!items.length) return;
+  try {
+    const res = await api('verifyUploads', { collection: items[0].colId, items: items.map(i => ({ fileId: i.session.fileId, token: i.session.token, expectedSize: i.file.size })) });
+    items.forEach((item, i) => applyVerdict(item, res.results[i]));
+    showResult();
+  } catch (e) {
+    if (e.code !== 'sign_in_required') showResult('Drive could not be asked just now. ' + e.message);
+  }
+}
+
+function copyResult(rows, button) {
+  const lines = [`Media Library upload, ${new Date().toLocaleString('en-US', { timeZone: SETTINGS.timeZone })}`,
+    `${rows.filter(r => r.status === 'ok').length} of ${rows.length} files confirmed in Drive`, ''];
+  for (const r of rows) lines.push(`${r.name} | ${fmtBytes(r.size)} | ${r.path || 'no folder'} | ${checkLine(r)}`);
+  const done = ok => { button.textContent = ok ? 'Copied' : 'Could not copy'; };
+  try { navigator.clipboard.writeText(lines.join('\n')).then(() => done(true), () => done(false)); } catch (e) { done(false); }
+}
+
+// ----- failure lines for the Upload Log, kept in this browser until the library has them -----
+const FAIL_STORE = PREVIEW ? 'ml-preview-failures' : 'ml-failures';
+function readFailures() { try { return JSON.parse(localStorage.getItem(FAIL_STORE) || '[]'); } catch (e) { return []; } }
+function writeFailures(list) { try { localStorage.setItem(FAIL_STORE, JSON.stringify(list.slice(-200))); } catch (e) { /* storage off: the lines are sent now or not at all */ } }
+function reportProblems() {
+  const fresh = [];
+  for (const item of files) {
+    if (item.state === 'error' && !item.reported) {
+      item.reported = true;
+      fresh.push({ collection: item.colId || col.id, name: item.file.name, size: item.file.size, path: item.path || '', reason: item.reason || 'other', detail: item.reason === 'other' ? (item.detail || '') : '' });
+    }
+  }
+  for (const r of skipped) if (!r.reported) { r.reported = true; fresh.push({ collection: col.id, name: r.name, size: r.size, path: '', reason: r.reason, detail: '' }); }
+  if (fresh.length) writeFailures([...readFailures(), ...fresh]);
+  flushFailures();
+}
+let flushing = false;
+async function flushFailures() {
+  if (flushing || !idToken) return;
+  flushing = true;
+  try {
+    const list = readFailures();
+    const byCollection = {};
+    for (const f of list) (byCollection[f.collection] = byCollection[f.collection] || []).push(f);
+    for (const [collection, items] of Object.entries(byCollection)) {
+      for (let i = 0; i < items.length; i += 50) await api('reportFailure', { collection, items: items.slice(i, i + 50) });
+      const sent = new Set(items.map(x => JSON.stringify(x)));
+      writeFailures(readFailures().filter(f => !sent.has(JSON.stringify(f))));
+    }
+  } catch (e) { /* kept for the next time the page is open and signed in */ }
+  flushing = false;
+}
+
+/**
+ * After sign-in: files that reached Drive in an earlier visit but were never confirmed (the tab was
+ * closed, the phone slept or the sign-in ran out at the very end) are finished and checked now.
+ */
+async function recoverPending() {
+  const prefix = who.email + '::';
+  const pending = Object.entries(readSessions()).filter(([k, s]) => k.startsWith(prefix) && s.fileId && s.collection && !files.some(f => f.sessKey === k));
+  for (const [k, s] of pending) {
+    try {
+      const fin = await api('finishUpload', { collection: s.collection, fileId: s.fileId, token: s.token, originalName: s.originalName || '', context: s.context || {}, expectedSize: s.expectedSize });
+      const ok = fin && fin.verified === true;
+      if (ok || ['missing', 'trashed', 'size_mismatch'].includes(fin && fin.reason)) writeSession(k, null);
+      recoveredRows.push({ name: s.originalName || 'A file', size: s.expectedSize || 0, path: (fin && fin.path) || s.path || '', savedAs: s.savedAs || '', driveSize: (fin && fin.size) || 0,
+        status: ok ? 'ok' : 'unverified', why: ok ? '' : plainReason((fin && fin.reason) || 'size_unknown') });
+    } catch (e) { if (e.code === 'sign_in_required') return; }
+  }
+  if (recoveredRows.length && !uploading) showResult('These files reached Drive during an earlier visit and have now been checked.');
+}
+
 function clearDoneFiles() {
   for (let i = files.length - 1; i >= 0; i--) if (files[i].state === 'done') files.splice(i, 1);
+  skipped.length = 0; recoveredRows = []; renderRejects();
   renderFiles(); refreshSummary();
 }
 
@@ -1491,6 +1700,7 @@ function clearChoices() {
 
 function resetAdd() {
   files.length = 0;
+  skipped.length = 0; recoveredRows = []; renderRejects();
   clearChoices();
   $('doneArea').replaceChildren();
   renderContextFields(); renderPickers(); renderFiles(); refreshSummary();
@@ -1540,6 +1750,18 @@ function selectFindSection(id) {
   $('crumbs').replaceChildren(); $('folders').replaceChildren();
   renderFilters();
   if (findState.started) setMode(findMode);
+}
+
+/** From the result panel: open the folder the files went into, in Find media. */
+function showFolderInFind(colId, folderId) {
+  findCol = CONFIG.collections.find(c => c.id === colId) || findCol;
+  $('findSection').value = findCol.id;
+  for (const k of Object.keys(filterValues)) delete filterValues[k];
+  findState.started = true; findState.folderId = folderId || '';
+  $('crumbs').replaceChildren(); $('folders').replaceChildren();
+  renderFilters();
+  showView('find');
+  setMode('browse');
 }
 
 function setMode(mode) {
@@ -1601,7 +1823,7 @@ async function runSearch(more) {
     setFindStatus(count ? `${plural(count, 'file', 'files')}${res.nextPageToken ? ' so far' : ''}.` : '');
     if (!count) $('results').replaceChildren(el('div', { class: 'card empty-state' },
       el('strong', { text: 'Nothing matches yet' }),
-      'Try fewer words or clear a filter. Files that were in Drive before this page existed are under Browse folders.'));
+      'Try fewer words or clear a filter. Search finds files uploaded with this page. Files added to Drive another way are under Browse folders.'));
     $('moreBtn').hidden = !res.nextPageToken;
   } catch (e) {
     if (e.code !== 'sign_in_required') setFindStatus(e.message, true);
@@ -1620,10 +1842,13 @@ async function openFolder(folderId, more) {
       const node = last ? el('strong', { text: c.name, 'aria-current': 'page' }) : el('button', { type: 'button', class: 'link-btn', text: c.name, onclick: () => openFolder(i === 0 ? '' : c.id) });
       return i ? [el('span', { class: 'sep', text: '/' }), node] : [node];
     }));
-    if (!more) $('folders').replaceChildren(...res.folders.map(f => el('button', { type: 'button', class: 'folder-btn', onclick: () => openFolder(f.id) }, svgIcon('folder'), f.name)));
+    const folderButtons = res.folders.map(f => el('button', { type: 'button', class: 'folder-btn', onclick: () => openFolder(f.id) },
+      svgIcon('folder'), f.name, f.addedInDrive ? el('span', { class: 'added-tag', text: 'Added in Drive' }) : null));
+    if (!more) $('folders').replaceChildren(...folderButtons); else $('folders').append(...folderButtons);
     renderCards(res.files, more);
     const n = $('results').children.length;
-    setFindStatus(n ? `${plural(n, 'file', 'files')} in this folder.` : (res.folders.length ? '' : 'This folder is empty.'));
+    const added = $('results').querySelectorAll('.media-body .added-tag').length;
+    setFindStatus(n ? `${plural(n, 'file', 'files')} in this folder${added ? `, ${added} added in Drive` : ''}.` : (res.folders.length ? '' : 'This folder is empty.'));
     $('moreBtn').hidden = !res.nextPageToken;
   } catch (e) {
     if (e.code !== 'sign_in_required') setFindStatus(e.message, true);
@@ -1676,8 +1901,8 @@ function renderCards(list, append) {
     const img = el('img', { alt: '', 'data-id': f.id, hidden: true });
     const what = (f.description.match(/^What happened: (.*)$/m) || [])[1];
     const frame = el('button', { type: 'button', class: 'thumb', 'aria-label': `Open ${f.name}`, onclick: () => openViewer(f, img) },
-      el('span', { class: 'ph' }, svgIcon(f.kind === 'video' ? 'video' : 'photo')), img,
-      el('span', { class: 'badge', text: f.kind === 'video' ? 'Video' : 'Photo' }));
+      el('span', { class: 'ph' }, svgIcon(f.kind === 'video' ? 'video' : f.kind === 'file' ? 'file' : 'photo')), img,
+      el('span', { class: 'badge', text: f.kind === 'video' ? 'Video' : f.kind === 'file' ? 'File' : 'Photo' }));
     // Watch the visible frame: the picture itself stays hidden until it has loaded.
     if (f.hasThumbnail) waitingFrames.add(frame);
     box.append(el('article', { class: 'card media-card' },
@@ -1685,6 +1910,7 @@ function renderCards(list, append) {
       el('div', { class: 'media-body' },
         el('div', { class: 'media-title', text: f.name }),
         el('div', { class: 'media-path', text: f.path.split('/').join(' / ') }),
+        f.addedInDrive ? el('span', { class: 'added-tag', text: 'Added in Drive' }) : null,
         what ? el('div', { class: 'media-what', text: what }) : null)));
   }
 }
@@ -1692,7 +1918,7 @@ function renderCards(list, append) {
 async function openViewer(f, img) {
   $('viewerTitle').textContent = f.name;
   $('viewerPath').textContent = f.path.split('/').join(' / ');
-  $('viewerDesc').textContent = f.description || 'No context was added for this file.';
+  $('viewerDesc').textContent = f.description || (f.addedInDrive ? 'Added in Drive. No context was saved with this file.' : 'No context was added for this file.');
   $('viewerImg').src = img.src || '';
   $('viewerImg').hidden = !img.src;
   $('viewerImg').alt = f.name;
@@ -1753,6 +1979,7 @@ function startApp() {
   findSelect.addEventListener('change', () => selectFindSection(findSelect.value));
   findCol = CONFIG.collections[0];
   showView(location.hash === '#find' ? 'find' : 'add');
+  recoverPending().then(flushFailures);
 }
 
 async function loadMock() {
@@ -1775,6 +2002,7 @@ async function init() {
   $('tabFind').addEventListener('click', () => showView('find'));
   $('modeSearch').addEventListener('click', () => setMode('search'));
   $('modeBrowse').addEventListener('click', () => setMode('browse'));
+  $('hintBrowse').addEventListener('click', () => setMode('browse'));
   $('searchForm').addEventListener('submit', e => { e.preventDefault(); runSearch(false); });
   $('moreBtn').addEventListener('click', () => findMode === 'search' ? runSearch(true) : openFolder(findState.folderId, true));
   $('signOut').addEventListener('click', signOut);

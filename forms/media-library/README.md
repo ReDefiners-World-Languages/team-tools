@@ -31,7 +31,8 @@ Google Drive  <---- 2. the browser sends the file bytes here directly, 8 MB at a
 - Folders are created only when a file goes in, and only after looking for an existing folder with the exact same name.
 - Context and the uploader (from the sign-in) are saved in the Drive file description (readable in Drive, searchable) and in the `Upload Log` tab of the admin sheet. Each file also carries properties (program, course, site, year, month, type) used by the search filters.
 - A dropped connection picks up where it stopped. If the page is reloaded, adding the same file again with the same destination (same month) continues the same upload.
-- Files that were in Drive before this page existed have no context or properties: they show under **Browse folders**, not in search filters.
+- Files that were in Drive before this page existed, or that were put there by hand, have no context or properties: they show under **Browse folders** (marked "Added in Drive"), not in search or its filters.
+- A file counts as uploaded only after the library asks Drive again and finds it, not in the trash, with the same size as the original (`finishUpload`, `verifyUploads`). After every batch the page lists each file with that answer; failures and files that could not be confirmed also get a row in `Upload Log` (columns `Result` and `Details`, added by `upgradeSheets()`).
 
 ## Files
 
@@ -53,7 +54,7 @@ Google Drive  <---- 2. the browser sends the file bytes here directly, 8 MB at a
 | `Collections` | One row per destination: id, label, Drive root folder id, path pattern, context fields, Active. |
 | `Steps` | The picker steps per collection, their order, which step each one depends on, and the folder used for **Other** (empty = no Other). |
 | `Options` | Every allowed value: collection, step, parent value, value. A name not in this tab cannot be chosen. |
-| `Upload Log` | One row per uploaded file: when, where, names, size, type and the context. |
+| `Upload Log` | One row per uploaded file: when, where, names, size, type and the context, then `Result` (uploaded and verified, not verified, failed, not added) and `Details` in plain words. |
 
 Edits show up within 5 minutes (or run `refreshConfig()`).
 

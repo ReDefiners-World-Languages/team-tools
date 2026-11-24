@@ -10,7 +10,8 @@ var SHEETS = {
   log: {
     name: 'Upload Log',
     headers: ['Logged At', 'Collection', 'Folder Path', 'Original Name', 'Saved As', 'File ID', 'Size (MB)', 'Type',
-      'What Happened', 'Class or Event Date', 'Instructor or Staff', 'Notes', 'Placement Note', 'Uploader Name', 'Uploader Email']
+      'What Happened', 'Class or Event Date', 'Instructor or Staff', 'Notes', 'Placement Note', 'Uploader Name', 'Uploader Email',
+      'Result', 'Details'] // Result and Details (2026-11): upgradeSheets() adds them to the existing log
   }
 };
 
